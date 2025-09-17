@@ -18,7 +18,9 @@ function onOpen() {
       .addItem('📊 Open Email Sidebar', 'showMissionEmailerSidebar')
       .addItem('🔄 Process New Submissions', 'processTypeformSubmission')
       .addItem('📧 Send Scheduled Emails', 'sendScheduledEmails')
+      .addSeparator()
       .addItem('🧪 Test Connection', 'testSheetsConnection')
+      .addItem('🚀 Test Email Automation', 'testEmailAutomationWithLastSubmission')
       .addItem('⚙️ Setup Automation Triggers', 'setupAutomationTriggers')
       .addToUi();
     console.log('✅ Mission Emailer menu added to Fillout spreadsheet');
@@ -134,6 +136,15 @@ function syncTemplatesNow() {
     return APME.syncTemplatesNow();
   } catch (error) {
     console.error('❌ Template sync error:', error);
+    SpreadsheetApp.getUi().alert('Error: ' + error.message);
+  }
+}
+
+function testEmailAutomationWithLastSubmission() {
+  try {
+    return APME.testEmailAutomationWithLastSubmission();
+  } catch (error) {
+    console.error('❌ Email automation test error:', error);
     SpreadsheetApp.getUi().alert('Error: ' + error.message);
   }
 }

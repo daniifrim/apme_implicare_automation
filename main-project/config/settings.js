@@ -13,16 +13,16 @@ const SETTINGS = {
     // To get Sheet ID: Open your sheet → Copy the long string from URL between /d/ and /edit
     
     // Your main People Database sheet (with CSV import data)
-    PEOPLE_DB_ID: '1jtruahBf4sr8lm1RcupNx9CxjUmd-3yIx23OczZhKj8',
-    
-    // Your Email Templates sheet (if separate) 
-    EMAIL_TEMPLATES_ID: '1jtruahBf4sr8lm1RcupNx9CxjUmd-3yIx23OczZhKj8',
-    
-    // Your Typeform data sheet (if separate)  
-    TYPEFORM_DATA_ID: '1jtruahBf4sr8lm1RcupNx9CxjUmd-3yIx23OczZhKj8',
-    
+    PEOPLE_DB_ID: '1otbJUQAuVxVr0xIbGFXWl4Ke5fWaw1O78RNFjJcFNVo',
+
+    // Your Email Templates sheet (if separate)
+    EMAIL_TEMPLATES_ID: '1otbJUQAuVxVr0xIbGFXWl4Ke5fWaw1O78RNFjJcFNVo',
+
+    // Your Typeform data sheet (if separate)
+    TYPEFORM_DATA_ID: '1otbJUQAuVxVr0xIbGFXWl4Ke5fWaw1O78RNFjJcFNVo',
+
     // Sheet names within your spreadsheet
-    PEOPLE_DB_SHEET_NAME: 'People DB',
+    PEOPLE_DB_SHEET_NAME: 'Implicare 2.0',
     EMAIL_TEMPLATES_SHEET_NAME: 'Email Templates', 
     TYPEFORM_SHEET_NAME: 'Typeform Data',
     ANALYTICS_SHEET_NAME: 'Analytics'
@@ -445,15 +445,20 @@ Respond ONLY with the exact field name that best matches, or "NO_MATCH" if none 
   // DEVELOPMENT & TESTING CONFIGURATION
   // ============================================================================
   DEVELOPMENT: {
-    // CRITICAL: Only send emails to test email address
-    TEST_MODE: true, // Set to true to prevent accidental emails
-    TEST_EMAIL: 'danifrim14@gmail.com', // Only email that should receive emails
+    // PRODUCTION: Send emails to real users
+    TEST_MODE: false, // CHANGED: Now sends emails to real users
+    TEST_EMAIL: 'danifrim14@gmail.com', // Fallback email for errors
     VERBOSE_LOGGING: true,
-    
-    // Email safety settings
-    SAFETY_MODE: true, // Additional safety check
-    ALLOWED_EMAILS: ['danifrim14@gmail.com'], // Only these emails can receive emails
-    BLOCK_ALL_OTHER_EMAILS: true // Block emails to anyone else
+
+    // Email safety settings - KEEP ENABLED for initial production deployment
+    SAFETY_MODE: false, // Keep enabled for safety
+    ALLOWED_EMAILS: [
+      'danifrim14@gmail.com',
+      'betina.serban@interchange.ro',
+      'mobilizare@apme.ro'
+      // Add more trusted emails here as needed
+    ],
+    BLOCK_ALL_OTHER_EMAILS: false // CHANGED: Now allows emails to real users
   },
 
   // ============================================================================

@@ -253,24 +253,35 @@ class SheetsConnector {
   static testConnection() {
     try {
       console.log('🧪 Testing Google Sheets connection...');
-      
+
       const spreadsheet = this.getPeopleDBSpreadsheet();
       console.log(`✅ Connected to spreadsheet: ${spreadsheet.getName()}`);
-      
+
       const sheets = spreadsheet.getSheets();
       console.log(`📋 Available sheets: ${sheets.map(s => s.getName()).join(', ')}`);
-      
-      const peopleSheet = this.getPeopleDBSheet();
-      const rowCount = peopleSheet.getLastRow();
-      console.log(`👥 People DB sheet has ${rowCount} rows`);
-      
+
+      // Get data from Implicare 2.0 sheet instead of People DB
+      const implicareSheet = spreadsheet.getSheetByName('Implicare 2.0');
+      if (!implicareSheet) {
+        throw new Error('Implicare 2.0 sheet not found');
+      }
+
+      const rowCount = implicareSheet.getLastRow();
+      const submissionCount = Math.max(0, rowCount - 1); // Subtract header row
+      console.log(`📝 Implicare 2.0 sheet has ${submissionCount} submissions`);
+
+      // Get processing statistics
+      const stats = this.getProcessingStatistics();
+      console.log(`📊 Processing stats: ${stats.processed} processed, ${stats.unprocessed} unprocessed`);
+
       return {
         success: true,
         spreadsheetName: spreadsheet.getName(),
         sheets: sheets.map(s => s.getName()),
-        peopleCount: Math.max(0, rowCount - 1) // Subtract header row
+        submissionCount: submissionCount,
+        processingStats: stats
       };
-      
+
     } catch (error) {
       console.error('❌ Sheets connection test failed:', error);
       return {

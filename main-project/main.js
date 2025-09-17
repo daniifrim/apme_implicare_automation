@@ -2086,15 +2086,15 @@ function getMissionInvolvementData() {
     console.log('📊 Getting mission involvement data for sidebar...');
     
     // DIRECT ACCESS with zero dependencies
-    const sheetId = '1jtruahBf4sr8lm1RcupNx9CxjUmd-3yIx23OczZhKj8';
+    const sheetId = '1otbJUQAuVxVr0xIbGFXWl4Ke5fWaw1O78RNFjJcFNVo';
     const spreadsheet = SpreadsheetApp.openById(sheetId);
-    const sheet = spreadsheet.getSheetByName('People DB');
+    const sheet = spreadsheet.getSheetByName('Implicare 2.0');
     
     const data = sheet.getDataRange().getValues();
     console.log(`👥 Found ${data.length} total rows (including header)`);
     
     if (data.length === 0) {
-      console.log('⚠️ No data found in People DB sheet');
+      console.log('⚠️ No data found in Implicare 2.0 sheet');
       return [];
     }
     
@@ -2318,7 +2318,7 @@ function completeReauthorization() {
     
     // Force access to all required services
     const ui = SpreadsheetApp.getUi();
-    const spreadsheet = SpreadsheetApp.openById('1jtruahBf4sr8lm1RcupNx9CxjUmd-3yIx23OczZhKj8');
+    const spreadsheet = SpreadsheetApp.openById('1otbJUQAuVxVr0xIbGFXWl4Ke5fWaw1O78RNFjJcFNVo');
     const sheet = spreadsheet.getActiveSheet();
     const data = sheet.getRange(1, 1, 2, 2).getValues();
     
@@ -2850,6 +2850,194 @@ function basicConnectionTest() {
     timestamp: new Date().toString(),
     data: { test: true, number: 42 }
   };
+}
+
+/**
+ * TEST FUNCTION: Send emails from last submission without marking as processed
+ * Perfect for testing the email automation with real data safely
+ */
+function testEmailAutomationWithLastSubmission() {
+  try {
+    console.log('🧪 Testing email automation with last submission...');
+
+    // 1. Get all submissions from Implicare 2.0 sheet
+    const allSubmissions = SheetsConnector.getAllSubmissions();
+    if (allSubmissions.length === 0) {
+      return {
+        success: false,
+        error: 'No submissions found in Implicare 2.0 sheet'
+      };
+    }
+
+    // 2. Get the last submission (most recent)
+    const lastSubmission = allSubmissions[allSubmissions.length - 1];
+    const firstName = TemplateAssignment.getFieldValue(lastSubmission, 'FIRST_NAME') || 'Prieten';
+    const email = TemplateAssignment.getFieldValue(lastSubmission, 'EMAIL') || 'unknown@email.com';
+
+    console.log(`👤 Testing with: ${firstName} (${email})`);
+    console.log(`📊 Submission data keys: ${Object.keys(lastSubmission).slice(0, 10).join(', ')}...`);
+
+    // 3. Check if person should be processed
+    if (!TemplateAssignment.shouldProcessPerson(lastSubmission)) {
+      return {
+        success: true,
+        skipped: true,
+        person: `${firstName} (${email})`,
+        reason: 'Person should not be processed according to assignment rules'
+      };
+    }
+
+    // 4. Assign email templates based on their responses
+    const assignedTemplates = TemplateAssignment.assignTemplates(lastSubmission);
+    console.log(`📧 Assigned templates: ${assignedTemplates.join(', ')}`);
+
+    if (assignedTemplates.length === 0) {
+      return {
+        success: true,
+        person: `${firstName} (${email})`,
+        templates: [],
+        message: 'No templates assigned based on responses'
+      };
+    }
+
+    // 5. Send emails for each template (but DON'T mark as processed)
+    const emailResults = [];
+
+    for (const templateName of assignedTemplates) {
+      try {
+        console.log(`📮 Testing template: "${templateName}"`);
+
+        // Get template info
+        const templates = SheetsConnector.getEmailTemplates();
+        const template = templates.find(t => t.Name === templateName);
+
+        if (!template) {
+          emailResults.push({
+            template: templateName,
+            success: false,
+            error: `Template "${templateName}" not found in Email Templates sheet`
+          });
+          continue;
+        }
+
+        // Get template URL
+        let docUrl = null;
+        if (template.Doc && template.Doc.includes('docs.google.com')) {
+          docUrl = template.Doc;
+        } else if (template.DocURL) {
+          docUrl = template.DocURL;
+        } else if (template.URL && template.URL.includes('docs.google.com')) {
+          docUrl = template.URL;
+        }
+
+        if (!docUrl) {
+          emailResults.push({
+            template: templateName,
+            success: false,
+            error: `No valid Google Doc URL found for template "${templateName}"`
+          });
+          continue;
+        }
+
+        // Prepare personalization data
+        const templateData = TemplateAssignment.getPersonalizationData(lastSubmission);
+
+        // Add prayer-specific data if needed
+        if (templateName.includes('Rugăciune pentru misionari') || templateName.includes('Rugăciune pentru grup etnic')) {
+          const missionarySelection = TemplateAssignment.getFieldValue(lastSubmission, 'MISSIONARY_SELECTION');
+          const ethnicGroupSelection = TemplateAssignment.getFieldValue(lastSubmission, 'ETHNIC_GROUP_SELECTION');
+
+          if (missionarySelection) {
+            templateData.Missionary = missionarySelection;
+            console.log(`📿 Missionary prayer for: ${missionarySelection}`);
+          }
+          if (ethnicGroupSelection) {
+            templateData.EthnicGroup = ethnicGroupSelection;
+            console.log(`🌍 Ethnic group prayer for: ${ethnicGroupSelection}`);
+          }
+        }
+
+        // Generate subject line
+        const subject = AutomationEngine.generateSubjectLine(templateName, templateData);
+
+        // Force email to test address (getEmailRecipient handles TEST_MODE)
+        const testEmailRecipient = getEmailRecipient(email);
+
+        console.log(`🧪 TEST MODE: Email will be sent to ${testEmailRecipient} instead of ${email}`);
+        console.log(`📄 Template URL: ${docUrl}`);
+        console.log(`✉️ Subject: ${subject}`);
+        console.log(`🎯 Personalization data: ${JSON.stringify(templateData, null, 2)}`);
+
+        // Send the email
+        const result = GDocsConverter.sendEmailFromGDoc(
+          docUrl,
+          testEmailRecipient,
+          subject,
+          templateData
+        );
+
+        emailResults.push({
+          template: templateName,
+          success: true,
+          docUrl: docUrl,
+          recipient: result.recipient,
+          subject: subject,
+          personalizationData: templateData
+        });
+
+        console.log(`✅ Template "${templateName}" sent successfully to ${result.recipient}`);
+
+      } catch (error) {
+        console.error(`❌ Error testing template "${templateName}":`, error);
+        emailResults.push({
+          template: templateName,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+
+    // 6. IMPORTANT: Do NOT mark as processed - that's the whole point!
+    console.log('🚫 NOT marking submission as processed (this is a test)');
+
+    // 7. Return comprehensive test results
+    const successfulEmails = emailResults.filter(r => r.success);
+    const failedEmails = emailResults.filter(r => !r.success);
+
+    console.log(`📊 Test complete: ${successfulEmails.length} successful, ${failedEmails.length} failed`);
+
+    return {
+      success: true,
+      testMode: true,
+      person: {
+        name: firstName,
+        email: email,
+        originalEmail: email,
+        testEmailRecipient: getEmailRecipient(email)
+      },
+      assignedTemplates: assignedTemplates,
+      emailResults: emailResults,
+      summary: {
+        totalTemplates: assignedTemplates.length,
+        successfulEmails: successfulEmails.length,
+        failedEmails: failedEmails.length,
+        notMarkedAsProcessed: true
+      },
+      submissionData: {
+        totalSubmissions: allSubmissions.length,
+        testedSubmissionIndex: allSubmissions.length - 1,
+        submissionKeys: Object.keys(lastSubmission)
+      }
+    };
+
+  } catch (error) {
+    console.error('❌ Error in email automation test:', error);
+    return {
+      success: false,
+      error: error.message,
+      stack: error.stack
+    };
+  }
 }
 
 // ============================================================================

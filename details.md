@@ -1,10 +1,10 @@
 # Main Apps Script Project
 This is the project with multiple files and main functionality
-`https://script.google.com/u/4/home/projects/14cAHJIREVfcKY5zRtoiAwulqXqVOSHx1mX0hUPFJXqfYQwaS-r0tWDxm/edit`
+`https://script.google.com/u/4/home/projects/14cAHJIREVfcKY5zRtoiAwulqXqVOSHx1mX0hUPFJXqfYQwaS-r0tWDxm
 
 # Main Spreadsheet
 Main spreadsheet with the Implicare 2.0 sheet with all the data
-`https://docs.google.com/spreadsheets/d/1otbJUQAuVxVr0xIbGFXWl4Ke5fWaw1O78RNFjJcFNVo/edit?gid=0#gid=0`
+`https://docs.google.com/spreadsheets/d/1otbJUQAuVxVr0xIbGFXWl4Ke5fWaw1O78RNFjJcFNVo
 
 # Wrapper Aops Script Project
 This is a wrapper that points to the main app script project. This is the one that's directly connected to the main spreadsheet but it points to the main app script because we're using the funtionality from there.
