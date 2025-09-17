@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Basic Test</title>
+</head>
+<body>
+  <h3>🧪 Apps Script Connection Test</h3>
+  
+  <button id="testBtn">Test Connection</button>
+  <div id="result"></div>
+  
+  <script>
+    console.log('📱 Test sidebar loaded');
+    
+    document.getElementById('testBtn').onclick = function() {
+      console.log('🔄 Testing connection...');
+      document.getElementById('result').innerHTML = 'Testing...';
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          console.log('✅ Success:', result);
+          document.getElementById('result').innerHTML = '✅ SUCCESS: ' + JSON.stringify(result);
+        })
+        .withFailureHandler(function(error) {
+          console.error('❌ Failed:', error);
+          document.getElementById('result').innerHTML = '❌ FAILED: ' + error.message;
+        })
+        .basicConnectionTest();
+    };
+  </script>
+</body>
+</html> 

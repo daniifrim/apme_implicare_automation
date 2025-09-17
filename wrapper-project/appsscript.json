@@ -1,0 +1,15 @@
+{
+  "timeZone": "Europe/Madrid",
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "dependencies": {
+    "libraries": [
+      {
+        "userSymbol": "APME",
+        "libraryId": "1Q32fzhqvPJytC0B2TLFruj4RRCBnNKMJy-BQJjrpoHCgvMu2b2DzaVAN",
+        "version": "0",
+        "developmentMode": true
+      }
+    ]
+  }
+}
