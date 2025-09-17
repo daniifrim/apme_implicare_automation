@@ -2851,3 +2851,21 @@ function basicConnectionTest() {
     data: { test: true, number: 42 }
   };
 }
+
+// ============================================================================
+// LIBRARY INTERFACE - EXPLICIT FUNCTION EXPORTS
+// ============================================================================
+
+/**
+ * Library interface - these functions will be accessible when this script is used as a library
+ * All functions must be at global scope for library access
+ */
+
+// Test that library is working
+function libraryTest() {
+  return {
+    success: true,
+    message: 'APME library is connected and working!',
+    timestamp: new Date().toString()
+  };
+}

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed - September 17, 2025
+- Fixed library connection issue between wrapper and main projects
+- Corrected Script ID reference in wrapper project Code.js
+- Added explicit library test function for connection validation
+- Successfully established communication between dual-script architecture
+
 ### Added
 - Initial project setup with Apps Script code recovery
 - Main Apps Script project with complete automation system (2,852+ lines)
