@@ -1,14 +1,14 @@
 /**
  * APME Template Assignment Engine
  * Implements the complex business logic for assigning email templates
- * Based on Rules&Workflows.MD document and Romanian Typeform field names
+ * Based on Rules&Workflows.MD document and Romanian Fillout field names
  */
 
 class TemplateAssignment {
   
   /**
    * Main function to assign email templates to a person
-   * @param {Object} person - Person data from Typeform (with Romanian headers)
+   * @param {Object} person - Person data from Fillout (with Romanian headers)
    * @returns {Array} - Array of template names to send
    */
   static assignTemplates(person) {

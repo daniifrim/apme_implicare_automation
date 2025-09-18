@@ -6,7 +6,7 @@
 class AutomationEngine {
   
   /**
-   * Process new submissions from Typeform
+   * Process new submissions from Fillout
    * Main entry point for automation
    */
   static processNewSubmissions() {
@@ -21,8 +21,8 @@ class AutomationEngine {
       
       console.log(`✅ Connected to "${connectionTest.spreadsheetName}" with ${connectionTest.peopleCount} people`);
       
-      // 2. Get people who need email processing
-      const peopleToProcess = SheetsConnector.getPeopleNeedingEmailProcessing();
+      // 2. Get people who need email processing (unprocessed submissions)
+      const peopleToProcess = SheetsConnector.getUnprocessedSubmissions();
       
       if (peopleToProcess.length === 0) {
         console.log('📭 No people need email processing at this time');
@@ -133,6 +133,8 @@ class AutomationEngine {
       
       if (successfulTemplates.length > 0) {
         SheetsConnector.updatePersonEmailStatus(email, successfulTemplates);
+        // Mark the submission as processed in the Implicare 2.0 sheet
+        SheetsConnector.markSubmissionAsProcessed(person, 'PROCESSED');
       }
       
       return {

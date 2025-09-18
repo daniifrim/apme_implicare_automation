@@ -44,20 +44,24 @@ The project uses a **dual-script architecture**:
 
 ## Development Commands
 
-### Main Project Development
+### Quick Deployment
 ```bash
-cd main-project
-clasp pull    # Pull latest from Google Apps Script
-clasp push    # Deploy changes to Google Apps Script
-clasp open    # Open project in browser
+npm run push-clasp          # Push both projects to Apps Script only
+npm run push-clasp-github   # Push to Apps Script + commit to GitHub
 ```
 
-### Wrapper Project Development
+### Individual Project Commands
 ```bash
-cd wrapper-project
-clasp pull    # Pull latest changes
-clasp push    # Deploy wrapper changes
-clasp open    # Open wrapper in browser
+npm run push-main           # Push main project only
+npm run push-wrapper        # Push wrapper project only
+npm run pull-main           # Pull main project from Apps Script
+npm run pull-wrapper        # Pull wrapper project from Apps Script
+```
+
+### Direct Clasp Commands
+```bash
+cd main-project && clasp open    # Open main project in browser
+cd wrapper-project && clasp open # Open wrapper project in browser
 ```
 
 ### Authentication
@@ -118,10 +122,14 @@ clasp open    # Open wrapper in browser
 - Check Analytics sheet for processing results
 
 ### Deployment Strategy
-When making changes to main project that affect the library:
-1. Deploy main project with `clasp push`
-2. Update library version if using versioned library imports
-3. Test wrapper functionality via spreadsheet menu
+**Production Deployment:**
+1. Use `npm run push-clasp-github` for full deployment (Apps Script + GitHub)
+2. Use `npm run push-clasp` for Apps Script-only deployment during development
+3. Always test in spreadsheet menu after main project changes (affects library)
+
+**Development Workflow:**
+- For feature development: Use `npm run push-clasp` to test in Apps Script
+- For production releases: Use `npm run push-clasp-github` to deploy and commit
 
 ## Important Constraints
 - Google Apps Script execution time limits (6 minutes)

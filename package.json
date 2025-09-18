@@ -4,6 +4,7 @@
   "description": "APME email automation system for missionary follow-ups",
   "scripts": {
     "push-clasp-github": "./scripts/push-clasp-github.sh",
+    "push-clasp": "./scripts/push-clasp-only.sh",
     "push-main": "cd main-project && clasp push",
     "push-wrapper": "cd wrapper-project && clasp push",
     "pull-main": "cd main-project && clasp pull",

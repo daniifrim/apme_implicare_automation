@@ -4,9 +4,9 @@
  * Created for: https://docs.google.com/spreadsheets/d/1otbJUQAuVxVr0xIbGFXWl4Ke5fWaw1O78RNFjJcFNVo
  */
 
-// IMPORTANT: Replace this with your actual standalone script ID
-// Get this from your standalone Apps Script project: Project Settings → Script ID
-const APME_LIBRARY_ID = '1Q32fzhqvPJytC0B2TLFruj4RRCBnNKMJy-BQJjrpoHCgvMu2b2DzaVAN'; // This is the actual script ID from your standalone project
+// IMPORTANT: This should be the LIBRARY ID, not the script ID
+// Library ID from the main project deployment
+const APME_LIBRARY_ID = '1Q32fzhqvPJytC0B2TLFruj4RRCBnNKMJy-BQJjrpoHCgvMu2b2DzaVAN'; // This is the library ID from CLAUDE.md
 
 /**
  * onOpen trigger - Creates menu when spreadsheet opens
@@ -16,7 +16,7 @@ function onOpen() {
     const ui = SpreadsheetApp.getUi();
     ui.createMenu('🎯 Mission Emailer')
       .addItem('📊 Open Email Sidebar', 'showMissionEmailerSidebar')
-      .addItem('🔄 Process New Submissions', 'processTypeformSubmission')
+      .addItem('🔄 Process New Submissions', 'processFilloutSubmission')
       .addItem('📧 Send Scheduled Emails', 'sendScheduledEmails')
       .addSeparator()
       .addItem('🧪 Test Connection', 'testSheetsConnection')
@@ -86,9 +86,9 @@ function showMissionEmailerSidebar() {
   }
 }
 
-function processTypeformSubmission() {
+function processFilloutSubmission() {
   try {
-    return APME.processTypeformSubmission();
+    return APME.processFilloutSubmission();
   } catch (error) {
     console.error('❌ Processing error:', error);
     SpreadsheetApp.getUi().alert('Error: ' + error.message);

@@ -318,7 +318,7 @@ class TemplateSync {
   }
 
   /**
-   * Monitor for Typeform field changes and update mappings automatically
+   * Monitor for Fillout field changes and update mappings automatically
    */
   static monitorFieldMappings() {
     console.log('🔍 Starting Field Mapping Monitor...');

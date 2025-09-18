@@ -18,13 +18,13 @@ const SETTINGS = {
     // Your Email Templates sheet (if separate)
     EMAIL_TEMPLATES_ID: '1otbJUQAuVxVr0xIbGFXWl4Ke5fWaw1O78RNFjJcFNVo',
 
-    // Your Typeform data sheet (if separate)
-    TYPEFORM_DATA_ID: '1otbJUQAuVxVr0xIbGFXWl4Ke5fWaw1O78RNFjJcFNVo',
+    // Your Fillout data sheet (if separate)
+    FILLOUT_DATA_ID: '1otbJUQAuVxVr0xIbGFXWl4Ke5fWaw1O78RNFjJcFNVo',
 
     // Sheet names within your spreadsheet
     PEOPLE_DB_SHEET_NAME: 'Implicare 2.0',
     EMAIL_TEMPLATES_SHEET_NAME: 'Email Templates', 
-    TYPEFORM_SHEET_NAME: 'Typeform Data',
+    FILLOUT_SHEET_NAME: 'Fillout Data',
     ANALYTICS_SHEET_NAME: 'Analytics'
   },
 
@@ -115,8 +115,8 @@ const SETTINGS = {
     DAILY_SUMMARY_HOUR: 20, // 8 PM
     DAILY_SUMMARY_MINUTE: 0,
     
-    // How often to check for new Typeform submissions
-    TYPEFORM_CHECK_INTERVAL: 30, // minutes
+    // How often to check for new Fillout submissions
+    FILLOUT_CHECK_INTERVAL: 30, // minutes
     
     // Minimum days between sending emails to same person
     MIN_DAYS_BETWEEN_EMAILS: 30
