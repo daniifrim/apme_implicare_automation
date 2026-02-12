@@ -415,7 +415,7 @@ export default function SubmissionsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <Link 
-                        href={`/dashboard/submissions/${submission.id}`}
+                        href={`/submissions/${submission.id}`}
                         className="block"
                       >
                         <p className="font-medium text-gray-900">

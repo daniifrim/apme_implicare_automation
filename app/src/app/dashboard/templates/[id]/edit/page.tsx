@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -13,8 +13,7 @@ import {
   User
 } from 'lucide-react'
 import { EmailEditor, insertPlaceholder } from '@/components/email-editor'
-import { PartialBlock } from '@blocknote/core'
-import { BlockNoteEditor } from '@blocknote/core'
+import { BlockNoteEditor, PartialBlock } from '@blocknote/core'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -75,6 +74,7 @@ export default function TemplateEditorPage() {
     submission: Submission | null
   } | null>(null)
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>('')
+  const [editorInstance, setEditorInstance] = useState<BlockNoteEditor | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -254,6 +254,11 @@ export default function TemplateEditorPage() {
     }
   }
 
+  function handleInsertPlaceholder(placeholder: string) {
+    if (!editorInstance) return
+    insertPlaceholder(editorInstance, placeholder)
+  }
+
   function handleEditorChange(
     blocks: PartialBlock[],
     html: string,
@@ -288,7 +293,7 @@ export default function TemplateEditorPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link
-            href="/dashboard/templates"
+            href="/templates"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -386,6 +391,7 @@ export default function TemplateEditorPage() {
               <EmailEditor
                 initialContent={editorContent.blocks}
                 onChange={handleEditorChange}
+                onEditorReady={setEditorInstance}
               />
             </div>
 
@@ -406,16 +412,22 @@ export default function TemplateEditorPage() {
         <div className="space-y-6">
           {/* Placeholders */}
           <div className="bg-white border rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Insert Placeholders</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">Available Placeholders</h3>
             <div className="space-y-2">
               <Button
                 variant="outline"
                 size="sm"
                 className="w-full justify-start"
-                onClick={() => insertPlaceholderIntoEditor('FirstName')}
+                onClick={() => handleInsertPlaceholder('FirstName')}
+                disabled={!editorInstance}
               >
                 {'{{FirstName}}'}
               </Button>
+              {!editorInstance && (
+                <div className="text-xs text-gray-500">
+                  Click inside the editor to enable placeholder insertion.
+                </div>
+              )}
             </div>
           </div>
 

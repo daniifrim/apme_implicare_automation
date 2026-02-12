@@ -4,9 +4,10 @@ import type { Prisma } from '@prisma/client'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; versionId: string } }
+  { params }: { params: Promise<{ id: string; versionId: string }> }
 ) {
   try {
+    const { versionId } = await params
     const body = await request.json()
     const {
       name,
@@ -19,7 +20,7 @@ export async function PATCH(
     } = body
     
     const version = await prisma.templateVersion.findUnique({
-      where: { id: params.versionId }
+      where: { id: versionId }
     })
     
     if (!version) {
@@ -37,7 +38,7 @@ export async function PATCH(
     }
     
     const updatedVersion = await prisma.templateVersion.update({
-      where: { id: params.versionId },
+      where: { id: versionId },
       data: {
         ...(name !== undefined && { name }),
         ...(subject !== undefined && { subject }),
@@ -61,11 +62,12 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; versionId: string } }
+  { params }: { params: Promise<{ id: string; versionId: string }> }
 ) {
   try {
+    const { versionId } = await params
     const version = await prisma.templateVersion.findUnique({
-      where: { id: params.versionId }
+      where: { id: versionId }
     })
     
     if (!version) {
@@ -83,7 +85,7 @@ export async function DELETE(
     }
     
     await prisma.templateVersion.delete({
-      where: { id: params.versionId }
+      where: { id: versionId }
     })
     
     return NextResponse.json({ success: true })

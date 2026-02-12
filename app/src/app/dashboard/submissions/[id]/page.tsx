@@ -107,7 +107,7 @@ export default function SubmissionDetailPage({ params }: { params: { id: string 
       const response = await fetch(`/api/submissions/${params.id}`)
       if (!response.ok) {
         if (response.status === 404) {
-          router.push('/dashboard/submissions')
+          router.push('/submissions')
           return
         }
         throw new Error('Failed to fetch submission')
@@ -275,7 +275,7 @@ export default function SubmissionDetailPage({ params }: { params: { id: string 
       <div className="text-center py-12">
         <p className="text-red-600">{error || 'Submission not found'}</p>
         <Link 
-          href="/dashboard/submissions"
+          href="/submissions"
           className="text-blue-600 hover:underline mt-4 inline-block"
         >
           Back to submissions
@@ -291,7 +291,7 @@ export default function SubmissionDetailPage({ params }: { params: { id: string 
         <div className="min-w-0">
           <div className="flex items-center gap-3">
             <Link
-              href="/dashboard/submissions"
+              href="/submissions"
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />

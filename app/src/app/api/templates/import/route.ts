@@ -4,7 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import type { Prisma } from '@prisma/client'
 
-const templatesDir = path.join(process.cwd(), '..', '..', 'docs', 'email-templates')
+const templatesDir = path.join(process.cwd(), '..', 'docs', 'email-templates')
 
 function slugify(name: string): string {
   return name
@@ -145,7 +145,7 @@ export async function POST(_request: NextRequest) {
                 name: 'Initial Version',
                 subject: name,
                 preheader: '',
-                editorState: editorState as Prisma.JsonValue,
+                editorState: editorState as Prisma.InputJsonValue,
                 htmlContent,
                 textContent: content,
                 placeholders,

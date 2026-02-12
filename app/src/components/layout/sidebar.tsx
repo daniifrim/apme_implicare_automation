@@ -16,18 +16,18 @@ import {
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Submissions", href: "/dashboard/submissions", icon: Inbox },
-  { name: "Templates", href: "/dashboard/templates", icon: FileText },
-  { name: "Field Mappings", href: "/dashboard/mappings", icon: GitBranch },
-  { name: "Webhooks", href: "/dashboard/webhooks", icon: Webhook },
+  { name: "Dashboard", href: "/overview", icon: LayoutDashboard },
+  { name: "Submissions", href: "/submissions", icon: Inbox },
+  { name: "Templates", href: "/templates", icon: FileText },
+  { name: "Field Mappings", href: "/mappings", icon: GitBranch },
+  { name: "Webhooks", href: "/webhooks", icon: Webhook },
 ];
 
 const systemNavigation = [
-  { name: "Audit Log", href: "/dashboard/audit", icon: History },
-  { name: "Users", href: "/dashboard/users", icon: Users },
-  { name: "UI Lab", href: "/dashboard/styleguide", icon: Paintbrush },
-  { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  { name: "Audit Log", href: "/audit", icon: History },
+  { name: "Users", href: "/users", icon: Users },
+  { name: "UI Lab", href: "/styleguide", icon: Paintbrush },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {

@@ -44,7 +44,7 @@ export default async function TemplateDetailPage({
 
         <div className="flex items-center gap-2">
           <Link
-            href={`/dashboard/templates/${params.id}/edit`}
+            href={`/templates/${params.id}/edit`}
           >
             <Button variant="outline" size="sm">
               <Edit className="w-4 h-4 mr-2" />
@@ -52,7 +52,7 @@ export default async function TemplateDetailPage({
             </Button>
           </Link>
           <Link
-            href="/dashboard/templates"
+            href="/templates"
             className="text-sm text-primary hover:underline whitespace-nowrap"
           >
             Back to templates
@@ -128,4 +128,3 @@ export default async function TemplateDetailPage({
     </div>
   );
 }
-

@@ -124,7 +124,7 @@ export default async function DashboardPage() {
         <div className="p-6 border-b border-gray-200 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">Recent Submissions</h2>
           <Link 
-            href="/dashboard/submissions"
+            href="/submissions"
             className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
           >
             View all

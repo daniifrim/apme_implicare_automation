@@ -182,7 +182,7 @@ export default function TemplatesPage() {
                     
                     <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
                       <Link
-                        href={`/dashboard/templates/${template.id}/edit`}
+                        href={`/templates/${template.id}/edit`}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       >
                         <Edit className="w-4 h-4" />
