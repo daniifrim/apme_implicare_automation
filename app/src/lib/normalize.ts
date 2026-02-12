@@ -1,17 +1,7 @@
+// ABOUTME: Normalizes Fillout submissions into canonical data structures
+// ABOUTME: Extracts location, contact, and mapped field values for storage
 import type { FilloutSubmission, NormalizedSubmission, FieldValue } from '@/types/fillout'
 import type { FieldMapping, FilloutQuestion } from '@prisma/client'
-
-const ROMANIAN_QUESTION_MAPPINGS: Record<string, string> = {
-  'Cum te numești?': 'FIRST_NAME',
-  'Număr de telefon': 'PHONE',
-  'Email': 'EMAIL',
-  'Căți ani ai?': 'AGE',
-  'Unde locuiești?': 'LOCATION_TYPE',
-  'În ce oraș din România locuiești?': 'CITY_ROMANIA',
-  'În ce oraș și țară locuiești?': 'CITY_DIASPORA',
-  'La ce biserică mergi?': 'CHURCH',
-  'Cum ai ajuns să completezi acest formular': 'SOURCE',
-}
 
 export function detectLocationType(answers: FilloutSubmission['questions']): 'romania' | 'diaspora' | null {
   const locationAnswer = answers.find(a => 
@@ -77,9 +67,7 @@ export function extractCityAndCountry(
 }
 
 export function normalizeSubmission(
-  submission: FilloutSubmission,
-  fieldMappings?: FieldMapping[],
-  questions?: FilloutQuestion[]
+  submission: FilloutSubmission
 ): NormalizedSubmission {
   const locationType = detectLocationType(submission.questions)
   const { city, country } = extractCityAndCountry(locationType, submission.questions)

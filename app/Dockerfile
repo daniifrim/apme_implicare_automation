@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20 AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ RUN npx prisma generate
 RUN pnpm build
 
 # Production stage
-FROM node:20-alpine AS runner
+FROM node:20 AS runner
 
 WORKDIR /app
 
@@ -31,11 +31,11 @@ RUN npm install -g pnpm && pnpm install --frozen-lockfile --prod
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.pnpm/@prisma+client* ./node_modules/.pnpm/
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
-# Generate Prisma client in production
-RUN npx prisma generate
+# Copy the generated Prisma client from builder  
+COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 
 EXPOSE 3000
 

@@ -1,3 +1,5 @@
+// ABOUTME: Imports submission records from CSV into the database
+// ABOUTME: Provides GET preview and POST import endpoints for legacy submissions
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import fs from 'fs'
@@ -17,7 +19,9 @@ interface CSVRow {
   'În ce oraș din România locuiești?': string
   'În ce oraș și țară locuiești?': string
   'La ce biserică mergi?': string
-  [key: string]: string
+  'Processing Status'?: string
+  'Processed At'?: string
+  [key: string]: string | undefined
 }
 
 function parseName(fullName: string): { firstName: string; lastName: string } {
@@ -53,8 +57,39 @@ function parseLocation(row: CSVRow): { city: string; country: string; locationTy
   return { city: '', country: '', locationType: 'romania' }
 }
 
-export async function POST(_request: NextRequest) {
+export function parseProcessingStatus(row: CSVRow): {
+  status: 'pending' | 'processed'
+  processedAt: Date | null
+} {
+  const processingStatus = row['Processing Status']?.trim().toUpperCase()
+
+  if (processingStatus !== 'PROCESSED') {
+    return {
+      status: 'pending',
+      processedAt: null
+    }
+  }
+
+  const processedAtRaw = row['Processed At']?.trim()
+  if (processedAtRaw) {
+    const parsedDate = new Date(processedAtRaw)
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return {
+        status: 'processed',
+        processedAt: parsedDate
+      }
+    }
+  }
+
+  return {
+    status: 'processed',
+    processedAt: new Date()
+  }
+}
+
+export async function POST(request: NextRequest) {
   try {
+    void request
     const csvPath = path.join(dataDir, 'Implicare 2.0 - Implicare 2.0.csv')
     
     if (!fs.existsSync(csvPath)) {
@@ -93,6 +128,7 @@ export async function POST(_request: NextRequest) {
     for (const row of records) {
       try {
         const submissionId = row['Submission ID']
+        const { status, processedAt } = parseProcessingStatus(row)
 
         if (!submissionId) {
           results.skipped++
@@ -105,6 +141,14 @@ export async function POST(_request: NextRequest) {
         })
         
         if (existing) {
+          await prisma.submission.update({
+            where: { id: existing.id },
+            data: {
+              status,
+              processedAt
+            }
+          })
+
           results.skipped++
           continue
         }
@@ -123,14 +167,6 @@ export async function POST(_request: NextRequest) {
           submissionTime = new Date()
         }
         
-        // Parse age
-        let age: number | null = null
-        try {
-          age = row['Căți ani ai?'] ? parseInt(row['Căți ani ai?']) : null
-        } catch {
-          age = null
-        }
-        
         // Build raw data object with all fields
         const rawData: Record<string, string> = {}
         for (const [key, value] of Object.entries(row)) {
@@ -138,7 +174,7 @@ export async function POST(_request: NextRequest) {
             rawData[key] = value
           }
         }
-        
+
         await prisma.submission.create({
           data: {
             submissionId: submissionId,
@@ -153,7 +189,8 @@ export async function POST(_request: NextRequest) {
             country,
             church: row['La ce biserică mergi?'] || null,
             rawData,
-            status: 'pending'
+            status,
+            processedAt
           }
         })
         
@@ -178,8 +215,9 @@ export async function POST(_request: NextRequest) {
   }
 }
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
+    void request
     const csvPath = path.join(dataDir, 'Implicare 2.0 - Implicare 2.0.csv')
     
     if (!fs.existsSync(csvPath)) {

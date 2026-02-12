@@ -1,0 +1,27 @@
+C4Context
+    title System Context - APME Implicare Automation
+
+    Person(apmeTeam, "APME Team", "Mission organization staff managing volunteer engagement")
+    Person(volunteer, "Volunteer/Subscriber", "People interested in mission work via Fillout forms")
+    
+    System_Boundary(apmeSystem, "APME Automation Platform") {
+        System(webApp, "Next.js Dashboard", "Web interface for managing templates, submissions, and assignments")
+        System(appsScript, "Google Apps Script", "Legacy email automation and Google Workspace integration")
+        System(fillout, "Fillout Forms", "Form submission collection")
+    }
+    
+    System_Ext(gmail, "Gmail API", "Email delivery service")
+    System_Ext(googleSheets, "Google Sheets", "Legacy data storage and templates")
+    System_Ext(googleDocs, "Google Docs", "Email template documents")
+    System_Ext(openai, "OpenAI API", "AI-powered field mapping and content generation")
+    
+    Rel(apmeTeam, webApp, "Manages templates, views submissions", "HTTPS")
+    Rel(volunteer, fillout, "Submits interest forms", "HTTPS")
+    Rel(fillout, webApp, "Sends webhook events", "HTTPS/Webhook")
+    Rel(webApp, appsScript, "Syncs assignments", "Library API")
+    Rel(appsScript, gmail, "Sends personalized emails", "API")
+    Rel(appsScript, googleSheets, "Reads/Writes data", "API")
+    Rel(appsScript, googleDocs, "Reads templates", "API")
+    Rel(appsScript, openai, "Field mapping assistance", "API")
+    
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")

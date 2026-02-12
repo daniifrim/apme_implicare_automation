@@ -1,0 +1,46 @@
+sequenceDiagram
+    autonumber
+    participant F as Fillout Form
+    participant W as Webhook Handler
+    participant N as Normalizer
+    participant P as Prisma/PostgreSQL
+    participant A as Assignment Engine
+    participant AS as Apps Script
+    participant G as Gmail API
+
+    F->>W: POST /api/webhooks/fillout<br/>Form submission data
+    activate W
+    W->>W: Verify webhook signature
+    W->>P: Check for duplicate event
+    
+    alt New submission
+        W->>N: normalizeSubmission(data)
+        activate N
+        N-->>W: Normalized submission object
+        deactivate N
+        
+        W->>P: Create Submission record
+        W->>P: Create SubmissionAnswer records
+        
+        W->>A: createAssignmentsForSubmission()
+        activate A
+        A->>A: Convert answers to Record format
+        A->>A: Run assignment rules engine
+        A->>P: Find matching Template records
+        A->>P: Create Assignment records<br/>(status: pending)
+        A-->>W: Assignment result
+        deactivate A
+        
+        W->>P: Update submission status<br/>processedAt timestamp
+        W-->>F: 200 OK
+    else Duplicate event
+        W-->>F: 200 Already processed
+    end
+    deactivate W
+
+    Note over AS,G: Legacy Apps Script Flow
+    AS->>AS: Timer trigger / Manual run
+    AS->>P: Fetch pending assignments
+    AS->>AS: Process each assignment
+    AS->>G: Send personalized email
+    AS->>P: Update assignment status

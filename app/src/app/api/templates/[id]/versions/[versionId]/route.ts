@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createAuditLog } from '@/lib/audit'
 import type { Prisma } from '@prisma/client'
 
 export async function PATCH(
@@ -20,7 +21,8 @@ export async function PATCH(
     } = body
     
     const version = await prisma.templateVersion.findUnique({
-      where: { id: versionId }
+      where: { id: versionId },
+      include: { template: true }
     })
     
     if (!version) {
@@ -36,6 +38,13 @@ export async function PATCH(
         { status: 400 }
       )
     }
+
+    const oldValue = {
+      name: version.name,
+      subject: version.subject,
+      preheader: version.preheader,
+      placeholders: version.placeholders
+    }
     
     const updatedVersion = await prisma.templateVersion.update({
       where: { id: versionId },
@@ -47,6 +56,26 @@ export async function PATCH(
         ...(htmlContent !== undefined && { htmlContent }),
         ...(textContent !== undefined && { textContent }),
         ...(placeholders !== undefined && { placeholders })
+      }
+    })
+
+    const newValue = {
+      name: updatedVersion.name,
+      subject: updatedVersion.subject,
+      preheader: updatedVersion.preheader,
+      placeholders: updatedVersion.placeholders
+    }
+
+    await createAuditLog({
+      userId: 'system',
+      action: 'updated',
+      resource: 'template_version',
+      resourceId: versionId,
+      oldValue,
+      newValue: {
+        ...newValue,
+        templateName: version.template.name,
+        versionNumber: version.versionNumber
       }
     })
     
@@ -67,7 +96,8 @@ export async function DELETE(
   try {
     const { versionId } = await params
     const version = await prisma.templateVersion.findUnique({
-      where: { id: versionId }
+      where: { id: versionId },
+      include: { template: true }
     })
     
     if (!version) {
@@ -83,9 +113,25 @@ export async function DELETE(
         { status: 400 }
       )
     }
+
+    const oldValue = {
+      name: version.name,
+      subject: version.subject,
+      versionNumber: version.versionNumber,
+      templateName: version.template.name
+    }
     
     await prisma.templateVersion.delete({
       where: { id: versionId }
+    })
+
+    await createAuditLog({
+      userId: 'system',
+      action: 'deleted',
+      resource: 'template_version',
+      resourceId: versionId,
+      oldValue,
+      newValue: null
     })
     
     return NextResponse.json({ success: true })

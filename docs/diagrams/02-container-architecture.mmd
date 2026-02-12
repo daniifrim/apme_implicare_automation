@@ -1,0 +1,41 @@
+C4Container
+    title Container Diagram - APME Implicare Automation
+
+    Person(user, "APME Staff", "Manages email templates and monitors submissions")
+    
+    Container_Boundary(browser, "Web Browser") {
+        Container(spa, "Next.js 16 App", "React, TypeScript, Tailwind", "Dashboard UI with server/client components")
+    }
+    
+    Container_Boundary(apiLayer, "API Layer") {
+        Container(apiRoutes, "Next.js API Routes", "TypeScript", "RESTful endpoints for webhooks and CRUD operations")
+        Container(webhookHandler, "Fillout Webhook Handler", "TypeScript", "Processes form submissions and creates assignments")
+        Container(assignmentEngine, "Assignment Engine", "TypeScript", "Rule-based template selection logic")
+    }
+    
+    Container_Boundary(dataLayer, "Data Layer") {
+        ContainerDb(postgres, "PostgreSQL", "Prisma ORM", "Submissions, templates, assignments, audit logs")
+        Container(prisma, "Prisma Client", "TypeScript", "Database access layer")
+    }
+    
+    Container_Boundary(automationLayer, "Automation Layer (Apps Script)") {
+        Container(mainProject, "Main Apps Script", "JavaScript", "Core automation logic")
+        Container(wrapperProject, "Wrapper Script", "JavaScript", "Spreadsheet-bound trigger handler")
+        Container(sheetsConnector, "Sheets Connector", "JavaScript", "Google Sheets integration")
+        Container(templateAssigner, "Template Assignment", "JavaScript", "Legacy assignment rules")
+        Container(emailSender, "Email Sender", "JavaScript", "Gmail-based email delivery")
+    }
+    
+    Container_Ext(filloutService, "Fillout Service", "SaaS", "Form builder and submission platform")
+    
+    Rel(user, spa, "Uses", "HTTPS")
+    Rel(spa, apiRoutes, "Calls", "JSON/HTTPS")
+    Rel(apiRoutes, prisma, "Uses", "TypeScript")
+    Rel(prisma, postgres, "Queries", "SQL")
+    Rel(filloutService, webhookHandler, "POST webhooks", "JSON/HTTPS")
+    Rel(webhookHandler, assignmentEngine, "Invokes", "TypeScript")
+    Rel(webhookHandler, prisma, "Creates records", "TypeScript")
+    Rel(wrapperProject, mainProject, "Calls as library", "Apps Script")
+    Rel(mainProject, sheetsConnector, "Uses", "JavaScript")
+    Rel(mainProject, templateAssigner, "Uses", "JavaScript")
+    Rel(mainProject, emailSender, "Uses", "JavaScript")

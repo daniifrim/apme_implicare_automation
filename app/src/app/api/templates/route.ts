@@ -28,7 +28,14 @@ export async function GET(request: NextRequest) {
       include: {
         versions: {
           orderBy: { versionNumber: 'desc' },
-          take: 1
+          take: 1,
+          select: {
+            id: true,
+            versionNumber: true,
+            isPublished: true,
+            name: true,
+            subject: true
+          }
         },
         _count: {
           select: { assignments: true }

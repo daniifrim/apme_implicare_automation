@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createAuditLog } from '@/lib/audit'
 
 export async function POST(
   request: NextRequest,
@@ -40,6 +41,8 @@ export async function POST(
       )
     }
 
+    const previousPublishedVersion = template.versions.find((v: { isPublished: boolean }) => v.isPublished)
+
     await prisma.$transaction([
       prisma.templateVersion.updateMany({
         where: { templateId: id },
@@ -57,6 +60,22 @@ export async function POST(
         data: { status: 'active' }
       })
     ])
+
+    await createAuditLog({
+      userId: 'system',
+      action: 'published',
+      resource: 'template',
+      resourceId: id,
+      oldValue: previousPublishedVersion ? {
+        versionId: previousPublishedVersion.id,
+        versionNumber: previousPublishedVersion.versionNumber
+      } : null,
+      newValue: {
+        versionId: versionId,
+        versionNumber: version.versionNumber,
+        templateName: template.name
+      }
+    })
 
     return NextResponse.json({ success: true })
 

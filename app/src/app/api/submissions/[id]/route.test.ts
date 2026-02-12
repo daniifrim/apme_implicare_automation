@@ -1,3 +1,5 @@
+// ABOUTME: Tests submission detail API handlers for GET and PATCH behaviors
+// ABOUTME: Validates success, not found, and error responses for submissions
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { GET, PATCH } from '@/app/api/submissions/[id]/route'
 import { prisma } from '@/lib/prisma'
@@ -89,7 +91,7 @@ describe('Submission Detail API', () => {
       })
 
       const response = await PATCH(request, { params: Promise.resolve({ id: 'sub-123' }) })
-      const body = await response.json()
+      await response.json()
 
       expect(response.status).toBe(200)
       expect(prisma.submission.update).toHaveBeenCalledWith({

@@ -1,3 +1,5 @@
+// ABOUTME: Imports email templates from filesystem into the database
+// ABOUTME: Exposes GET preview and POST import endpoints for templates
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import fs from 'fs'
@@ -90,8 +92,9 @@ function convertToBlockNote(content: string) {
   return blocks
 }
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
+    void request
     const files = fs.readdirSync(templatesDir)
     const txtFiles = files.filter(f => f.endsWith('.txt'))
     
@@ -176,8 +179,9 @@ export async function POST(_request: NextRequest) {
   }
 }
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
+    void request
     const files = fs.readdirSync(templatesDir)
     const txtFiles = files.filter(f => f.endsWith('.txt'))
     

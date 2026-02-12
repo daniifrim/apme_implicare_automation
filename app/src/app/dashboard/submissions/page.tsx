@@ -1,7 +1,8 @@
+// ABOUTME: Renders the submissions list with filters, bulk actions, and detail modal
+// ABOUTME: Handles fetching submissions data and presenting read-only submission details
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
 import { 
   Search, 
   Filter, 
@@ -14,9 +15,19 @@ import {
   X,
   MapPin,
   CheckSquare,
-  Square
+  Square,
+  Edit,
+  Layers,
+  FileText,
+  Mail,
+  Phone,
+  Building2,
+  MapPinned
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 interface Submission {
   id: string
@@ -34,6 +45,32 @@ interface Submission {
     id: string
     template: { name: string }
     status: string
+  }>
+}
+
+interface SubmissionDetail {
+  id: string
+  submissionId: string
+  email: string | null
+  firstName: string | null
+  lastName: string | null
+  phone: string | null
+  locationType: string | null
+  city: string | null
+  country: string | null
+  church: string | null
+  status: string
+  submissionTime: string
+  assignments: Array<{
+    id: string
+    template: { name: string }
+    status: string
+  }>
+  answers: Array<{
+    id: string
+    value: string | null
+    rawValue: unknown
+    question: { id: string; name: string }
   }>
 }
 
@@ -56,6 +93,10 @@ export default function SubmissionsPage() {
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkProcessing, setBulkProcessing] = useState(false)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState<string | null>(null)
+  const [selectedSubmission, setSelectedSubmission] = useState<SubmissionDetail | null>(null)
 
   const fetchSubmissions = useCallback(async () => {
     setLoading(true)
@@ -201,6 +242,46 @@ export default function SubmissionsPage() {
       alert('Failed to re-process submissions')
     } finally {
       setBulkProcessing(false)
+    }
+  }
+
+  const openSubmissionDetail = async (submissionId: string) => {
+    setDetailOpen(true)
+    setDetailLoading(true)
+    setDetailError(null)
+    try {
+      const response = await fetch(`/api/submissions/${submissionId}`)
+      if (!response.ok) {
+        throw new Error('Failed to load submission details')
+      }
+      const data = await response.json()
+      setSelectedSubmission(data)
+    } catch (error) {
+      setSelectedSubmission(null)
+      setDetailError(error instanceof Error ? error.message : 'Failed to load submission details')
+    } finally {
+      setDetailLoading(false)
+    }
+  }
+
+  const closeSubmissionDetail = () => {
+    setDetailOpen(false)
+    setDetailError(null)
+  }
+
+  const formatAnswerValue = (value: string | null, rawValue: unknown) => {
+    if (value && value.trim().length > 0) {
+      return { display: value, rawDisplay: rawValue != null && rawValue !== value ? JSON.stringify(rawValue) : null }
+    }
+
+    if (rawValue == null) {
+      return { display: '—', rawDisplay: null }
+    }
+
+    try {
+      return { display: JSON.stringify(rawValue), rawDisplay: null }
+    } catch {
+      return { display: String(rawValue), rawDisplay: null }
     }
   }
 
@@ -396,14 +477,27 @@ export default function SubmissionsPage() {
                 {submissions.map((submission) => (
                   <tr 
                     key={submission.id} 
+                    role="button"
+                    tabIndex={0}
                     className={cn(
-                      "hover:bg-gray-50",
+                      "hover:bg-gray-50 cursor-pointer",
                       selectedIds.has(submission.id) && "bg-blue-50"
                     )}
+                    onClick={() => openSubmissionDetail(submission.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        openSubmissionDetail(submission.id)
+                      }
+                    }}
                   >
                     <td className="px-4 py-4">
                       <button
-                        onClick={() => toggleSelection(submission.id)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          toggleSelection(submission.id)
+                        }}
+                        aria-label={`Select submission ${submission.submissionId}`}
                         className="p-1 hover:bg-gray-200 rounded"
                       >
                         {selectedIds.has(submission.id) ? (
@@ -414,15 +508,12 @@ export default function SubmissionsPage() {
                       </button>
                     </td>
                     <td className="px-6 py-4">
-                      <Link 
-                        href={`/submissions/${submission.id}`}
-                        className="block"
-                      >
+                      <div className="block">
                         <p className="font-medium text-gray-900">
                           {submission.firstName} {submission.lastName}
                         </p>
                         <p className="text-sm text-gray-500">{submission.email}</p>
-                      </Link>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
@@ -503,6 +594,210 @@ export default function SubmissionsPage() {
           </>
         )}
       </div>
+
+      <Dialog open={detailOpen} onOpenChange={(open) => {
+        if (!open) {
+          closeSubmissionDetail()
+        }
+      }}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto w-full" showCloseButton={false}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{selectedSubmission ? `${selectedSubmission.firstName ?? 'Unknown'} ${selectedSubmission.lastName ?? ''}` : 'Submission Details'}</DialogTitle>
+          </DialogHeader>
+          
+          {detailLoading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          )}
+
+          {detailError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {detailError}
+            </div>
+          )}
+
+          {!detailLoading && !detailError && selectedSubmission && (
+            <div className="space-y-6">
+              {/* Header Section */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <h1 className="text-xl font-bold text-slate-900 truncate">
+                    {selectedSubmission.firstName} {selectedSubmission.lastName}
+                  </h1>
+                  <Badge 
+                    variant={selectedSubmission.status === 'processed' ? 'default' : 'secondary'}
+                    className={cn(
+                      'text-xs font-medium flex-shrink-0',
+                      selectedSubmission.status === 'processed' && 'bg-green-100 text-green-800',
+                      selectedSubmission.status === 'pending' && 'bg-yellow-100 text-yellow-800',
+                      selectedSubmission.status === 'failed' && 'bg-red-100 text-red-800'
+                    )}
+                  >
+                    {selectedSubmission.status}
+                  </Badge>
+                </div>
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* Metadata Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Submission ID</p>
+                  <p className="text-sm font-bold text-slate-900 font-mono">{selectedSubmission.submissionId}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Submitted</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {new Date(selectedSubmission.submissionTime).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Location</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {selectedSubmission.city || selectedSubmission.country || '—'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Assignments</p>
+                  <p className="text-sm font-bold text-slate-900">{selectedSubmission.assignments.length}</p>
+                </div>
+              </div>
+
+              {/* Contact & Location Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Contact Info */}
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider flex items-center gap-1">
+                    <Mail className="w-3 h-3" />
+                    Contact Information
+                  </label>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Mail className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500">Email</p>
+                        <p className="text-sm font-medium text-slate-900 break-all">{selectedSubmission.email ?? '—'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Phone className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500">Phone</p>
+                        <p className="text-sm font-medium text-slate-900">{selectedSubmission.phone ?? '—'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Building2 className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500">Church</p>
+                        <p className="text-sm font-medium text-slate-900">{selectedSubmission.church ?? '—'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location Info */}
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider flex items-center gap-1">
+                    <MapPinned className="w-3 h-3" />
+                    Location
+                  </label>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500">Type</p>
+                        <p className="text-sm font-medium text-slate-900 capitalize">{selectedSubmission.locationType ?? '—'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <MapPinned className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500">City</p>
+                        <p className="text-sm font-medium text-slate-900">{selectedSubmission.city ?? '—'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <MapPinned className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500">Country</p>
+                        <p className="text-sm font-medium text-slate-900">{selectedSubmission.country ?? '—'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Assignments Section */}
+              {selectedSubmission.assignments.length > 0 && (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider flex items-center gap-1">
+                    <FileText className="w-3 h-3" />
+                    Assignments ({selectedSubmission.assignments.length})
+                  </label>
+                  <div className="space-y-2">
+                    {selectedSubmission.assignments.map((assignment) => (
+                      <div 
+                        key={assignment.id}
+                        className="flex items-center justify-between p-4 bg-gray-50/50 border border-gray-100 rounded-xl"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">{assignment.template.name}</p>
+                            <p className="text-xs text-gray-500">Template Assignment</p>
+                          </div>
+                        </div>
+                        <Badge 
+                          variant="outline"
+                          className="text-[10px] font-extrabold uppercase"
+                        >
+                          {assignment.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Answers Section */}
+              {selectedSubmission.answers.length > 0 && (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">
+                    Answers ({selectedSubmission.answers.length})
+                  </label>
+                  <div className="space-y-2">
+                    {selectedSubmission.answers.map((answer) => {
+                      const formatted = formatAnswerValue(answer.value, answer.rawValue)
+                      return (
+                        <div key={answer.id} className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                          <p className="text-sm font-medium text-slate-900">{answer.question.name}</p>
+                          <p className="mt-1 text-sm text-gray-600 whitespace-pre-wrap break-words">
+                            {formatted.display}
+                          </p>
+                          {formatted.rawDisplay && (
+                            <p className="mt-2 text-xs text-gray-500 font-mono">
+                              Raw: {formatted.rawDisplay}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

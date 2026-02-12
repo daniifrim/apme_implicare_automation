@@ -1,19 +1,26 @@
+// ABOUTME: Displays the templates dashboard with list, search, and detail modal
+// ABOUTME: Handles template creation, import, duplication, and deletion flows
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { 
   Plus, 
   Search, 
-  MoreVertical,
   Edit,
   Copy,
   Trash2,
   CheckCircle,
   Loader2,
-  Upload
+  Upload,
+  ArrowRight,
+  Layers
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 interface Template {
   id: string
@@ -29,6 +36,9 @@ interface Template {
     versionNumber: number
     isPublished: boolean
     name: string
+    subject: string
+    htmlContent?: string
+    textContent?: string | null
   }>
   _count: {
     assignments: number
@@ -36,18 +46,23 @@ interface Template {
 }
 
 export default function TemplatesPage() {
+  const router = useRouter()
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newTemplate, setNewTemplate] = useState({ slug: '', name: '', description: '' })
   const [importing, setImporting] = useState(false)
+  
+  // Template detail modal state
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [loadingTemplateDetail, setLoadingTemplateDetail] = useState(false)
 
-  useEffect(() => {
-    fetchTemplates()
-  }, [])
-
-  async function fetchTemplates() {
+  const fetchTemplates = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
@@ -61,7 +76,11 @@ export default function TemplatesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [search])
+
+  useEffect(() => {
+    fetchTemplates()
+  }, [fetchTemplates])
 
   async function createTemplate(e: React.FormEvent) {
     e.preventDefault()
@@ -98,6 +117,79 @@ export default function TemplatesPage() {
       setImporting(false)
     }
   }
+
+  async function handleCardClick(template: Template) {
+    setLoadingTemplateDetail(true)
+    setIsDetailModalOpen(true)
+    try {
+      // Fetch full template details with version content
+      const response = await fetch(`/api/templates/${template.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setSelectedTemplate(data.template)
+      } else {
+        setSelectedTemplate(template)
+      }
+    } catch (error) {
+      console.error('Error fetching template details:', error)
+      setSelectedTemplate(template)
+    } finally {
+      setLoadingTemplateDetail(false)
+    }
+  }
+
+  async function handleDuplicate() {
+    if (!selectedTemplate) return
+    
+    setDuplicating(true)
+    try {
+      const response = await fetch(`/api/templates/${selectedTemplate.id}/duplicate`, {
+        method: 'POST'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setIsDetailModalOpen(false)
+        setSelectedTemplate(null)
+        fetchTemplates()
+        // Navigate to the new duplicated template
+        router.push(`/templates/${data.template.id}/edit`)
+      } else {
+        console.error('Failed to duplicate template')
+      }
+    } catch (error) {
+      console.error('Error duplicating template:', error)
+    } finally {
+      setDuplicating(false)
+    }
+  }
+
+  async function handleDelete() {
+    if (!selectedTemplate) return
+    
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/templates/${selectedTemplate.id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setShowDeleteConfirm(false)
+        setIsDetailModalOpen(false)
+        setSelectedTemplate(null)
+        fetchTemplates()
+      } else {
+        console.error('Failed to delete template')
+      }
+    } catch (error) {
+      console.error('Error deleting template:', error)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const publishedVersion = selectedTemplate?.versions.find(v => v.isPublished)
+  const latestVersion = selectedTemplate?.versions[0]
 
   return (
     <div className="space-y-6">
@@ -161,43 +253,23 @@ export default function TemplatesPage() {
           {templates.map((template) => (
             <div 
               key={template.id} 
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+              onClick={() => handleCardClick(template)}
+              className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all cursor-pointer group"
             >
               <div className="p-6">
                 <div className="flex items-start justify-between">
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900">{template.name}</h3>
+                      <h3 className="font-semibold text-gray-900 truncate">{template.name}</h3>
                       {template.versions.some(v => v.isPublished) && (
-                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">{template.slug}</p>
+                    <p className="text-sm text-gray-500 mt-1 truncate">{template.slug}</p>
                   </div>
                   
-                  <div className="relative group">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg">
-                      <MoreVertical className="w-5 h-5 text-gray-400" />
-                    </button>
-                    
-                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                      <Link
-                        href={`/templates/${template.id}/edit`}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        <Edit className="w-4 h-4" />
-                        Edit
-                      </Link>
-                      <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                        <Copy className="w-4 h-4" />
-                        Duplicate
-                      </button>
-                      <hr className="my-1" />
-                      <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                        <Trash2 className="w-4 h-4" />
-                        Delete
-                      </button>
-                    </div>
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ArrowRight className="w-5 h-5 text-gray-400" />
                   </div>
                 </div>
                 
@@ -206,7 +278,7 @@ export default function TemplatesPage() {
                 )}
                 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {template.tags.map((tag) => (
+                  {template.tags.slice(0, 3).map((tag) => (
                     <span 
                       key={tag}
                       className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full"
@@ -214,6 +286,11 @@ export default function TemplatesPage() {
                       {tag}
                     </span>
                   ))}
+                  {template.tags.length > 3 && (
+                    <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+                      +{template.tags.length - 3}
+                    </span>
+                  )}
                 </div>
                 
                 <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-sm">
@@ -240,6 +317,214 @@ export default function TemplatesPage() {
           ))}
         </div>
       )}
+
+      {/* Template Detail Modal */}
+      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto w-full" showCloseButton={false}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{selectedTemplate?.name || 'Template Details'}</DialogTitle>
+          </DialogHeader>
+          {loadingTemplateDetail ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          ) : selectedTemplate && (
+            <div className="space-y-6">
+              {/* Header Section */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <h1 className="text-xl font-bold text-slate-900 truncate">
+                    {selectedTemplate.name}
+                  </h1>
+                  {latestVersion && (
+                    <Badge variant="secondary" className="text-xs font-medium flex-shrink-0">
+                      v{latestVersion.versionNumber}
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Link href={`/templates/${selectedTemplate.id}/edit`}>
+                    <Button variant="outline" size="sm" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                      <Edit className="w-4 h-4 mr-1.5" />
+                      Edit
+                    </Button>
+                  </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleDuplicate}
+                    disabled={duplicating}
+                  >
+                    {duplicating ? (
+                      <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                    ) : (
+                      <Copy className="w-4 h-4 mr-1.5" />
+                    )}
+                    Duplicate
+                  </Button>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4 mr-1.5" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* Metadata Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Version</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {latestVersion ? latestVersion.name : 'No versions'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Last Updated</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {new Date(selectedTemplate.updatedAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</p>
+                  <div className="flex items-center gap-1.5">
+                    {publishedVersion ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <span className="text-sm font-bold text-green-700">Active</span>
+                      </>
+                    ) : (
+                      <span className="text-sm font-bold text-yellow-700">Draft</span>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Assignments</p>
+                  <p className="text-sm font-bold text-slate-900">{selectedTemplate._count.assignments}</p>
+                </div>
+              </div>
+
+              {/* Template Preview Section */}
+              {latestVersion?.htmlContent && (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">
+                    Template Preview
+                  </label>
+                  <div 
+                    className="p-6 md:p-8 bg-slate-50 border border-slate-100 rounded-xl max-h-[450px] overflow-y-auto"
+                    dangerouslySetInnerHTML={{ 
+                      __html: latestVersion.htmlContent.replace(
+                        /\{\{([^}]+)\}\}/g, 
+                        '<span class="font-mono text-sm bg-blue-100/50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-200 font-bold">{{$1}}</span>'
+                      ) 
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Version History */}
+              {selectedTemplate.versions.length > 0 && (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">
+                    Version History
+                  </label>
+                  <div className="space-y-2">
+                    {selectedTemplate.versions.slice(0, 3).map((version, index) => (
+                      <div 
+                        key={version.id}
+                        className="flex items-center justify-between p-4 bg-gray-50/50 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                            <Layers className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-slate-900">
+                                v{version.versionNumber}: {version.name}
+                              </span>
+                              {version.isPublished && (
+                                <Badge className="text-[9px] font-extrabold uppercase bg-green-100 text-green-700">
+                                  Current
+                                </Badge>
+                              )}
+                              {index === 0 && !version.isPublished && (
+                                <Badge variant="secondary" className="text-[9px] font-extrabold uppercase">
+                                  Latest
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              Subject: {version.subject}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center gap-2 text-red-600">
+              <Trash2 className="w-5 h-5" />
+              Delete Template
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <p className="text-gray-600">
+              Are you sure you want to delete <strong>{selectedTemplate?.name}</strong>?
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              This will permanently delete the template, all its versions, and any associated assignments. This action cannot be undone.
+            </p>
+            {selectedTemplate && selectedTemplate._count.assignments > 0 && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-800">
+                  <strong>Warning:</strong> This template has {selectedTemplate._count.assignments} assignment{selectedTemplate._count.assignments !== 1 ? 's' : ''} that will also be deleted.
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4 mr-2" />
+              )}
+              Delete Template
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Template Modal */}
       {showCreateModal && (

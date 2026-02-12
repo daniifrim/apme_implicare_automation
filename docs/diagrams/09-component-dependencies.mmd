@@ -1,0 +1,51 @@
+graph TB
+    subgraph Web_App["Web App (Next.js 16)"]
+        Pages["Dashboard Pages<br/>/submissions<br/>/templates<br/>/mappings<br/>/audit"]
+        Components["UI Components<br/>shadcn/ui based"]
+        Lib["Library Code<br/>prisma.ts<br/>assignment-engine.ts<br/>assignments.ts<br/>webhook.ts<br/>normalize.ts"]
+    end
+    
+    subgraph API_Layer["API Routes"]
+        Webhooks["/api/webhooks/fillout"]
+        TemplatesAPI["/api/templates/*"]
+        SubmissionsAPI["/api/submissions/*"]
+        MappingsAPI["/api/mappings"]
+        AuditAPI["/api/audit-logs"]
+    end
+    
+    subgraph Data_Access["Data Access"]
+        PrismaClient["Prisma Client"]
+    end
+    
+    subgraph Database["PostgreSQL Database"]
+        Tables["All Entities<br/>see ERD diagram"]
+    end
+    
+    subgraph External["External Services"]
+        Fillout["Fillout Forms"]
+        Gmail["Gmail API"]
+        Sheets["Google Sheets"]
+    end
+    
+    subgraph Legacy["Legacy Apps Script"]
+        MainProj["Main Project"]
+        Wrapper["Wrapper Project"]
+    end
+    
+    Pages --> Components
+    Pages --> Lib
+    Components --> Lib
+    
+    Lib --> PrismaClient
+    PrismaClient --> Tables
+    
+    Webhooks --> Lib
+    TemplatesAPI --> PrismaClient
+    SubmissionsAPI --> PrismaClient
+    MappingsAPI --> PrismaClient
+    AuditAPI --> PrismaClient
+    
+    Fillout -.->|webhook| Webhooks
+    MainProj -.->|reads/writes| Sheets
+    MainProj -.->|sends| Gmail
+    Wrapper -.->|calls| MainProj

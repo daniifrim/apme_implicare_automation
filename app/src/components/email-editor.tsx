@@ -5,11 +5,9 @@ import {
   BlockNoteEditor,
   PartialBlock
 } from '@blocknote/core'
-import {
-  BlockNoteViewRaw,
-  useCreateBlockNote
-} from '@blocknote/react'
-import '@blocknote/react/style.css'
+import { useCreateBlockNote } from '@blocknote/react'
+import { BlockNoteView } from '@blocknote/mantine'
+import '@blocknote/mantine/style.css'
 
 interface EmailEditorProps {
   initialContent?: PartialBlock[]
@@ -63,7 +61,7 @@ export function EmailEditor({
 
   return (
     <div className="email-editor border rounded-lg overflow-hidden bg-white min-h-[300px]">
-      <BlockNoteViewRaw
+      <BlockNoteView
         editor={editor}
         editable={editable}
         onChange={handleChange}

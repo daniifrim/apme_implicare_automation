@@ -1,4 +1,6 @@
-import type { Submission, FieldMapping, FilloutQuestion } from '@prisma/client'
+// ABOUTME: Evaluates assignment rules to decide which templates to send
+// ABOUTME: Normalizes submissions and applies rule-based template selection
+import type { Submission, FilloutQuestion } from '@prisma/client'
 
 export interface AssignmentRule {
   templateSlug: string

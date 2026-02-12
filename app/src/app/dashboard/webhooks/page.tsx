@@ -1,4 +1,6 @@
-import { Webhook, CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
+// ABOUTME: Renders the webhooks monitoring dashboard with event summaries
+// ABOUTME: Shows recent webhook events and basic delivery metrics
+import { CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 

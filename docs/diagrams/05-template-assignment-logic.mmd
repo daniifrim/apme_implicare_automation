@@ -1,0 +1,33 @@
+flowchart TD
+    Start([Submission Received]) --> Normalize[Normalize Submission Data]
+    Normalize --> Extract{Extract Key Fields}
+    
+    Extract --> Email[email]
+    Extract --> Location[locationType]
+    Extract --> Answers[answers Record]
+    
+    Answers --> RuleEngine{Assignment Rules Engine}
+    
+    RuleEngine -->|prayer_method includes 'adopt'| T1[rugaciune-grup-etnic]
+    RuleEngine -->|prayer_method includes 'missionary'| T2[rugaciune-misionari]
+    RuleEngine -->|mission_interests includes 'short_term'| T3[info-misiune-termen-scurt]
+    RuleEngine -->|desired_role includes 'missionary'| T4[info-misionar]
+    RuleEngine -->|mission_interests includes 'camps'| T5[info-tabere-misiune]
+    RuleEngine -->|mission_interests includes 'volunteer'| T6[info-voluntariat]
+    RuleEngine -->|support_interests includes 'donate'| T7[info-donatii]
+    RuleEngine -->|course_interests includes 'kairos'| T8[info-curs-kairos]
+    RuleEngine -->|course_interests includes 'mobilizeaza'| T9[info-curs-mobilizeaza]
+    RuleEngine -->|course_interests includes 'crst'| T10[info-crst]
+    
+    Location -->|locationType == 'diaspora'| L1[info-diaspora-connect<br/>info-misiune-termen-scurt-diaspora]
+    Location -->|locationType == 'romania'| L2[info-cursuri-locale<br/>info-evenimente-apme]
+    
+    T1 & T2 & T3 & T4 & T5 & T6 & T7 & T8 & T9 & T10 & L1 & L2 --> Combine[Combine All Templates]
+    Combine --> Deduplicate[Remove Duplicates]
+    Deduplicate --> CheckExisting{Check Existing<br/>Assignments}
+    
+    CheckExisting -->|Exists| Skip[Skip - Already Assigned]
+    CheckExisting -->|New| Create[Create Assignment<br/>status: pending]
+    
+    Skip & Create --> Result[Return Result:<br/>created, skipped, errors]
+    Result --> End([End])

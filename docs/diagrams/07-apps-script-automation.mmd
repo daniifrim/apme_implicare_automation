@@ -1,0 +1,36 @@
+flowchart TD
+    Trigger([Timer Trigger<br/>or Manual Run]) --> Connect[Test Sheets Connection]
+    Connect -->|Failed| Error[Throw Error]
+    Connect -->|Success| Fetch[Fetch Unprocessed Submissions]
+    
+    Fetch --> Empty{Any Submissions}
+    Empty -->|No| Done[Return: No work]
+    Empty -->|Yes| Loop[For Each Person]
+    
+    Loop --> Validate{Validate Person}
+    Validate -->|Missing Email/Name| Skip[Skip Person]
+    Validate -->|Processed Recently| Skip
+    Validate -->|Valid| Assign[Assign Templates]
+    
+    Assign --> Templates{Any Templates}
+    Templates -->|No| MarkNoTemplate[Mark Processed<br/>No templates]
+    Templates -->|Yes| LoopTemplates[For Each Template]
+    
+    LoopTemplates --> GetDoc[Get Google Doc URL]
+    GetDoc --> Personalize[Generate Personalization Data]
+    Personalize --> SendEmail[Send via Gmail API]
+    SendEmail --> Log[Log to Email History]
+    
+    Log --> MoreTemplates{More Templates}
+    MoreTemplates -->|Yes| LoopTemplates
+    MoreTemplates -->|No| UpdateSheet[Update Sheet Status]
+    UpdateSheet --> MorePeople{More People}
+    MorePeople -->|Yes| Loop
+    MorePeople -->|No| Summary[Generate Summary]
+    
+    Summary --> Return[Return Results]
+    Skip & MarkNoTemplate --> MorePeople
+    
+    style Error fill:#ffcccc
+    style Done fill:#ccffcc
+    style Return fill:#ccffcc

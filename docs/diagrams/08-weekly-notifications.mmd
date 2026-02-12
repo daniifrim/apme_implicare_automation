@@ -1,0 +1,31 @@
+flowchart TD
+    Start([Weekly Notification Trigger]) --> GetAll[Get All People from DB]
+    GetAll --> Filter[Filter Unprocessed]
+    
+    subgraph Categorization
+        Filter --> Cat1[Categorize: WhatsApp Group]
+        Filter --> Cat2[Categorize: CRST School]
+        Filter --> Cat3[Categorize: Mission Involvement]
+        
+        Cat1 -->|prayer_method contains<br/>'grup de rugăciune'| WhatsApp[WhatsApp Group List]
+        Cat2 -->|CRST interest == true| CRST[CRST School List]
+        Cat3 -->|mission_field matches<br/>short/long term| Mission[Mission Involvement List]
+    end
+    
+    subgraph Notification_Dispatch
+        WhatsApp & CRST & Mission --> Display[Display Summary Console]
+        Display --> Send{Send Emails}
+        
+        Send --> Email1[Send WhatsApp Notification<br/>to: weekly recipients]
+        Send --> Email2[Send CRST Notification<br/>to: school admin]
+        Send --> Email3[Send Mission Notification<br/>to: mission coordinators]
+    end
+    
+    subgraph Tracking
+        Email1 & Email2 & Email3 --> Update[Update Tracking Columns]
+        Update --> Log[Log Results]
+    end
+    
+    Log --> Complete([Return Summary])
+    
+    style Complete fill:#ccffcc

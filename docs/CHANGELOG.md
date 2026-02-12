@@ -1,68 +1,100 @@
-# Changelog
+# Project Knowledge Changelog
 
-All notable changes to this project will be documented in this file.
+> Living project state document. Not a git log. Last updated: February 12, 2026
 
-## [Unreleased]
+## Current State
 
-### Added - February 12, 2025
-- **Next.js Web Application**: Complete dashboard and API layer for the APME email automation system
-  - Dashboard UI with modern React components under `app/src/app/dashboard/`
-  - REST API routes under `app/src/app/api/` for external integrations
-  - Prisma ORM with PostgreSQL schema for data persistence
-  - Authentication system with bcrypt password hashing
-  - Vitest testing framework with React Testing Library
-  - PNPM workspace integration for monorepo management
-- **Project Structure Expansion**: Added `app/` directory alongside existing Apps Script projects
-- **Development Scripts**: New package.json scripts for web app operations (`app:dev`, `app:build`, `app:test`, `app:lint`)
-- **Documentation**: Comprehensive PRD, implementation plan, and summary docs in `docs/` folder
+APME Implicare Automation is a monorepo with a Next.js 16 web dashboard + API (Prisma/Postgres)
+and two Google Apps Script projects (library + spreadsheet wrapper) that automate APME form
+processing, email template assignment, and reporting. The dashboard provides operational views
+for submissions, templates, mappings, webhooks, and audit history.
 
-### Major Code Cleanup - September 18, 2025
+## Latest Changes
 
-#### Phase 1: Critical Bug Fixes ✅
-- **Fixed missing wrapper functions**: Added `processNewSubmissions()` and `sendDailySummary()` functions that triggers were trying to call
-- **Removed broken class references**: Replaced non-existent `TestRunner` and `TriggerManager` classes with direct implementations
-- **Created proper APME library export**: Added comprehensive APME object that wrapper project can access
-- **Fixed TemplateSyncUtilities reference**: Removed broken reference to non-existent class
+### February 12, 2026
 
-#### Phase 2: Code Organization ✅
-- **Created test-functions.js**: Created separate file for test functions (338 lines)
-- **Reduced main.js bloat**: Successfully reduced main.js from 3,166 lines to 2,691 lines (**15% reduction, saved 475 lines**)
-- **Removed massive test functions**: Deleted `testRomanianFieldMappings` (159 lines), `testDynamicFieldMapping` (89 lines), `testFutureProofingScenarios` (75 lines), `validateSystemForProduction` (190+ lines)
-- **Updated APME library export**: Removed references to deleted functions, kept only essential functions
-- **Verified wrapper integration**: All essential functions still work correctly
+- Added audit log API support with filterable, paginated responses and related dashboard UI.
+- Added mapping management API with tests, plus UI improvements in the mappings dashboard.
+- Extended template workflows with publish adjustments, version handling, and duplicate endpoint.
+- Expanded submissions tooling with import updates, new tests, and richer list/detail UI behavior.
+- Added legacy inference rules and updated reconciliation tooling for backfilling email history.
+- Replaced legacy CSV exports with normalized data files under `docs/data/`.
+- Added and refreshed diagrams under `docs/diagrams/` plus submission detail modal planning notes.
 
-#### Phase 3: Naming Consistency ✅
-- **Fixed Typeform/Fillout naming inconsistency**: Updated all function names, comments, and logs to use "Fillout" instead of "Typeform"
-- **Renamed core functions**: `processTypeformSubmission()` → `processFilloutSubmission()` in both main and wrapper projects
-- **Updated configuration**: `TYPEFORM_SHEET_NAME` → `FILLOUT_SHEET_NAME`, `TYPEFORM_CHECK_INTERVAL` → `FILLOUT_CHECK_INTERVAL`
-- **Updated test functions**: `simulateTypeformChanges()` → `simulateFilloutChanges()`
-- **Comprehensive update**: All comments, console logs, and documentation now consistently use "Fillout"
+## Key Files
 
-### Fixed - September 17, 2025
-- Fixed library connection issue between wrapper and main projects
-- Corrected Script ID reference in wrapper project Code.js
-- Added explicit library test function for connection validation
-- Successfully established communication between dual-script architecture
+### Core (Next.js App)
 
-### Added
-- Initial project setup with Apps Script code recovery
-- Main Apps Script project with complete automation system (2,852+ lines)
-- Wrapper Apps Script project for spreadsheet integration
-- Configuration system with safety controls and field mappings
-- Core automation modules:
-  - AutomationEngine for processing submissions
-  - TemplateAssignment for email template logic
-  - SheetsConnector for Google Sheets integration
-  - EmailHistoryManager for preventing duplicates
-  - AnalyticsManager for tracking engagement
-  - OpenAIClient for AI-powered field mapping
-- HTML templates for sidebar interfaces
-- Development documentation (README.md, CLAUDE.md)
-- Clasp configuration for deployment to Google Apps Script
+- `app/src/app/api/audit-logs/route.ts` - Audit log listing with filters and pagination.
+- `app/src/app/api/mappings/route.ts` - Mapping CRUD endpoints for dashboard management.
+- `app/src/app/api/templates/[id]/duplicate/route.ts` - Template duplication endpoint.
+- `app/src/app/api/templates/[id]/versions/[versionId]/route.ts` - Template version handling.
+- `app/src/app/api/submissions/import/route.ts` - Submission import pipeline updates.
+- `app/src/lib/audit.ts` - Central audit log writer helper.
+- `app/src/lib/assignment-engine.ts` - Submission template assignment logic.
+- `app/src/components/email-editor.tsx` - Shared email template editor UI.
+- `app/src/app/dashboard/` - Dashboard pages (audit, mappings, submissions, templates, webhooks).
+- `app/src/app/dashboard/submissions/page.test.tsx` - Submissions UI regression coverage.
+- `app/src/app/api/audit-logs/route.test.ts` - Audit log API test coverage.
+- `app/src/app/api/mappings/route.test.ts` - Mapping API test coverage.
 
-### Technical Details
-- Dual-script architecture with library system
-- Romanian language support for missionary outreach
-- AI-powered dynamic field mapping using OpenAI GPT-4
-- Safety controls for email sending (test mode, allowed lists)
-- Integration with Google Sheets, Gmail, and Drive APIs
+### Scripts and Data
+
+- `app/scripts/reconcile-legacy-email-history.js` - Backfill email history tooling.
+- `app/scripts/legacy-inference-rules.js` - Rules for inferring template assignments.
+- `app/scripts/legacy-inference-rules.test.ts` - Legacy inference test coverage.
+- `docs/data/email-history.csv` - Normalized email history export.
+- `docs/data/implicare-data.csv` - Normalized submission export.
+
+### Documentation
+
+- `docs/IMPLEMENTATION-SUMMARY.md` - Current implementation summary.
+- `docs/diagrams/` - Architecture and flow diagrams.
+- `docs/submission-detail-modal-plan.md` - UI planning notes for submission detail modal.
+- `AGENTS.md` - Project-specific agent rules and workflows.
+- `main-project/` - Apps Script automation library.
+- `wrapper-project/` - Spreadsheet-bound Apps Script integration.
+
+## Findings & Learnings
+
+### February 12, 2026
+
+- **Finding:** Audit log queries need both pagination and filter metadata to keep UI responsive.
+- **Why it matters:** The audit dashboard relies on consistent filter sets for fast navigation.
+- **Finding:** Legacy template inference logic must mirror Apps Script rules to reconcile history.
+- **Why it matters:** Backfill accuracy depends on using the same mapping heuristics.
+- **Finding:** Mapping data and audit records now move together in the UI.
+- **Why it matters:** Operators can trace template behavior across both systems.
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router)
+- **Language:** TypeScript (app), JavaScript (Apps Script)
+- **Database:** PostgreSQL via Prisma
+- **Testing:** Vitest + React Testing Library
+- **Package Manager:** PNPM
+- **Deployment:** Vercel (web app) + Google Apps Script
+
+## Development
+
+### Commands
+
+```bash
+pnpm -C app dev              # Start dev server
+pnpm -C app build            # Production build
+pnpm -C app start            # Start production server
+pnpm -C app lint             # Run ESLint
+pnpm -C app test             # Run all tests
+pnpm -C app test -- -t "..." # Run tests matching pattern
+pnpm -C app db:migrate       # Run Prisma migrations
+pnpm -C app db:generate      # Generate Prisma client
+pnpm -C app db:studio        # Open Prisma Studio
+npm run app:dev              # Root shortcut for app dev server
+npm run app:test             # Root shortcut for app tests
+```
+
+### Setup Notes
+
+- Web app environment variables live in `app/.env`.
+- Apps Script auth uses the `mobilizare@apme.ro` account.
+- Diagram sources live under `docs/diagrams/` and are kept in Mermaid format.

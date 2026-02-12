@@ -1,0 +1,32 @@
+flowchart LR
+    subgraph Webhook_Receipt
+        A[Receive POST] --> B{Validate Signature}
+        B -->|Invalid| C[Return 401]
+        B -->|Valid| D{Check Event ID}
+        D -->|Duplicate| E[Return 200<br/>Already Processed]
+        D -->|New| F[Create WebhookEvent<br/>status: processing]
+    end
+    
+    subgraph Submission_Processing
+        F --> G{Event Type}
+        G -->|record.created| H[Process Submission]
+        G -->|Other| I[Skip - Not Implemented]
+    end
+    
+    subgraph Data_Persistence
+        H --> J{Submission Exists}
+        J -->|Yes| K[Update Submission]
+        J -->|No| L[Create Submission]
+        K & L --> M[Upsert Answers]
+        M --> N[Create Assignments]
+    end
+    
+    subgraph Completion
+        N --> O[Mark Submission Processed]
+        O --> P[Update WebhookEvent<br/>status: completed]
+        P --> Q[Return 200 Success]
+    end
+    
+    style C fill:#ffcccc
+    style E fill:#ffffcc
+    style Q fill:#ccffcc

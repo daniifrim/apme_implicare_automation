@@ -1,6 +1,8 @@
+// ABOUTME: Displays detailed submission view with assignments and answers
+// ABOUTME: Supports editing and reprocessing for a single submission record
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { 
@@ -97,12 +99,7 @@ export default function SubmissionDetailPage({ params }: { params: { id: string 
   // Expand/collapse answers
   const [expandedAnswers, setExpandedAnswers] = useState<Set<string>>(new Set())
 
-  useEffect(() => {
-    fetchSubmission()
-    fetchTemplates()
-  }, [params.id])
-
-  async function fetchSubmission() {
+  const fetchSubmission = useCallback(async () => {
     try {
       const response = await fetch(`/api/submissions/${params.id}`)
       if (!response.ok) {
@@ -131,9 +128,9 @@ export default function SubmissionDetailPage({ params }: { params: { id: string 
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id, router])
 
-  async function fetchTemplates() {
+  const fetchTemplates = useCallback(async () => {
     try {
       const response = await fetch('/api/templates')
       if (response.ok) {
@@ -143,7 +140,12 @@ export default function SubmissionDetailPage({ params }: { params: { id: string 
     } catch (error) {
       console.error('Failed to fetch templates:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchSubmission()
+    fetchTemplates()
+  }, [fetchSubmission, fetchTemplates])
 
   async function handleSaveEdit() {
     if (!submission) return

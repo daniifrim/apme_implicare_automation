@@ -1,0 +1,181 @@
+erDiagram
+    USER ||--o{ AUDIT_LOG : creates
+    
+    FILLOUT_FORM ||--o{ FILLOUT_QUESTION : contains
+    FILLOUT_FORM ||--o{ SUBMISSION : receives
+    
+    FILLOUT_QUESTION ||--o{ SUBMISSION_ANSWER : answered_in
+    FILLOUT_QUESTION ||--o{ FIELD_MAPPING : mapped_to
+    
+    SUBMISSION ||--o{ SUBMISSION_ANSWER : has
+    SUBMISSION ||--o{ ASSIGNMENT : receives
+    
+    TEMPLATE ||--o{ TEMPLATE_VERSION : has_versions
+    TEMPLATE ||--o{ TEMPLATE_VARIANT : has_variants
+    TEMPLATE ||--o{ ASSIGNMENT : assigned_via
+    
+    TEMPLATE_VERSION ||--o{ ASSIGNMENT : uses
+    
+    WEBHOOK_EVENT {
+        string id PK
+        string eventId UK
+        string eventType
+        json payload
+        string signature
+        string status
+        string errorMessage
+        datetime processedAt
+        datetime createdAt
+    }
+    
+    USER {
+        string id PK
+        string email UK
+        string name
+        Role role
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    FILLOUT_FORM {
+        string id PK
+        string formId UK
+        string name
+        string status
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    FILLOUT_QUESTION {
+        string id PK
+        string questionId
+        string formId FK
+        string type
+        string name
+        int order
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    FIELD_MAPPING {
+        string id PK
+        string canonicalKey UK
+        string questionId FK
+        string description
+        boolean isRequired
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    SUBMISSION {
+        string id PK
+        string submissionId UK
+        string formId FK
+        datetime submissionTime
+        string email
+        string firstName
+        string lastName
+        string phone
+        string locationType
+        string city
+        string country
+        string church
+        string status
+        datetime processedAt
+        json rawData
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    SUBMISSION_ANSWER {
+        string id PK
+        string submissionId FK
+        string questionId FK
+        string value
+        json rawValue
+        datetime createdAt
+    }
+    
+    TEMPLATE {
+        string id PK
+        string slug UK
+        string name
+        string description
+        string status
+        string[] tags
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    TEMPLATE_VERSION {
+        string id PK
+        string templateId FK
+        int versionNumber
+        string name
+        string subject
+        string preheader
+        json editorState
+        string htmlContent
+        string textContent
+        string[] placeholders
+        boolean isPublished
+        datetime publishedAt
+        string publishedBy
+        datetime createdAt
+    }
+    
+    TEMPLATE_VARIANT {
+        string id PK
+        string templateId FK
+        string name
+        string description
+        string selectionType
+        float weight
+        json conditionRules
+        boolean isActive
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    ASSIGNMENT {
+        string id PK
+        string submissionId FK
+        string templateId FK
+        string versionId FK
+        string variantId
+        string status
+        json reasonCodes
+        json missingFields
+        datetime scheduledAt
+        datetime processedAt
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    AUDIT_LOG {
+        string id PK
+        string userId FK
+        string action
+        string resource
+        string resourceId
+        json oldValue
+        json newValue
+        datetime createdAt
+    }
+    
+    LEGACY_EMAIL_HISTORY {
+        string id PK
+        string email
+        string templateName
+        datetime sentDate
+        string status
+        string campaignContext
+        string responseId
+        string personName
+        string notes
+        string deliveryStatus
+        string opened
+        string clicked
+        string bounced
+        datetime createdAt
+    }

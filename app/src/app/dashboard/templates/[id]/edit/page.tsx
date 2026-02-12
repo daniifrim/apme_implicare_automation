@@ -414,6 +414,7 @@ export default function TemplateEditorPage() {
           <div className="bg-white border rounded-lg p-6">
             <h3 className="font-semibold text-gray-900 mb-4">Available Placeholders</h3>
             <div className="space-y-2">
+              <div className="text-xs text-gray-500 mb-2">Contact Info</div>
               <Button
                 variant="outline"
                 size="sm"
@@ -423,8 +424,29 @@ export default function TemplateEditorPage() {
               >
                 {'{{FirstName}}'}
               </Button>
+
+              <div className="text-xs text-gray-500 mb-2 mt-3">Prayer Context</div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => handleInsertPlaceholder('Missionary')}
+                disabled={!editorInstance}
+              >
+                {'{{Missionary}}'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => handleInsertPlaceholder('EthnicGroup')}
+                disabled={!editorInstance}
+              >
+                {'{{EthnicGroup}}'}
+              </Button>
+
               {!editorInstance && (
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 mt-2">
                   Click inside the editor to enable placeholder insertion.
                 </div>
               )}
