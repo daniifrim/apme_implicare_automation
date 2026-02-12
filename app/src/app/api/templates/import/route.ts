@@ -2,6 +2,7 @@
 // ABOUTME: Exposes GET preview and POST import endpoints for templates
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { collectTemplatePlaceholders, normalizeEmailHtml } from '@/lib/email-template-normalization'
 import fs from 'fs'
 import path from 'path'
 import type { Prisma } from '@prisma/client'
@@ -118,7 +119,6 @@ export async function POST(request: NextRequest) {
           continue
         }
         
-        const placeholders = extractPlaceholders(content)
         const editorState = convertToBlockNote(content)
         
         const htmlContent = content
@@ -134,6 +134,13 @@ export async function POST(request: NextRequest) {
             return `<p>${line}</p>`
           })
           .join('')
+        const normalizedContent = normalizeEmailHtml(htmlContent)
+        const placeholders = collectTemplatePlaceholders([
+          name,
+          normalizedContent.html,
+          normalizedContent.text,
+          ...extractPlaceholders(content).map((placeholder) => `{{${placeholder}}}`)
+        ])
         
         await prisma.template.create({
           data: {
@@ -149,8 +156,8 @@ export async function POST(request: NextRequest) {
                 subject: name,
                 preheader: '',
                 editorState: editorState as Prisma.InputJsonValue,
-                htmlContent,
-                textContent: content,
+                htmlContent: normalizedContent.html,
+                textContent: normalizedContent.text,
                 placeholders,
                 isPublished: false
               }

@@ -1,6 +1,9 @@
+// ABOUTME: Manages template version listing and creation for a template
+// ABOUTME: Persists normalized email content to keep preview and storage contracts stable
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import type { Prisma } from '@prisma/client'
+import { collectTemplatePlaceholders, normalizeEmailHtml } from '@/lib/email-template-normalization'
 
 export async function GET(
   request: NextRequest,
@@ -37,7 +40,6 @@ export async function POST(
       preheader,
       editorState,
       htmlContent,
-      textContent,
       placeholders
     } = body
 
@@ -59,6 +61,17 @@ export async function POST(
     }
 
     const nextVersionNumber = template.versions[0]?.versionNumber + 1 || 1
+    const normalizedContent = normalizeEmailHtml(htmlContent ?? '')
+    const detectedPlaceholders = collectTemplatePlaceholders([
+      subject,
+      preheader,
+      normalizedContent.html,
+      normalizedContent.text,
+    ])
+    const providedPlaceholders = Array.isArray(placeholders)
+      ? placeholders.filter((placeholder: unknown): placeholder is string => typeof placeholder === 'string')
+      : []
+    const mergedPlaceholders = [...new Set([...detectedPlaceholders, ...providedPlaceholders])]
 
     const version = await prisma.templateVersion.create({
       data: {
@@ -68,13 +81,13 @@ export async function POST(
         subject,
         preheader,
         editorState: editorState as Prisma.InputJsonValue,
-        htmlContent,
-        textContent,
-        placeholders: placeholders || []
+        htmlContent: normalizedContent.html,
+        textContent: normalizedContent.text,
+        placeholders: mergedPlaceholders
       }
     })
 
-    return NextResponse.json({ version }, { status: 201 })
+    return NextResponse.json({ version, warnings: normalizedContent.warnings }, { status: 201 })
 
   } catch (error) {
     console.error('Error creating template version:', error)

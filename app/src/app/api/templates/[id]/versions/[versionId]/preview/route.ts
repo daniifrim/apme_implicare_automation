@@ -1,5 +1,8 @@
+// ABOUTME: Generates personalized template previews for chosen submissions
+// ABOUTME: Applies placeholder substitution over normalized HTML/text for fidelity checks
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { collectTemplatePlaceholders, normalizeEmailHtml } from '@/lib/email-template-normalization'
 
 function resolvePlaceholderValue(
   submission: {
@@ -72,26 +75,30 @@ export async function POST(
       )
     }
     
-    let htmlContent = version.htmlContent
-    let textContent = version.textContent || ''
+    const normalizedContent = normalizeEmailHtml(version.htmlContent)
+
+    let htmlContent = normalizedContent.html
+    let textContent = normalizedContent.text
     let subject = version.subject
     let preheader = version.preheader || ''
+    const warnings = [...normalizedContent.warnings]
+
+    const replacePlaceholders = (value: string): string =>
+      value.replace(/\{\{([^{}]+)\}\}/g, (_full, placeholder: string) => {
+        if (!submission) return `{{${placeholder}}}`
+        return resolvePlaceholderValue(submission, placeholder.trim())
+      })
     
     if (submission) {
-      for (const placeholder of version.placeholders) {
-        const value = resolvePlaceholderValue(submission, placeholder)
-        const token = `{{${placeholder}}}`
+      htmlContent = replacePlaceholders(htmlContent)
+      textContent = replacePlaceholders(textContent)
+      subject = replacePlaceholders(subject)
+      preheader = replacePlaceholders(preheader)
+    }
 
-        htmlContent = htmlContent.split(token).join(value)
-        textContent = textContent.split(token).join(value)
-        subject = subject.split(token).join(value)
-        preheader = preheader.split(token).join(value)
-      }
-
-      htmlContent = htmlContent.replace(/\{\{[^{}]+\}\}/g, '')
-      textContent = textContent.replace(/\{\{[^{}]+\}\}/g, '')
-      subject = subject.replace(/\{\{[^{}]+\}\}/g, '')
-      preheader = preheader.replace(/\{\{[^{}]+\}\}/g, '')
+    const unresolved = collectTemplatePlaceholders([htmlContent, textContent, subject, preheader])
+    if (unresolved.length > 0) {
+      warnings.push(`Unresolved placeholders in preview: ${unresolved.join(', ')}`)
     }
     
     return NextResponse.json({
@@ -100,7 +107,14 @@ export async function POST(
         text: textContent,
         subject,
         preheader,
-        placeholders: version.placeholders,
+        placeholders: collectTemplatePlaceholders([
+          version.subject,
+          version.preheader,
+          version.htmlContent,
+          version.textContent,
+          ...version.placeholders.map((placeholder) => `{{${placeholder}}}`)
+        ]),
+        warnings,
         submission: submission ? {
           id: submission.id,
           firstName: submission.firstName,

@@ -16,8 +16,6 @@ import {
   MapPin,
   CheckSquare,
   Square,
-  Edit,
-  Layers,
   FileText,
   Mail,
   Phone,
@@ -27,7 +25,6 @@ import {
 import { cn } from '@/lib/utils'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 
 interface Submission {
   id: string

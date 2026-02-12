@@ -1,7 +1,10 @@
+// ABOUTME: Updates and deletes individual template versions with publishing safeguards
+// ABOUTME: Enforces normalized content storage and writes audit events for version changes
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createAuditLog } from '@/lib/audit'
 import type { Prisma } from '@prisma/client'
+import { collectTemplatePlaceholders, normalizeEmailHtml } from '@/lib/email-template-normalization'
 
 export async function PATCH(
   request: NextRequest,
@@ -16,7 +19,6 @@ export async function PATCH(
       preheader,
       editorState,
       htmlContent,
-      textContent,
       placeholders
     } = body
     
@@ -45,6 +47,26 @@ export async function PATCH(
       preheader: version.preheader,
       placeholders: version.placeholders
     }
+
+    const contentChanged =
+      htmlContent !== undefined ||
+      subject !== undefined ||
+      preheader !== undefined ||
+      placeholders !== undefined
+
+    const nextSubject = subject ?? version.subject
+    const nextPreheader = preheader ?? version.preheader ?? ''
+    const normalizedContent = normalizeEmailHtml(htmlContent ?? version.htmlContent)
+    const detectedPlaceholders = collectTemplatePlaceholders([
+      nextSubject,
+      nextPreheader,
+      normalizedContent.html,
+      normalizedContent.text,
+    ])
+    const providedPlaceholders = Array.isArray(placeholders)
+      ? placeholders.filter((placeholder: unknown): placeholder is string => typeof placeholder === 'string')
+      : version.placeholders
+    const mergedPlaceholders = [...new Set([...detectedPlaceholders, ...providedPlaceholders])]
     
     const updatedVersion = await prisma.templateVersion.update({
       where: { id: versionId },
@@ -53,9 +75,11 @@ export async function PATCH(
         ...(subject !== undefined && { subject }),
         ...(preheader !== undefined && { preheader }),
         ...(editorState !== undefined && { editorState: editorState as Prisma.InputJsonValue }),
-        ...(htmlContent !== undefined && { htmlContent }),
-        ...(textContent !== undefined && { textContent }),
-        ...(placeholders !== undefined && { placeholders })
+        ...(contentChanged && {
+          htmlContent: normalizedContent.html,
+          textContent: normalizedContent.text,
+          placeholders: mergedPlaceholders
+        })
       }
     })
 
@@ -79,7 +103,7 @@ export async function PATCH(
       }
     })
     
-    return NextResponse.json({ version: updatedVersion })
+    return NextResponse.json({ version: updatedVersion, warnings: normalizedContent.warnings })
   } catch (error) {
     console.error('Error updating version:', error)
     return NextResponse.json(

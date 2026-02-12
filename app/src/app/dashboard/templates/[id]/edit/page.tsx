@@ -1,3 +1,5 @@
+// ABOUTME: Provides the template version editor UI with publish and preview workflows
+// ABOUTME: Coordinates constrained email authoring, placeholder tools, and fidelity warnings
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -22,6 +24,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
+import type { EditorWarning } from '@/types/email-editor'
 
 interface Template {
   id: string
@@ -71,6 +74,7 @@ export default function TemplateEditorPage() {
     html: string
     text: string
     subject: string
+    warnings: string[]
     submission: Submission | null
   } | null>(null)
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>('')
@@ -88,12 +92,15 @@ export default function TemplateEditorPage() {
     html: string
     text: string
     placeholders: string[]
+    warnings: string[]
   }>({
     blocks: [],
     html: '',
     text: '',
-    placeholders: []
+    placeholders: [],
+    warnings: []
   })
+  const [editorWarnings, setEditorWarnings] = useState<EditorWarning[]>([])
 
   const fetchData = async () => {
     try {
@@ -126,7 +133,8 @@ export default function TemplateEditorPage() {
             blocks: versionToEdit.editorState as PartialBlock[],
             html: versionToEdit.htmlContent,
             text: versionToEdit.textContent || '',
-            placeholders: versionToEdit.placeholders
+            placeholders: versionToEdit.placeholders,
+            warnings: []
           })
         }
       }
@@ -246,6 +254,7 @@ export default function TemplateEditorPage() {
         html: data.preview.html,
         text: data.preview.text,
         subject: data.preview.subject,
+        warnings: data.preview.warnings || [],
         submission: data.preview.submission
       })
       setShowPreview(true)
@@ -263,9 +272,10 @@ export default function TemplateEditorPage() {
     blocks: PartialBlock[],
     html: string,
     text: string,
-    placeholders: string[]
+    placeholders: string[],
+    warnings: string[]
   ) {
-    setEditorContent({ blocks, html, text, placeholders })
+    setEditorContent({ blocks, html, text, placeholders, warnings })
     setHasChanges(true)
   }
 
@@ -392,8 +402,28 @@ export default function TemplateEditorPage() {
                 initialContent={editorContent.blocks}
                 onChange={handleEditorChange}
                 onEditorReady={setEditorInstance}
+                onValidationChange={setEditorWarnings}
+                showBlockHandles={false}
+                allowedFeatures={{
+                  paragraphs: true,
+                  lineBreaks: true,
+                  links: true,
+                  lists: true,
+                  placeholders: true
+                }}
               />
             </div>
+
+            {editorWarnings.length > 0 && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <div className="text-sm font-medium text-amber-900 mb-1">Compatibility Warnings</div>
+                <ul className="list-disc list-inside text-sm text-amber-800 space-y-1">
+                  {editorWarnings.map((warning) => (
+                    <li key={warning.code}>{warning.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {editorContent.placeholders.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
@@ -444,12 +474,6 @@ export default function TemplateEditorPage() {
               >
                 {'{{EthnicGroup}}'}
               </Button>
-
-              {!editorInstance && (
-                <div className="text-xs text-gray-500 mt-2">
-                  Click inside the editor to enable placeholder insertion.
-                </div>
-              )}
             </div>
           </div>
 
@@ -472,9 +496,11 @@ export default function TemplateEditorPage() {
                         blocks: version.editorState as PartialBlock[],
                         html: version.htmlContent,
                         text: version.textContent || '',
-                        placeholders: version.placeholders
+                        placeholders: version.placeholders,
+                        warnings: []
                       })
                     }
+                    setEditorWarnings([])
                     setHasChanges(false)
                   }}
                   className={cn(
@@ -560,17 +586,39 @@ export default function TemplateEditorPage() {
                 <div className="font-medium">{previewData.subject}</div>
               </div>
 
+              {previewData.warnings.length > 0 && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <div className="text-sm font-medium text-amber-900 mb-2">Preview warnings</div>
+                  <ul className="list-disc list-inside text-sm text-amber-800 space-y-1">
+                    {previewData.warnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <Tabs defaultValue="html">
                 <TabsList>
-                  <TabsTrigger value="html">HTML</TabsTrigger>
+                  <TabsTrigger value="html">Rendered Email</TabsTrigger>
+                  <TabsTrigger value="raw">Raw HTML</TabsTrigger>
                   <TabsTrigger value="text">Plain Text</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="html">
-                  <div
-                    className="border rounded-lg p-6 bg-white prose max-w-none"
-                    dangerouslySetInnerHTML={{ __html: previewData.html }}
-                  />
+                  <div className="rounded-lg border bg-gray-100 p-4">
+                    <div className="mx-auto max-w-[640px] rounded-lg border bg-white p-6 shadow-sm">
+                      <div
+                        className="text-[15px] leading-7 text-gray-900"
+                        dangerouslySetInnerHTML={{ __html: previewData.html }}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="raw">
+                  <pre className="border rounded-lg p-6 bg-gray-50 whitespace-pre-wrap font-mono text-sm">
+                    {previewData.html}
+                  </pre>
                 </TabsContent>
 
                 <TabsContent value="text">

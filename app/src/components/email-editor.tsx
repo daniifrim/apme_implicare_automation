@@ -1,3 +1,5 @@
+// ABOUTME: Renders a constrained BlockNote-based email editor for template authoring
+// ABOUTME: Produces normalized email HTML/text and editor validation warnings on content changes
 'use client'
 
 import { useCallback, useEffect } from 'react'
@@ -9,22 +11,38 @@ import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import '@blocknote/mantine/style.css'
 
+import { extractPlaceholders, normalizeEmailHtml } from '@/lib/email-template-normalization'
+import type { EmailEditorAllowedFeatures, EditorWarning } from '@/types/email-editor'
+
 interface EmailEditorProps {
   initialContent?: PartialBlock[]
-  onChange?: (content: PartialBlock[], html: string, text: string, placeholders: string[]) => void
+  onChange?: (
+    content: PartialBlock[],
+    html: string,
+    text: string,
+    placeholders: string[],
+    warnings: string[]
+  ) => void
   onEditorReady?: (editor: BlockNoteEditor) => void
+  onValidationChange?: (warnings: EditorWarning[]) => void
+  allowedFeatures?: EmailEditorAllowedFeatures
+  showBlockHandles?: boolean
   editable?: boolean
-}
-
-function extractPlaceholders(text: string): string[] {
-  const matches = text.match(/\{\{[^{}]+\}\}/g)
-  return matches ? [...new Set(matches.map(m => m.slice(2, -2)))] : []
 }
 
 export function EmailEditor({
   initialContent,
   onChange,
   onEditorReady,
+  onValidationChange,
+  allowedFeatures = {
+    paragraphs: true,
+    lineBreaks: true,
+    lists: true,
+    links: true,
+    placeholders: true
+  },
+  showBlockHandles = false,
   editable = true
 }: EmailEditorProps) {
   const editor = useCreateBlockNote({
@@ -42,31 +60,45 @@ export function EmailEditor({
 
   const handleChange = useCallback(async () => {
     if (!onChange) return
-    
-    const blocks = editor.document
-    const html = await editor.blocksToHTMLLossy(blocks)
 
-    const text = html
-      .replace(/<br\s*\/?\s*>/gi, '\n')
-      .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
-      .replace(/<[^>]+>/g, '')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim()
-    
-    const placeholders = extractPlaceholders(text)
-    
-    onChange(blocks as PartialBlock[], html, text, placeholders)
-  }, [editor, onChange])
+    const blocks = editor.document
+    const lossyHtml = await editor.blocksToHTMLLossy(blocks)
+    const normalized = normalizeEmailHtml(lossyHtml)
+
+    const placeholders = extractPlaceholders(
+      `${normalized.html}\n${normalized.text}`
+    )
+
+    const validationWarnings: EditorWarning[] = normalized.warnings.map((warning, index) => ({
+      code: `NORMALIZATION_${index + 1}`,
+      message: warning,
+      severity: 'warning'
+    }))
+
+    onValidationChange?.(validationWarnings)
+    onChange(blocks as PartialBlock[], normalized.html, normalized.text, placeholders, normalized.warnings)
+  }, [editor, onChange, onValidationChange])
 
   return (
-    <div className="email-editor border rounded-lg overflow-hidden bg-white min-h-[300px]">
+    <div
+      className="email-editor border rounded-lg overflow-hidden bg-white min-h-[300px]"
+      data-hide-handles={!showBlockHandles}
+      data-allow-lists={allowedFeatures.lists}
+      data-allow-links={allowedFeatures.links}
+    >
       <BlockNoteView
         editor={editor}
         editable={editable}
         onChange={handleChange}
         theme="light"
       />
+
+      <style jsx global>{`
+        .email-editor[data-hide-handles='true'] .bn-side-menu,
+        .email-editor[data-hide-handles='true'] [class*='sideMenu'] {
+          display: none !important;
+        }
+      `}</style>
     </div>
   )
 }
@@ -78,8 +110,7 @@ export function insertPlaceholder(
   editor.insertInlineContent([
     {
       type: 'text',
-      text: `{{${placeholder}}}`,
-      styles: { bold: true, backgroundColor: '#dbeafe', textColor: '#1e40af' }
+      text: `{{${placeholder}}}`
     }
   ])
 }
