@@ -10,7 +10,8 @@ import {
   Copy,
   Trash2,
   CheckCircle,
-  Loader2
+  Loader2,
+  Upload
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -40,6 +41,7 @@ export default function TemplatesPage() {
   const [search, setSearch] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newTemplate, setNewTemplate] = useState({ slug: '', name: '', description: '' })
+  const [importing, setImporting] = useState(false)
 
   useEffect(() => {
     fetchTemplates()
@@ -69,7 +71,7 @@ export default function TemplatesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTemplate)
       })
-      
+
       if (response.ok) {
         setShowCreateModal(false)
         setNewTemplate({ slug: '', name: '', description: '' })
@@ -77,6 +79,23 @@ export default function TemplatesPage() {
       }
     } catch (error) {
       console.error('Error creating template:', error)
+    }
+  }
+
+  async function handleImportTemplates() {
+    setImporting(true)
+    try {
+      const response = await fetch('/api/templates/import', {
+        method: 'POST'
+      })
+
+      if (response.ok) {
+        fetchTemplates()
+      }
+    } catch (error) {
+      console.error('Error importing templates:', error)
+    } finally {
+      setImporting(false)
     }
   }
 
@@ -88,13 +107,27 @@ export default function TemplatesPage() {
           <p className="text-gray-500 mt-1">Manage email templates and versions</p>
         </div>
         
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          New Template
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleImportTemplates}
+            disabled={importing}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            {importing ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Upload className="w-5 h-5" />
+            )}
+            Import from Files
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            New Template
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -149,7 +182,7 @@ export default function TemplatesPage() {
                     
                     <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
                       <Link
-                        href={`/dashboard/templates/${template.id}`}
+                        href={`/dashboard/templates/${template.id}/edit`}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       >
                         <Edit className="w-4 h-4" />

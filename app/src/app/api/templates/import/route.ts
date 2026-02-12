@@ -2,15 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import fs from 'fs'
 import path from 'path'
+import type { Prisma } from '@prisma/client'
 
 const templatesDir = path.join(process.cwd(), '..', '..', 'docs', 'email-templates')
-
-interface TemplateFile {
-  filename: string
-  slug: string
-  name: string
-  content: string
-}
 
 function slugify(name: string): string {
   return name
@@ -96,7 +90,7 @@ function convertToBlockNote(content: string) {
   return blocks
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const files = fs.readdirSync(templatesDir)
     const txtFiles = files.filter(f => f.endsWith('.txt'))
@@ -138,7 +132,7 @@ export async function POST(request: NextRequest) {
           })
           .join('')
         
-        const template = await prisma.template.create({
+        await prisma.template.create({
           data: {
             slug,
             name,
@@ -151,7 +145,7 @@ export async function POST(request: NextRequest) {
                 name: 'Initial Version',
                 subject: name,
                 preheader: '',
-                editorState: editorState as any,
+                editorState: editorState as Prisma.JsonValue,
                 htmlContent,
                 textContent: content,
                 placeholders,
@@ -182,7 +176,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const files = fs.readdirSync(templatesDir)
     const txtFiles = files.filter(f => f.endsWith('.txt'))

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Edit } from "lucide-react";
 
 export default async function TemplateDetailPage({
   params,
@@ -40,12 +42,22 @@ export default async function TemplateDetailPage({
           </div>
         </div>
 
-        <Link
-          href="/dashboard/templates"
-          className="text-sm text-primary hover:underline whitespace-nowrap"
-        >
-          Back to templates
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/dashboard/templates/${params.id}/edit`}
+          >
+            <Button variant="outline" size="sm">
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Template
+            </Button>
+          </Link>
+          <Link
+            href="/dashboard/templates"
+            className="text-sm text-primary hover:underline whitespace-nowrap"
+          >
+            Back to templates
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
