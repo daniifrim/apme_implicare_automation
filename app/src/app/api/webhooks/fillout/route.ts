@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyWebhookSignature } from '@/lib/webhook'
 import { normalizeSubmission } from '@/lib/normalize'
+import { createAssignmentsForSubmission, markSubmissionAsProcessed } from '@/lib/assignments'
 import type { FilloutWebhookPayload, FilloutSubmission } from '@/types/fillout'
 import type { Prisma } from '@prisma/client'
 
@@ -131,11 +132,25 @@ async function processSubmission(submissionData: FilloutSubmission) {
           submissionId: existingSubmission.id,
           questionId: answer.questionId,
           value: answer.value,
-rawValue: answer.rawValue as Prisma.InputJsonValue
+          rawValue: answer.rawValue as Prisma.InputJsonValue
         }
       })
     }
 
+    // Re-process assignments for existing submission (in case data changed)
+    const assignmentResult = await createAssignmentsForSubmission(
+      existingSubmission.id,
+      normalized
+    )
+
+    if (assignmentResult.errors.length > 0) {
+      console.error('Assignment errors for existing submission:', assignmentResult.errors)
+    }
+
+    // Mark as processed (even if partially failed)
+    await markSubmissionAsProcessed(existingSubmission.id)
+
+    console.log(`Updated submission ${existingSubmission.id} with ${assignmentResult.created} new assignments, ${assignmentResult.skipped} skipped`)
     return
   }
 
@@ -167,5 +182,15 @@ rawValue: answer.rawValue as Prisma.InputJsonValue
     })
   }
 
-  console.log(`Created submission ${submission.id} for ${normalized.submissionId}`)
+  // Create template assignments based on submission answers
+  const assignmentResult = await createAssignmentsForSubmission(submission.id, normalized)
+
+  if (assignmentResult.errors.length > 0) {
+    console.error('Assignment errors:', assignmentResult.errors)
+  }
+
+  // Mark submission as processed
+  await markSubmissionAsProcessed(submission.id)
+
+  console.log(`Created submission ${submission.id} for ${normalized.submissionId} with ${assignmentResult.created} assignments`)
 }
