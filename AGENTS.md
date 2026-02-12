@@ -9,7 +9,6 @@ This is a monorepo with two distinct parts:
 - **`app/`** - Next.js 16 web application (dashboard + API + Prisma)
 - **`main-project/`** - Google Apps Script library (core automation logic)
 - **`wrapper-project/`** - Google Apps Script bound to spreadsheet
-- **`archive/`** - Prototypes and legacy code
 - **`docs/`** - Documentation, PRDs, data exports
 
 ## Development Commands

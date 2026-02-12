@@ -2,7 +2,7 @@
 
 **Scope**: Frontend/UI layer only.
 
-**Consolidation Note**: This plan originally targeted a standalone frontend in `packages/web/`. The codebase is now consolidated into a single Next.js app in `app/` (UI + API routes). The prototype frontend app was moved to `archive/frontend-prototypes/web/`.
+**Consolidation Note**: This plan originally targeted a standalone frontend in `packages/web/`. The codebase is now consolidated into a single Next.js app in `app/` (UI + API routes). Legacy frontend prototypes were removed from the repository.
 
 **Design Reference**: SuperDesign draft `d4ec5b5e-29e3-4b4c-8a34-8201ee4b367c` (Power-User Dense Submissions Dashboard)
 - Preview: https://p.superdesign.dev/draft/d4ec5b5e-29e3-4b4c-8a34-8201ee4b367c
