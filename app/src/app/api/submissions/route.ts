@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const fromDate = searchParams.get('from')
     const toDate = searchParams.get('to')
+    const locationType = searchParams.get('location')
 
     const where: Record<string, unknown> = {}
 
@@ -18,11 +19,17 @@ export async function GET(request: NextRequest) {
       where.status = status
     }
 
+    if (locationType) {
+      where.locationType = locationType
+    }
+
     if (search) {
       where.OR = [
         { email: { contains: search, mode: 'insensitive' } },
         { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } }
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { submissionId: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } }
       ]
     }
 
@@ -32,7 +39,10 @@ export async function GET(request: NextRequest) {
         dateFilter.gte = new Date(fromDate)
       }
       if (toDate) {
-        dateFilter.lte = new Date(toDate)
+        // Set to end of day for inclusive filtering
+        const endDate = new Date(toDate)
+        endDate.setHours(23, 59, 59, 999)
+        dateFilter.lte = endDate
       }
       where.submissionTime = dateFilter
     }
