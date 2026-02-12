@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added - February 12, 2025
+- **Next.js Web Application**: Complete dashboard and API layer for the APME email automation system
+  - Dashboard UI with modern React components under `app/src/app/dashboard/`
+  - REST API routes under `app/src/app/api/` for external integrations
+  - Prisma ORM with PostgreSQL schema for data persistence
+  - Authentication system with bcrypt password hashing
+  - Vitest testing framework with React Testing Library
+  - PNPM workspace integration for monorepo management
+- **Project Structure Expansion**: Added `app/` directory alongside existing Apps Script projects
+- **Development Scripts**: New package.json scripts for web app operations (`app:dev`, `app:build`, `app:test`, `app:lint`)
+- **Documentation**: Comprehensive PRD, implementation plan, and summary docs in `docs/` folder
+
 ### Major Code Cleanup - September 18, 2025
 
 #### Phase 1: Critical Bug Fixes ✅

@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  web:
+    image: ghcr.io/daniifrim/apme-implicare-web:latest
+    networks:
+      - public_net
+      - internal
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - FILLOUT_API_KEY=${FILLOUT_API_KEY}
+      - FILLOUT_WEBHOOK_SECRET=${FILLOUT_WEBHOOK_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - APP_URL=${APP_URL}
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: pause
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.apme-implicare.rule=Host(`${APP_HOST}`)"
+        - "traefik.http.routers.apme-implicare.entrypoints=websecure"
+        - "traefik.http.routers.apme-implicare.tls.certresolver=leresolver"
+        - "traefik.http.services.apme-implicare.loadbalancer.server.port=3000"
+        - "traefik.http.services.apme-implicare.loadbalancer.healthcheck.path=/api/health"
+        - "traefik.http.services.apme-implicare.loadbalancer.healthcheck.interval=10s"
+        - "traefik.http.services.apme-implicare.loadbalancer.healthcheck.timeout=5s"
+
+  worker:
+    image: ghcr.io/daniifrim/apme-implicare-web:latest
+    networks:
+      - internal
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - FILLOUT_API_KEY=${FILLOUT_API_KEY}
+      - FILLOUT_WEBHOOK_SECRET=${FILLOUT_WEBHOOK_SECRET}
+      - REDIS_URL=${REDIS_URL}
+    command: ["node", "dist/worker.js"]
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  postgres:
+    image: postgres:16-alpine
+    networks:
+      - internal
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - internal
+    volumes:
+      - redis_data:/data
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  public_net:
+    external: true
+  internal:
+    driver: overlay
+    attachable: true

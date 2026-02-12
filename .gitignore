@@ -1,0 +1,25 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/app/generated/prisma
+
+
+.node_modules
+
+# Next.js build output
+.next
+**/.next
+
+# Turbopack/Turbo
+.turbo
+**/.turbo
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS/editor
+.DS_Store

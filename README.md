@@ -3,6 +3,7 @@
 ## Project Structure
 
 ```
+├── app/                   # Next.js web app (dashboard + API routes + Prisma)
 ├── main-project/           # Main Apps Script project with core automation logic
 │   ├── config/            # Configuration files
 │   ├── core/             # Core automation modules
@@ -16,6 +17,20 @@
 │   └── Code.js           # Wrapper that calls main project as library
 │
 └── details.md            # Project documentation
+```
+
+## Web App (Next.js)
+
+The web app lives in `app/` and includes:
+- Dashboard UI under `app/src/app/dashboard/*`
+- API routes under `app/src/app/api/*`
+- Prisma schema under `app/prisma/schema.prisma`
+
+Common commands:
+```bash
+pnpm -C app dev
+pnpm -C app test
+pnpm -C app build
 ```
 
 ## Apps Script IDs

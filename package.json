@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "APME email automation system for missionary follow-ups",
   "scripts": {
+    "app:dev": "pnpm -C app dev",
+    "app:build": "pnpm -C app build",
+    "app:start": "pnpm -C app start",
+    "app:test": "pnpm -C app test",
+    "app:lint": "pnpm -C app lint",
     "push-clasp-github": "./scripts/push-clasp-github.sh",
     "push-clasp": "./scripts/push-clasp-only.sh",
     "push-main": "cd main-project && clasp push",
@@ -10,7 +15,21 @@
     "pull-main": "cd main-project && clasp pull",
     "pull-wrapper": "cd wrapper-project && clasp pull"
   },
-  "keywords": ["google-apps-script", "email-automation", "apme"],
+  "keywords": [
+    "google-apps-script",
+    "email-automation",
+    "apme"
+  ],
   "author": "APME",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/bcryptjs": "^3.0.0",
+    "@vitejs/plugin-react": "^5.1.4",
+    "@vitest/coverage-v8": "^4.0.18",
+    "jsdom": "^28.0.0",
+    "prisma": "^7.4.0",
+    "vitest": "^4.0.18"
+  }
 }

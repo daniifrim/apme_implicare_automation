@@ -1,0 +1,266 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(VIEWER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  action      String
+  resource    String
+  resourceId  String?  @map("resource_id")
+  oldValue    Json?    @map("old_value")
+  newValue    Json?    @map("new_value")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model FilloutForm {
+  id          String   @id @default(cuid())
+  formId      String   @unique @map("form_id")
+  name        String
+  status      String   @default("active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  questions   FilloutQuestion[]
+  submissions Submission[]
+
+  @@map("fillout_forms")
+}
+
+model FilloutQuestion {
+  id          String   @id @default(cuid())
+  questionId  String   @map("question_id")
+  formId      String   @map("form_id")
+  type        String
+  name        String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  form       FilloutForm     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  answers    SubmissionAnswer[]
+  mappings   FieldMapping[]
+
+  @@unique([questionId, formId])
+  @@index([formId])
+  @@map("fillout_questions")
+}
+
+model FieldMapping {
+  id             String   @id @default(cuid())
+  canonicalKey   String   @map("canonical_key")
+  questionId     String   @map("question_id")
+  description    String?
+  isRequired     Boolean  @default(false) @map("is_required")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  question FilloutQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([canonicalKey])
+  @@index([questionId])
+  @@map("field_mappings")
+}
+
+model Submission {
+  id             String   @id @default(cuid())
+  submissionId   String   @unique @map("submission_id")
+  formId         String?   @map("form_id")
+  submissionTime DateTime @map("submission_time")
+  email          String?
+  firstName      String?  @map("first_name")
+  lastName       String?  @map("last_name")
+  phone          String?
+  locationType   String?  @map("location_type")
+  city           String?
+  country        String?
+  church         String?
+  status         String   @default("pending")
+  processedAt    DateTime? @map("processed_at")
+  rawData        Json     @map("raw_data")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  form      FilloutForm?      @relation(fields: [formId], references: [id])
+  answers   SubmissionAnswer[]
+  assignments Assignment[]
+
+  @@index([formId])
+  @@index([submissionTime])
+  @@index([email])
+  @@index([status])
+  @@map("submissions")
+}
+
+model SubmissionAnswer {
+  id           String   @id @default(cuid())
+  submissionId String   @map("submission_id")
+  questionId   String   @map("question_id")
+  value        String?
+  rawValue     Json?    @map("raw_value")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  submission   Submission       @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question     FilloutQuestion  @relation(fields: [questionId], references: [id])
+
+  @@unique([submissionId, questionId])
+  @@index([submissionId])
+  @@index([questionId])
+  @@map("submission_answers")
+}
+
+model WebhookEvent {
+  id            String   @id @default(cuid())
+  eventId       String   @unique @map("event_id")
+  eventType     String   @map("event_type")
+  payload       Json
+  signature     String
+  status        String   @default("pending")
+  errorMessage  String?  @map("error_message")
+  processedAt   DateTime? @map("processed_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([eventType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("webhook_events")
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  status      String   @default("draft")
+  tags        String[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  versions    TemplateVersion[]
+  variants    TemplateVariant[]
+  assignments Assignment[]
+
+  @@index([status])
+  @@map("templates")
+}
+
+model TemplateVersion {
+  id             String   @id @default(cuid())
+  templateId     String   @map("template_id")
+  versionNumber  Int      @map("version_number")
+  name           String
+  subject        String
+  preheader      String?
+  editorState    Json     @map("editor_state")
+  htmlContent    String   @map("html_content")
+  textContent    String?  @map("text_content")
+  placeholders   String[]
+  isPublished    Boolean  @default(false) @map("is_published")
+  publishedAt    DateTime? @map("published_at")
+  publishedBy    String?  @map("published_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  template Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  assignments Assignment[]
+
+  @@unique([templateId, versionNumber])
+  @@index([templateId])
+  @@index([isPublished])
+  @@map("template_versions")
+}
+
+model TemplateVariant {
+  id             String   @id @default(cuid())
+  templateId     String   @map("template_id")
+  name           String
+  description    String?
+  selectionType  String   @map("selection_type")
+  weight         Float    @default(0.5)
+  conditionRules Json?    @map("condition_rules")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  template Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+  @@map("template_variants")
+}
+
+model Assignment {
+  id              String   @id @default(cuid())
+  submissionId    String   @map("submission_id")
+  templateId      String   @map("template_id")
+  versionId       String?  @map("version_id")
+  variantId       String?  @map("variant_id")
+  status          String   @default("pending")
+  reasonCodes     Json     @map("reason_codes")
+  missingFields   Json?    @map("missing_fields")
+  scheduledAt     DateTime? @map("scheduled_at")
+  processedAt     DateTime? @map("processed_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  submission Submission       @relation(fields: [submissionId], references: [id])
+  template   Template         @relation(fields: [templateId], references: [id])
+  version    TemplateVersion? @relation(fields: [versionId], references: [id])
+
+  @@unique([submissionId, templateId])
+  @@index([submissionId])
+  @@index([templateId])
+  @@index([status])
+  @@map("assignments")
+}
+
+model LegacyEmailHistory {
+  id               String   @id @default(cuid())
+  email            String
+  templateName     String   @map("template_name")
+  sentDate         DateTime? @map("sent_date")
+  status           String
+  campaignContext  String?  @map("campaign_context")
+  responseId       String?  @map("response_id")
+  personName       String?  @map("person_name")
+  notes            String?
+  deliveryStatus   String?  @map("delivery_status")
+  opened           String?  @default("UNKNOWN")
+  clicked          String?  @default("UNKNOWN")
+  bounced          String?  @default("NO")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@index([templateName])
+  @@index([sentDate])
+  @@map("legacy_email_history")
+}
