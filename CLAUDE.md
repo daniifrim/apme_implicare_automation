@@ -4,11 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an APME (Association for Missions and Evangelism) email automation system built on Google Apps Script. The system processes Typeform submissions from missionaries and automatically sends personalized follow-up emails based on user interests and responses.
+This is an APME (Association for Missions and Evangelism) email automation system with two components:
+
+1. **Next.js web dashboard** (`app/`) — Manages submissions, email templates, assignments, field mappings, and audit logs. Uses Prisma + PostgreSQL. Receives Fillout form webhooks.
+2. **Google Apps Script automation** (`main-project/`, `wrapper-project/`) — Legacy automation that processes Typeform submissions from a Google Sheet, assigns email templates, and sends personalized follow-up emails via Gmail.
 
 ## Architecture
 
-The project uses a **dual-script architecture**:
+The project is a monorepo with a Next.js app and two Apps Script projects:
+
+### Web App (`app/`)
+- **Framework**: Next.js 16 (App Router) + TypeScript
+- **Database**: PostgreSQL via Prisma ORM
+- **Testing**: Vitest + React Testing Library
+- **Package Manager**: PNPM
+- **Local setup**: See `AGENTS.md` "Local Development Setup" section
+
+### Apps Script (legacy)
 
 ### Main Project (`main-project/`)
 - **Script ID**: `14cAHJIREVfcKY5zRtoiAwulqXqVOSHx1mX0hUPFJXqfYQwaS-r0tWDxm`
@@ -44,7 +56,18 @@ The project uses a **dual-script architecture**:
 
 ## Development Commands
 
-### Quick Deployment
+### Web App
+```bash
+pnpm -C app dev              # Start dev server
+pnpm -C app build            # Production build
+pnpm -C app test             # Run all tests
+pnpm -C app lint             # Run ESLint
+pnpm -C app db:migrate       # Run Prisma migrations
+pnpm -C app db:generate      # Generate Prisma client
+pnpm -C app db:studio        # Open Prisma Studio
+```
+
+### Quick Deployment (Apps Script)
 ```bash
 npm run push-clasp          # Push both projects to Apps Script only
 npm run push-clasp-github   # Push to Apps Script + commit to GitHub
@@ -91,18 +114,27 @@ cd wrapper-project && clasp open # Open wrapper project in browser
 
 ### External APIs
 - **OpenAI GPT-4**: Dynamic field mapping for form variations
-- **Typeform**: Source data from missionary interest forms
+- **Fillout**: Form submissions via webhook to web app
+- **Typeform**: Legacy source data from missionary interest forms
 
 ## Data Flow
 
+### Web App (current)
+1. **Form Submission**: Fillout form webhook → `POST /api/webhooks/fillout`
+2. **Processing**: Submission normalized, answers stored, assignments created
+3. **Template Assignment**: Assignment engine evaluates rules against submission data
+4. **Management**: Dashboard for viewing/editing submissions, templates, and assignments
+
+### Apps Script (legacy)
 1. **Form Submission**: Romanian missionaries fill Typeform
 2. **Sheet Import**: Data appears in "Implicare 2.0" spreadsheet
 3. **Processing**: AutomationEngine identifies unprocessed entries
 4. **Field Mapping**: AI/pattern matching maps questions to standard fields
 5. **Template Assignment**: Business logic determines relevant email templates
-6. **Personalization**: Templates populated with user-specific data
-7. **Email Sending**: Gmail API with safety controls and rate limiting
-8. **Analytics**: Engagement tracking and summary reporting
+6. **Email Sending**: Gmail API with safety controls and rate limiting
+
+### Data Import (local dev)
+Legacy data can be imported from CSV files in `docs/data/`. See `AGENTS.md` for the full seeding procedure.
 
 ## Development Notes
 

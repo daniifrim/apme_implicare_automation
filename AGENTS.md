@@ -144,9 +144,68 @@ try {
 - Follow existing Google Apps Script patterns
 - Be aware of execution time limits (6 minutes)
 
+## Local Development Setup (Web App)
+
+### Prerequisites
+
+- Docker Desktop (for PostgreSQL)
+- Node.js + PNPM
+
+### Database Setup
+
+Start a local PostgreSQL container:
+
+```bash
+docker run -d --name apme-postgres \
+  -e POSTGRES_USER=apme \
+  -e POSTGRES_PASSWORD=apme_password \
+  -e POSTGRES_DB=apme_implicare \
+  -p 5432:5432 \
+  postgres:16-alpine
+```
+
+If the container already exists but is stopped:
+
+```bash
+docker start apme-postgres
+```
+
+Run migrations:
+
+```bash
+pnpm -C app db:migrate
+```
+
+### Seeding Data
+
+The database needs to be populated from local data files after a fresh setup. Run these in order:
+
+1. **Import email templates** (from `docs/email-templates/*.txt`):
+   ```bash
+   curl -X POST http://localhost:3000/api/templates/import
+   ```
+
+2. **Import submissions** (from `docs/data/implicare-data.csv`):
+   ```bash
+   curl -X POST http://localhost:3000/api/submissions/import
+   ```
+
+3. **Reconcile legacy email history** (creates template assignments from `docs/data/email-history.csv`):
+   ```bash
+   node app/scripts/reconcile-legacy-email-history.js --dry-run   # Preview first
+   node app/scripts/reconcile-legacy-email-history.js --apply      # Apply changes
+   ```
+
+The dev server (`pnpm -C app dev`) must be running for steps 1 and 2.
+
+### Environment
+
+Web app environment is configured in `app/.env`. Default local values point to `localhost:5432` for PostgreSQL and `localhost:6379` for Redis.
+
 ## Important Notes
 
 - **Safety Mode**: Apps Script has `TEST_MODE` - emails redirect to test address
 - **Prisma**: Regenerate client after schema changes (`pnpm -C app db:generate`)
 - **Environment**: Web app uses `.env` in `app/` directory
 - **Apps Script Auth**: Uses `mobilizare@apme.ro` account
+- **Docker**: PostgreSQL runs in a container named `apme-postgres` — start it before running the web app
