@@ -1,6 +1,6 @@
 # Project Knowledge Changelog
 
-> Living project state document. Not a git log. Last updated: February 12, 2026
+> Living project state document. Not a git log. Last updated: February 14, 2026
 
 ## Current State
 
@@ -10,6 +10,11 @@ processing, email template assignment, and reporting. The dashboard provides ope
 for submissions, templates, mappings, webhooks, and audit history.
 
 ## Latest Changes
+
+### February 14, 2026
+
+- Fixed CSV filename mismatch in submission import route (`implicare-data.csv` instead of old name).
+- Fixed undeclared `missingAssignment` variable bug in legacy email history reconciliation script.
 
 ### February 12, 2026
 

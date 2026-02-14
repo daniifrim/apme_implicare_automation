@@ -90,7 +90,7 @@ export function parseProcessingStatus(row: CSVRow): {
 export async function POST(request: NextRequest) {
   try {
     void request
-    const csvPath = path.join(dataDir, 'Implicare 2.0 - Implicare 2.0.csv')
+    const csvPath = path.join(dataDir, 'implicare-data.csv')
     
     if (!fs.existsSync(csvPath)) {
       return NextResponse.json(
@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     void request
-    const csvPath = path.join(dataDir, 'Implicare 2.0 - Implicare 2.0.csv')
+    const csvPath = path.join(dataDir, 'implicare-data.csv')
     
     if (!fs.existsSync(csvPath)) {
       return NextResponse.json(

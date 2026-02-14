@@ -243,6 +243,7 @@ async function runPhase1EmailHistoryReconciliation(prisma, args, report) {
 
   let wouldUpdate = 0
   let wouldCreate = 0
+  let missingAssignment = 0
   let alreadyNonPending = 0
   let updated = 0
   let created = 0
