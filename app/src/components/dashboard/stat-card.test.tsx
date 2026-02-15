@@ -70,7 +70,8 @@ describe('StatCard', () => {
       />
     )
 
-    expect(container.querySelector('[data-slot="skeleton"]')).toBeInTheDocument()
+    // Loading state uses animate-pulse divs
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
   })
 
   it('applies variant styles correctly', () => {
