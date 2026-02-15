@@ -1,6 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import type { Prisma } from '@prisma/client'
+
+interface SubmissionWithAssignments {
+  id: string
+  submissionId: string
+  email: string | null
+  firstName: string | null
+  lastName: string | null
+  status: string
+  submissionTime: Date
+  createdAt: Date
+  locationType: string | null
+  city: string | null
+  country: string | null
+  assignments: Array<{
+    status: string
+    template: {
+      id: string
+      slug: string
+      name: string
+    } | null
+    version: {
+      id: string
+      versionNumber: number
+      subject: string
+    } | null
+  }>
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,7 +67,7 @@ export async function GET(request: NextRequest) {
     ])
 
     // Transform submissions to include computed fields
-    const transformedSubmissions = submissions.map(sub => ({
+    const transformedSubmissions = submissions.map((sub: SubmissionWithAssignments) => ({
       id: sub.id,
       submissionId: sub.submissionId,
       email: sub.email,
@@ -54,7 +80,7 @@ export async function GET(request: NextRequest) {
       city: sub.city,
       country: sub.country,
       assignmentCount: sub.assignments.length,
-      templates: sub.assignments.map(a => ({
+      templates: sub.assignments.map((a: SubmissionWithAssignments['assignments'][0]) => ({
         id: a.template?.id,
         name: a.template?.name,
         slug: a.template?.slug,

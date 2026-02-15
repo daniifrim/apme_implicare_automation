@@ -158,7 +158,7 @@ async function getDailySubmissionsTrend(from: Date, to: Date): Promise<TrendData
   })
 
   // Aggregate by date
-  const counts = submissions.reduce((acc, sub) => {
+  const counts = submissions.reduce((acc: Record<string, number>, sub: { createdAt: Date }) => {
     const date = sub.createdAt.toISOString().split('T')[0]
     acc[date] = (acc[date] || 0) + 1
     return acc
