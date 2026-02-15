@@ -21,7 +21,7 @@ export function NotificationSettingsPanel({
 }: NotificationSettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<NotificationSettings>(settings)
 
-  useFormDirty('notifications', settings, localSettings)
+  useFormDirty('notifications', settings as unknown as Record<string, unknown>, localSettings as unknown as Record<string, unknown>)
 
   const handleChange = (updates: Partial<NotificationSettings>) => {
     const newSettings = { ...localSettings, ...updates }

@@ -22,7 +22,7 @@ export default async function TemplateDetailPage({
 
   if (!template) notFound();
 
-  const published = template.versions.find((v) => v.isPublished) ?? null;
+  const published = template.versions.find((v: { isPublished: boolean }) => v.isPublished) ?? null;
 
   return (
     <div className="space-y-6">
@@ -66,7 +66,7 @@ export default async function TemplateDetailPage({
             Versions
           </div>
           <div className="mt-3 divide-y border rounded-custom overflow-hidden">
-            {template.versions.map((v) => (
+            {template.versions.map((v: { id: string; versionNumber: number; name: string; isPublished: boolean; subject: string; createdAt: Date }) => (
               <div
                 key={v.id}
                 className="p-3 flex items-center justify-between gap-3 hover:bg-accent/30 transition-colors"

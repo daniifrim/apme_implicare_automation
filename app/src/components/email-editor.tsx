@@ -110,7 +110,8 @@ export function insertPlaceholder(
   editor.insertInlineContent([
     {
       type: 'text',
-      text: `{{${placeholder}}}`
+      text: `{{${placeholder}}}`,
+      styles: {}
     }
   ])
 }

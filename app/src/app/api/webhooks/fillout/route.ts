@@ -4,7 +4,6 @@ import { verifyWebhookSignature } from '@/lib/webhook'
 import { normalizeSubmission } from '@/lib/normalize'
 import { createAssignmentsForSubmission, markSubmissionAsProcessed } from '@/lib/assignments'
 import type { FilloutWebhookPayload, FilloutSubmission } from '@/types/fillout'
-import type { Prisma } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +51,7 @@ export async function POST(request: NextRequest) {
       data: {
         eventId,
         eventType: eventType || payload.type,
-        payload: payload as unknown as Prisma.InputJsonValue,
+        payload: payload as unknown as object,
         signature,
         status: 'processing'
       }
@@ -117,7 +116,7 @@ async function processSubmission(submissionData: FilloutSubmission) {
         city: normalized.city,
         country: normalized.country,
         church: normalized.church,
-        rawData: normalized.rawData as unknown as Prisma.InputJsonValue,
+        rawData: normalized.rawData as unknown as object,
         updatedAt: new Date()
       }
     })
@@ -132,7 +131,7 @@ async function processSubmission(submissionData: FilloutSubmission) {
           submissionId: existingSubmission.id,
           questionId: answer.questionId,
           value: answer.value,
-          rawValue: answer.rawValue as Prisma.InputJsonValue
+          rawValue: answer.rawValue as unknown as object
         }
       })
     }
@@ -166,7 +165,7 @@ async function processSubmission(submissionData: FilloutSubmission) {
       city: normalized.city,
       country: normalized.country,
       church: normalized.church,
-      rawData: normalized.rawData as unknown as Prisma.InputJsonValue,
+      rawData: normalized.rawData as unknown as object,
       status: 'pending'
     }
   })
@@ -177,7 +176,7 @@ async function processSubmission(submissionData: FilloutSubmission) {
         submissionId: submission.id,
         questionId: answer.questionId,
         value: answer.value,
-        rawValue: answer.rawValue as unknown as Prisma.InputJsonValue
+        rawValue: answer.rawValue as unknown as object
       }
     })
   }

@@ -112,7 +112,7 @@ export async function POST(
           version.preheader,
           version.htmlContent,
           version.textContent,
-          ...version.placeholders.map((placeholder) => `{{${placeholder}}}`)
+          ...version.placeholders.map((placeholder: string) => `{{${placeholder}}}`)
         ]),
         warnings,
         submission: submission ? {

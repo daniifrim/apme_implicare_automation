@@ -23,7 +23,7 @@ export function AutomationSettingsPanel({
 }: AutomationSettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<AutomationSettings>(settings)
 
-  useFormDirty('automation', settings, localSettings)
+  useFormDirty('automation', settings as unknown as Record<string, unknown>, localSettings as unknown as Record<string, unknown>)
 
   const handleChange = (updates: Partial<AutomationSettings>) => {
     const newSettings = { ...localSettings, ...updates }

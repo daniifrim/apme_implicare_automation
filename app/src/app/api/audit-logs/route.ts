@@ -118,8 +118,8 @@ export async function GET(request: NextRequest) {
         pages: Math.ceil(total / limit)
       },
       filters: {
-        actions: distinctActions.map(a => a.action).sort(),
-        resources: distinctResources.map(r => r.resource).sort(),
+        actions: distinctActions.map((a: { action: string }) => a.action).sort(),
+        resources: distinctResources.map((r: { resource: string }) => r.resource).sort(),
         users
       }
     })

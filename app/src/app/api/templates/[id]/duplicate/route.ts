@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import type { Prisma } from '@prisma/client'
 
 function generateUniqueSlug(baseSlug: string, attempt: number): string {
   if (attempt === 0) return `${baseSlug}-copy`
@@ -62,7 +61,7 @@ export async function POST(
                 name: 'Initial Version',
                 subject: latestVersion.subject,
                 preheader: latestVersion.preheader,
-                editorState: latestVersion.editorState as Prisma.InputJsonValue,
+                editorState: latestVersion.editorState as unknown as object,
                 htmlContent: latestVersion.htmlContent,
                 textContent: latestVersion.textContent,
                 placeholders: latestVersion.placeholders,

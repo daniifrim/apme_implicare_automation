@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useFormDirty } from '@/hooks/use-unsaved-changes'
-import { User, UserRole, ROLE_PERMISSIONS } from '@/types/settings'
+import { User, UserRole, ROLE_PERMISSIONS, UserStatus } from '@/types/settings'
 
 interface UserManagementPanelProps {
   initialUsers?: User[]
@@ -38,7 +38,7 @@ export function UserManagementPanel({
   const [statusFilter, setStatusFilter] = useState<UserStatus | 'all'>('all')
   const [actionInProgress, setActionInProgress] = useState<string | null>(null)
 
-  useFormDirty('users', initialUsers, users)
+  useFormDirty('users', initialUsers as unknown as Record<string, unknown>, users as unknown as Record<string, unknown>)
 
   const handleUsersChange = (newUsers: User[]) => {
     setUsers(newUsers)

@@ -24,7 +24,7 @@ export function SecuritySettingsPanel({
   const [localSettings, setLocalSettings] = useState<SecuritySettings>(settings)
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
 
-  useFormDirty('security', settings, localSettings)
+  useFormDirty('security', settings as unknown as Record<string, unknown>, localSettings as unknown as Record<string, unknown>)
 
   const handleChange = (updates: Partial<SecuritySettings>) => {
     const newSettings = { ...localSettings, ...updates }

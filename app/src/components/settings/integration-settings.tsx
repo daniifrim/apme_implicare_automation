@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Key, Globe, Trash2, Plus, Copy, RefreshCw, Eye, EyeOff, Webhook } from 'lucide-react'
+import { Key, Globe, Trash2, Plus, Copy, RefreshCw, Eye, EyeOff, Webhook as WebhookIcon } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -144,7 +144,7 @@ export function IntegrationSettingsPanel({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Webhook className="w-5 h-5" />
+            <WebhookIcon className="w-5 h-5" />
             Webhooks
           </CardTitle>
           <CardDescription>Configure webhook endpoints for real-time events</CardDescription>

@@ -28,7 +28,7 @@ export function AppearanceSettingsPanel({
 }: AppearanceSettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<AppearanceSettings>(settings)
 
-  useFormDirty('appearance', settings, localSettings)
+  useFormDirty('appearance', settings as unknown as Record<string, unknown>, localSettings as unknown as Record<string, unknown>)
 
   const handleChange = (updates: Partial<AppearanceSettings>) => {
     const newSettings = { ...localSettings, ...updates }

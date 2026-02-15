@@ -5,7 +5,6 @@ import { prisma } from '@/lib/prisma'
 import { collectTemplatePlaceholders, normalizeEmailHtml } from '@/lib/email-template-normalization'
 import fs from 'fs'
 import path from 'path'
-import type { Prisma } from '@prisma/client'
 
 const templatesDir = path.join(process.cwd(), '..', 'docs', 'email-templates')
 
@@ -155,7 +154,7 @@ export async function POST(request: NextRequest) {
                 name: 'Initial Version',
                 subject: name,
                 preheader: '',
-                editorState: editorState as Prisma.InputJsonValue,
+                editorState: editorState as unknown as object,
                 htmlContent: normalizedContent.html,
                 textContent: normalizedContent.text,
                 placeholders,

@@ -3,7 +3,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createAuditLog } from '@/lib/audit'
-import type { Prisma } from '@prisma/client'
 import { collectTemplatePlaceholders, normalizeEmailHtml } from '@/lib/email-template-normalization'
 
 export async function PATCH(
@@ -74,7 +73,7 @@ export async function PATCH(
         ...(name !== undefined && { name }),
         ...(subject !== undefined && { subject }),
         ...(preheader !== undefined && { preheader }),
-        ...(editorState !== undefined && { editorState: editorState as Prisma.InputJsonValue }),
+        ...(editorState !== undefined && { editorState: editorState as unknown as object }),
         ...(contentChanged && {
           htmlContent: normalizedContent.html,
           textContent: normalizedContent.text,

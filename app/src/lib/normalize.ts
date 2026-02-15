@@ -1,7 +1,19 @@
 // ABOUTME: Normalizes Fillout submissions into canonical data structures
 // ABOUTME: Extracts location, contact, and mapped field values for storage
 import type { FilloutSubmission, NormalizedSubmission, FieldValue } from '@/types/fillout'
-import type { FieldMapping, FilloutQuestion } from '@prisma/client'
+
+interface FieldMapping {
+  id: string
+  questionId: string
+  canonicalKey: string
+  [key: string]: unknown
+}
+
+interface FilloutQuestion {
+  id: string
+  questionId: string
+  [key: string]: unknown
+}
 
 export function detectLocationType(answers: FilloutSubmission['questions']): 'romania' | 'diaspora' | null {
   const locationAnswer = answers.find(a => 

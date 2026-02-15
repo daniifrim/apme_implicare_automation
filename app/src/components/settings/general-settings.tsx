@@ -44,7 +44,7 @@ export function GeneralSettingsPanel({
 }: GeneralSettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<GeneralSettings>(settings)
 
-  useFormDirty('general', settings, localSettings)
+  useFormDirty('general', settings as unknown as Record<string, unknown>, localSettings as unknown as Record<string, unknown>)
 
   const handleChange = (updates: Partial<GeneralSettings>) => {
     const newSettings = { ...localSettings, ...updates }

@@ -2,6 +2,12 @@ import { prisma } from '@/lib/prisma'
 import { assignmentEngine, type NormalizedSubmission as EngineNormalizedSubmission } from '@/lib/assignment-engine'
 import type { NormalizedSubmission } from '@/types/fillout'
 
+interface Template {
+  id: string
+  slug: string
+  [key: string]: unknown
+}
+
 export interface AssignmentCreationResult {
   created: number
   skipped: number
@@ -91,7 +97,7 @@ export async function createAssignmentsForSubmission(
       }
     })
 
-    const templateMap = new Map(templates.map(t => [t.slug, t]))
+    const templateMap = new Map<string, Template>(templates.map((t: { slug: string; [key: string]: unknown }) => [t.slug, t as Template]))
 
     // Process rule-based assignments
     for (const assignment of assignments) {
@@ -235,7 +241,7 @@ export async function reprocessAssignments(submissionId: string): Promise<Assign
     country: submission.country,
     church: submission.church,
     rawData: submission.rawData as never,
-    answers: submission.answers.map(a => ({
+    answers: submission.answers.map((a: { questionId: string; value: string | null; rawValue: unknown }) => ({
       questionId: a.questionId,
       value: a.value,
       rawValue: a.rawValue

@@ -2,7 +2,6 @@
 // ABOUTME: Persists normalized email content to keep preview and storage contracts stable
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import type { Prisma } from '@prisma/client'
 import { collectTemplatePlaceholders, normalizeEmailHtml } from '@/lib/email-template-normalization'
 
 export async function GET(
@@ -80,7 +79,7 @@ export async function POST(
         name,
         subject,
         preheader,
-        editorState: editorState as Prisma.InputJsonValue,
+        editorState: editorState as unknown as object,
         htmlContent: normalizedContent.html,
         textContent: normalizedContent.text,
         placeholders: mergedPlaceholders

@@ -1,6 +1,24 @@
 // ABOUTME: Evaluates assignment rules to decide which templates to send
 // ABOUTME: Normalizes submissions and applies rule-based template selection
-import type { Submission, FilloutQuestion } from '@prisma/client'
+
+interface FilloutQuestion {
+  id: string
+  questionId: string
+  title: string
+  name: string
+}
+
+interface Submission {
+  id: string
+  email: string | null
+  firstName: string | null
+  lastName: string | null
+  locationType: string | null
+  city: string | null
+  country: string | null
+  church: string | null
+  rawData: unknown
+}
 
 export interface AssignmentRule {
   templateSlug: string

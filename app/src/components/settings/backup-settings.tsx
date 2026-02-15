@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useFormDirty } from '@/hooks/use-unsaved-changes'
 import { BackupSettings, DEFAULT_SETTINGS } from '@/types/settings'
@@ -24,7 +25,7 @@ export function BackupSettingsPanel({
   const [localSettings, setLocalSettings] = useState<BackupSettings>(settings)
   const [backupInProgress, setBackupInProgress] = useState(false)
 
-  useFormDirty('backup', settings, localSettings)
+  useFormDirty('backup', settings as unknown as Record<string, unknown>, localSettings as unknown as Record<string, unknown>)
 
   const handleChange = (updates: Partial<BackupSettings>) => {
     const newSettings = { ...localSettings, ...updates }
