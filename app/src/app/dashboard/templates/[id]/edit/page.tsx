@@ -1,5 +1,5 @@
-// ABOUTME: Provides the template version editor UI with publish and preview workflows
-// ABOUTME: Coordinates constrained email authoring, placeholder tools, and fidelity warnings
+// ABOUTME: Redesigned template editor page with three-column resizable layout
+// ABOUTME: Editor 60%, Preview 25%, Sidebar 15% with responsive tab fallback
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -8,56 +8,21 @@ import Link from 'next/link'
 import {
   ArrowLeft,
   Save,
-  Plus,
-  Eye,
   CheckCircle,
-  Loader2,
-  User
+  Loader2
 } from 'lucide-react'
-import { EmailEditor, insertPlaceholder } from '@/components/email-editor'
 import { BlockNoteEditor, PartialBlock } from '@blocknote/core'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { cn } from '@/lib/utils'
+import { insertPlaceholder } from '@/components/email-editor'
+import {
+  TemplateEditorLayout,
+  EditorPanel,
+  PreviewPanel,
+  SidebarPanel
+} from '@/components/template-editor'
+import type { Template, TemplateVersion, Submission, PreviewData } from '@/components/template-editor/types'
 import type { EditorWarning } from '@/types/email-editor'
-
-interface Template {
-  id: string
-  slug: string
-  name: string
-  description: string | null
-  status: string
-  tags: string[]
-  createdAt: string
-  updatedAt: string
-}
-
-interface TemplateVersion {
-  id: string
-  versionNumber: number
-  name: string
-  subject: string
-  preheader: string | null
-  editorState: PartialBlock[]
-  htmlContent: string
-  textContent: string | null
-  placeholders: string[]
-  isPublished: boolean
-  publishedAt: string | null
-  createdAt: string
-}
-
-interface Submission {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-}
 
 export default function TemplateEditorPage() {
   const params = useParams()
@@ -69,14 +34,9 @@ export default function TemplateEditorPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
-  const [previewData, setPreviewData] = useState<{
-    html: string
-    text: string
-    subject: string
-    warnings: string[]
-    submission: Submission | null
-  } | null>(null)
+  const [publishing, setPublishing] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null)
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>('')
   const [editorInstance, setEditorInstance] = useState<BlockNoteEditor | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
@@ -87,18 +47,12 @@ export default function TemplateEditorPage() {
     preheader: ''
   })
 
-  const [editorContent, setEditorContent] = useState<{
-    blocks: PartialBlock[]
-    html: string
-    text: string
-    placeholders: string[]
-    warnings: string[]
-  }>({
-    blocks: [],
+  const [editorContent, setEditorContent] = useState({
+    blocks: [] as PartialBlock[],
     html: '',
     text: '',
-    placeholders: [],
-    warnings: []
+    placeholders: [] as string[],
+    warnings: [] as string[]
   })
   const [editorWarnings, setEditorWarnings] = useState<EditorWarning[]>([])
 
@@ -149,6 +103,14 @@ export default function TemplateEditorPage() {
     fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templateId])
+
+  // Auto-generate preview when submission changes or editor content changes
+  useEffect(() => {
+    if (selectedVersion && selectedSubmissionId) {
+      generatePreview()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSubmissionId, selectedVersion?.id])
 
   async function handleSaveDraft() {
     if (!selectedVersion) return
@@ -213,7 +175,7 @@ export default function TemplateEditorPage() {
   async function handlePublish() {
     if (!selectedVersion) return
 
-    setSaving(true)
+    setPublishing(true)
     try {
       const response = await fetch(
         `/api/templates/${templateId}/publish`,
@@ -230,13 +192,14 @@ export default function TemplateEditorPage() {
     } catch (error) {
       console.error('Error publishing:', error)
     } finally {
-      setSaving(false)
+      setPublishing(false)
     }
   }
 
-  async function handlePreview() {
+  async function generatePreview() {
     if (!selectedVersion) return
 
+    setPreviewLoading(true)
     try {
       const response = await fetch(
         `/api/templates/${templateId}/versions/${selectedVersion.id}/preview`,
@@ -257,9 +220,10 @@ export default function TemplateEditorPage() {
         warnings: data.preview.warnings || [],
         submission: data.preview.submission
       })
-      setShowPreview(true)
     } catch (error) {
       console.error('Error generating preview:', error)
+    } finally {
+      setPreviewLoading(false)
     }
   }
 
@@ -279,10 +243,34 @@ export default function TemplateEditorPage() {
     setHasChanges(true)
   }
 
+  function handleSelectVersion(version: TemplateVersion) {
+    setSelectedVersion(version)
+    setFormData({
+      name: version.name,
+      subject: version.subject,
+      preheader: version.preheader || ''
+    })
+    if (version.editorState) {
+      setEditorContent({
+        blocks: version.editorState as PartialBlock[],
+        html: version.htmlContent,
+        text: version.textContent || '',
+        placeholders: version.placeholders,
+        warnings: []
+      })
+    }
+    setEditorWarnings([])
+    setHasChanges(false)
+  }
+
+  const selectedSubmission = submissions.find(s => s.id === selectedSubmissionId) || null
+  const publishedVersion = versions.find(v => v.isPublished)
+  const isPublished = selectedVersion?.id === publishedVersion?.id
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
   }
@@ -290,35 +278,33 @@ export default function TemplateEditorPage() {
   if (!template) {
     return (
       <div className="p-8 text-center">
-        <p className="text-gray-500">Template not found</p>
+        <p className="text-muted-foreground">Template not found</p>
       </div>
     )
   }
 
-  const publishedVersion = versions.find(v => v.isPublished)
-
   return (
-    <div className="space-y-6">
+    <div className="h-[calc(100vh-8rem)] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6 shrink-0">
         <div className="flex items-center gap-4">
           <Link
             href="/templates"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-accent rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{template.name}</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold">{template.name}</h1>
+            <p className="text-sm text-muted-foreground">
               {template.slug} • {versions.length} version{versions.length !== 1 ? 's' : ''}
             </p>
           </div>
-          {publishedVersion?.id === selectedVersion?.id && (
-            <Badge className="bg-green-100 text-green-700">Published</Badge>
+          {isPublished && (
+            <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Published</Badge>
           )}
           {selectedVersion && !selectedVersion.isPublished && (
-            <Badge className="bg-yellow-100 text-yellow-700">Draft</Badge>
+            <Badge variant="secondary">Draft</Badge>
           )}
         </div>
 
@@ -331,306 +317,78 @@ export default function TemplateEditorPage() {
             onClick={handleSaveDraft}
             disabled={saving || !hasChanges}
           >
-            <Save className="w-4 h-4 mr-2" />
-            Save Draft
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleCreateNewVersion}
-            disabled={saving}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Version
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Draft
+              </>
+            )}
           </Button>
           <Button
             onClick={handlePublish}
-            disabled={saving || !selectedVersion || selectedVersion.isPublished}
+            disabled={publishing || !selectedVersion || selectedVersion.isPublished}
           >
-            <CheckCircle className="w-4 h-4 mr-2" />
-            Publish
+            {publishing ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Publishing...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Publish
+              </>
+            )}
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Editor */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border rounded-lg p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="version-name">Version Name</Label>
-                <Input
-                  id="version-name"
-                  value={formData.name}
-                  onChange={(e) => {
-                    setFormData({ ...formData, name: e.target.value })
-                    setHasChanges(true)
-                  }}
-                  placeholder="e.g., Welcome Email v2"
-                />
-              </div>
-              <div>
-                <Label htmlFor="subject">Email Subject</Label>
-                <Input
-                  id="subject"
-                  value={formData.subject}
-                  onChange={(e) => {
-                    setFormData({ ...formData, subject: e.target.value })
-                    setHasChanges(true)
-                  }}
-                  placeholder="e.g., Welcome to APME!"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="preheader">Preheader Text</Label>
-              <Input
-                id="preheader"
-                value={formData.preheader}
-                onChange={(e) => {
-                  setFormData({ ...formData, preheader: e.target.value })
-                  setHasChanges(true)
-                }}
-                placeholder="Preview text that appears in email clients"
-              />
-            </div>
-
-            <div>
-              <Label>Email Content</Label>
-              <EmailEditor
-                initialContent={editorContent.blocks}
-                onChange={handleEditorChange}
-                onEditorReady={setEditorInstance}
-                onValidationChange={setEditorWarnings}
-                showBlockHandles={false}
-                allowedFeatures={{
-                  paragraphs: true,
-                  lineBreaks: true,
-                  links: true,
-                  lists: true,
-                  placeholders: true
-                }}
-              />
-            </div>
-
-            {editorWarnings.length > 0 && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                <div className="text-sm font-medium text-amber-900 mb-1">Compatibility Warnings</div>
-                <ul className="list-disc list-inside text-sm text-amber-800 space-y-1">
-                  {editorWarnings.map((warning) => (
-                    <li key={warning.code}>{warning.message}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {editorContent.placeholders.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm text-gray-500">Detected placeholders:</span>
-                {editorContent.placeholders.map((p) => (
-                  <Badge key={p} variant="secondary">
-                    {'{{'}{p}{'}}'}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Placeholders */}
-          <div className="bg-white border rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Available Placeholders</h3>
-            <div className="space-y-2">
-              <div className="text-xs text-gray-500 mb-2">Contact Info</div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => handleInsertPlaceholder('FirstName')}
-                disabled={!editorInstance}
-              >
-                {'{{FirstName}}'}
-              </Button>
-
-              <div className="text-xs text-gray-500 mb-2 mt-3">Prayer Context</div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => handleInsertPlaceholder('Missionary')}
-                disabled={!editorInstance}
-              >
-                {'{{Missionary}}'}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => handleInsertPlaceholder('EthnicGroup')}
-                disabled={!editorInstance}
-              >
-                {'{{EthnicGroup}}'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Version History */}
-          <div className="bg-white border rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Version History</h3>
-            <div className="space-y-2">
-              {versions.map((version) => (
-                <button
-                  key={version.id}
-                  onClick={() => {
-                    setSelectedVersion(version)
-                    setFormData({
-                      name: version.name,
-                      subject: version.subject,
-                      preheader: version.preheader || ''
-                    })
-                    if (version.editorState) {
-                      setEditorContent({
-                        blocks: version.editorState as PartialBlock[],
-                        html: version.htmlContent,
-                        text: version.textContent || '',
-                        placeholders: version.placeholders,
-                        warnings: []
-                      })
-                    }
-                    setEditorWarnings([])
-                    setHasChanges(false)
-                  }}
-                  className={cn(
-                    'w-full text-left p-3 rounded-lg border transition-colors',
-                    selectedVersion?.id === version.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">
-                      v{version.versionNumber}: {version.name}
-                    </span>
-                    {version.isPublished && (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    )}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {new Date(version.createdAt).toLocaleDateString()}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Preview */}
-          <div className="bg-white border rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Preview</h3>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm">Select Person</Label>
-                <Select
-                  value={selectedSubmissionId}
-                  onValueChange={setSelectedSubmissionId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a person..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {submissions.map((sub) => (
-                      <SelectItem key={sub.id} value={sub.id}>
-                        {sub.firstName} {sub.lastName} ({sub.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handlePreview}
-                disabled={!selectedVersion}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview Email
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Preview Modal */}
-      <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Email Preview</DialogTitle>
-          </DialogHeader>
-
-          {previewData && (
-            <div className="space-y-6">
-              {previewData.submission && (
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 text-sm text-blue-900">
-                    <User className="w-4 h-4" />
-                    Previewing as: {previewData.submission.firstName} {previewData.submission.lastName}
-                  </div>
-                </div>
-              )}
-
-              <div className="border-b pb-4">
-                <div className="text-sm text-gray-500">Subject:</div>
-                <div className="font-medium">{previewData.subject}</div>
-              </div>
-
-              {previewData.warnings.length > 0 && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                  <div className="text-sm font-medium text-amber-900 mb-2">Preview warnings</div>
-                  <ul className="list-disc list-inside text-sm text-amber-800 space-y-1">
-                    {previewData.warnings.map((warning) => (
-                      <li key={warning}>{warning}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <Tabs defaultValue="html">
-                <TabsList>
-                  <TabsTrigger value="html">Rendered Email</TabsTrigger>
-                  <TabsTrigger value="raw">Raw HTML</TabsTrigger>
-                  <TabsTrigger value="text">Plain Text</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="html">
-                  <div className="rounded-lg border bg-gray-100 p-4">
-                    <div className="mx-auto max-w-[640px] rounded-lg border bg-white p-6 shadow-sm">
-                      <div
-                        className="text-[15px] leading-7 text-gray-900"
-                        dangerouslySetInnerHTML={{ __html: previewData.html }}
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="raw">
-                  <pre className="border rounded-lg p-6 bg-gray-50 whitespace-pre-wrap font-mono text-sm">
-                    {previewData.html}
-                  </pre>
-                </TabsContent>
-
-                <TabsContent value="text">
-                  <pre className="border rounded-lg p-6 bg-gray-50 whitespace-pre-wrap font-mono text-sm">
-                    {previewData.text}
-                  </pre>
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Three-Column Layout */}
+      <TemplateEditorLayout
+        editor={
+          <EditorPanel
+            formData={formData}
+            editorContent={editorContent}
+            editorWarnings={editorWarnings}
+            onFormChange={(data) => {
+              setFormData(data)
+              setHasChanges(true)
+            }}
+            onEditorChange={handleEditorChange}
+            onEditorReady={setEditorInstance}
+            onValidationChange={setEditorWarnings}
+          />
+        }
+        preview={
+          <PreviewPanel
+            html={previewData?.html || editorContent.html}
+            text={previewData?.text || editorContent.text}
+            subject={previewData?.subject || formData.subject}
+            warnings={previewData?.warnings || []}
+            selectedSubmission={selectedSubmission}
+            submissions={submissions}
+            onSubmissionChange={setSelectedSubmissionId}
+            onRefresh={generatePreview}
+            isLoading={previewLoading}
+          />
+        }
+        sidebar={
+          <SidebarPanel
+            placeholders={editorContent.placeholders}
+            versions={versions}
+            selectedVersionId={selectedVersion?.id || null}
+            editorInstance={editorInstance}
+            onInsertPlaceholder={handleInsertPlaceholder}
+            onSelectVersion={handleSelectVersion}
+            onCreateVersion={handleCreateNewVersion}
+          />
+        }
+      />
     </div>
   )
 }
