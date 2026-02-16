@@ -104,6 +104,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// PUT /api/settings - Update settings (alias for POST to match frontend)
+export async function PUT(request: NextRequest) {
+  // Reuse POST logic
+  return POST(request)
+}
+
 // PATCH /api/settings - Update specific settings
 export async function PATCH(request: NextRequest) {
   try {
