@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,14 +12,15 @@ export async function GET(request: NextRequest) {
     const fromDate = searchParams.get('from')
     const toDate = searchParams.get('to')
 
-    const where: Record<string, unknown> = {}
+    const where: Prisma.WebhookEventWhereInput = {}
 
     if (status) {
       where.status = status
     }
 
+    let dateFilter: { gte?: Date; lte?: Date } | undefined
     if (fromDate || toDate) {
-      const dateFilter: { gte?: Date; lte?: Date } = {}
+      dateFilter = {}
       if (fromDate) {
         dateFilter.gte = new Date(fromDate)
       }
@@ -43,15 +45,16 @@ export async function GET(request: NextRequest) {
     ])
 
     // Calculate metrics
+    const metricsWhere: Prisma.WebhookEventWhereInput = dateFilter ? { createdAt: dateFilter } : {}
     const [allEvents, completedEvents] = await Promise.all([
       prisma.webhookEvent.findMany({
-        where: fromDate || toDate ? { createdAt: where.createdAt } : {},
+        where: metricsWhere,
         select: { status: true, createdAt: true, processedAt: true }
       }),
       prisma.webhookEvent.findMany({
         where: {
           status: 'completed',
-          ...(fromDate || toDate ? { createdAt: where.createdAt } : {})
+          ...metricsWhere
         },
         select: { createdAt: true, processedAt: true }
       })
