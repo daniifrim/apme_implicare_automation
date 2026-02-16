@@ -1,14 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Settings2, Zap, RefreshCw, AlertCircle, Play, Pause } from 'lucide-react'
+import { Settings2, Zap, RefreshCw, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Button } from '@/components/ui/button'
 import { useFormDirty } from '@/hooks/use-unsaved-changes'
 import { AutomationSettings, DEFAULT_SETTINGS } from '@/types/settings'
 

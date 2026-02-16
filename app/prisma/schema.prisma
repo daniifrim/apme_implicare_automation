@@ -264,3 +264,69 @@ model LegacyEmailHistory {
   @@index([sentDate])
   @@map("legacy_email_history")
 }
+
+model Settings {
+  id                    String   @id @default(cuid())
+  
+  // General Settings
+  appName               String   @default("APME Implicare") @map("app_name")
+  timezone              String   @default("Europe/Bucharest") @map("timezone")
+  dateFormat            String   @default("DD/MM/YYYY") @map("date_format")
+  language              String   @default("ro") @map("language")
+  logoUrl               String?  @map("logo_url")
+  
+  // Notification Settings
+  emailEnabled          Boolean  @default(true) @map("email_enabled")
+  emailOnNewSubmission  Boolean  @default(true) @map("email_on_new_submission")
+  emailOnAssignmentFailure Boolean @default(true) @map("email_on_assignment_failure")
+  emailOnUserAction     Boolean  @default(false) @map("email_on_user_action")
+  emailDigest           String   @default("daily") @map("email_digest")
+  pushEnabled           Boolean  @default(false) @map("push_enabled")
+  webhookEnabled        Boolean  @default(true) @map("webhook_enabled")
+  
+  // Security Settings
+  minPasswordLength     Int      @default(8) @map("min_password_length")
+  requireUppercase      Boolean  @default(true) @map("require_uppercase")
+  requireNumbers        Boolean  @default(true) @map("require_numbers")
+  requireSpecialChars   Boolean  @default(true) @map("require_special_chars")
+  twoFactorEnabled      Boolean  @default(false) @map("two_factor_enabled")
+  sessionTimeout        Int      @default(30) @map("session_timeout")
+  maxLoginAttempts      Int      @default(5) @map("max_login_attempts")
+  lockoutDuration       Int      @default(30) @map("lockout_duration")
+  
+  // Automation Settings
+  autoProcessEnabled    Boolean  @default(true) @map("auto_process_enabled")
+  autoRetryEnabled      Boolean  @default(true) @map("auto_retry_enabled")
+  maxRetries            Int      @default(3) @map("max_retries")
+  retryDelay            Int      @default(60) @map("retry_delay")
+  processingTimeout     Int      @default(300) @map("processing_timeout")
+  batchSize             Int      @default(100) @map("batch_size")
+  maintenanceMode       Boolean  @default(false) @map("maintenance_mode")
+  
+  // Backup Settings
+  autoBackupEnabled     Boolean  @default(true) @map("auto_backup_enabled")
+  backupFrequency       String   @default("daily") @map("backup_frequency")
+  backupRetentionDays   Int      @default(30) @map("backup_retention_days")
+  includeAttachments    Boolean  @default(true) @map("include_attachments")
+  lastBackupAt          DateTime? @map("last_backup_at")
+  
+  // Integration Settings
+  apiKey                String   @default("sk_live_apme_xxxxxxxxxxxxxxxx") @map("api_key")
+  filloutWebhookSecret  String?  @map("fillout_webhook_secret")
+  smtpHost              String?  @map("smtp_host")
+  smtpPort              Int?     @map("smtp_port")
+  smtpSecure            Boolean  @default(true) @map("smtp_secure")
+  smtpUser              String?  @map("smtp_user")
+  smtpFrom              String?  @map("smtp_from")
+  
+  // Appearance Settings
+  theme                 String   @default("system") @map("theme")
+  sidebarCollapsed      Boolean  @default(false) @map("sidebar_collapsed")
+  denseMode             Boolean  @default(false) @map("dense_mode")
+  accentColor           String   @default("blue") @map("accent_color")
+  
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}

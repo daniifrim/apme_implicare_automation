@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Shield, Lock, Clock, Eye, EyeOff, Key, History } from 'lucide-react'
+import { Shield, Lock, Clock, History } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,7 +22,6 @@ export function SecuritySettingsPanel({
   onChange,
 }: SecuritySettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<SecuritySettings>(settings)
-  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
 
   useFormDirty('security', settings as unknown as Record<string, unknown>, localSettings as unknown as Record<string, unknown>)
 
