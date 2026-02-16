@@ -36,6 +36,8 @@ export default function TemplateEditorPage() {
   const [saving, setSaving] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [previewLoading, setPreviewLoading] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [previewData, setPreviewData] = useState<PreviewData | null>(null)
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>('')
   const [editorInstance, setEditorInstance] = useState<BlockNoteEditor | null>(null)
@@ -243,6 +245,57 @@ export default function TemplateEditorPage() {
     setHasChanges(true)
   }
 
+  async function handleDuplicateVersion(versionId: string) {
+    setDuplicating(true)
+    try {
+      const response = await fetch(
+        `/api/templates/${templateId}/versions/${versionId}/duplicate`,
+        { method: 'POST' }
+      )
+
+      if (response.ok) {
+        await fetchData()
+      }
+    } catch (error) {
+      console.error('Error duplicating version:', error)
+    } finally {
+      setDuplicating(false)
+    }
+  }
+
+  async function handleDeleteVersion(versionId: string) {
+    if (versions.length <= 1) {
+      alert('Cannot delete the only version. Create a new version first.')
+      return
+    }
+
+    if (!confirm('Are you sure you want to delete this version? This action cannot be undone.')) {
+      return
+    }
+
+    setDeleting(true)
+    try {
+      const response = await fetch(
+        `/api/templates/${templateId}/versions/${versionId}`,
+        { method: 'DELETE' }
+      )
+
+      if (response.ok) {
+        // If we deleted the selected version, select another one
+        if (selectedVersion?.id === versionId) {
+          const remainingVersions = versions.filter(v => v.id !== versionId)
+          const draftVersion = remainingVersions.find(v => !v.isPublished)
+          handleSelectVersion(draftVersion || remainingVersions[0])
+        }
+        await fetchData()
+      }
+    } catch (error) {
+      console.error('Error deleting version:', error)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   function handleSelectVersion(version: TemplateVersion) {
     setSelectedVersion(version)
     setFormData({
@@ -383,9 +436,13 @@ export default function TemplateEditorPage() {
             versions={versions}
             selectedVersionId={selectedVersion?.id || null}
             editorInstance={editorInstance}
+            templateName={template?.name}
+            templateSlug={template?.slug}
             onInsertPlaceholder={handleInsertPlaceholder}
             onSelectVersion={handleSelectVersion}
             onCreateVersion={handleCreateNewVersion}
+            onDuplicateVersion={handleDuplicateVersion}
+            onDeleteVersion={handleDeleteVersion}
           />
         }
       />
