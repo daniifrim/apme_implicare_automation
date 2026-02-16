@@ -2,18 +2,38 @@
 // ABOUTME: Editor 60%, Preview 25%, Sidebar 15% with responsive tab fallback
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft,
   Save,
   CheckCircle,
-  Loader2
+  Loader2,
+  MoreVertical,
+  RotateCcw,
+  Send,
+  X,
+  History
 } from 'lucide-react'
 import { BlockNoteEditor, PartialBlock } from '@blocknote/core'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 import { insertPlaceholder } from '@/components/email-editor'
 import {
   TemplateEditorLayout,
@@ -26,6 +46,7 @@ import type { EditorWarning } from '@/types/email-editor'
 
 export default function TemplateEditorPage() {
   const params = useParams()
+  const router = useRouter()
   const templateId = params.id as string
 
   const [template, setTemplate] = useState<Template | null>(null)
@@ -42,6 +63,7 @@ export default function TemplateEditorPage() {
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>('')
   const [editorInstance, setEditorInstance] = useState<BlockNoteEditor | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
+  const [showPublishDialog, setShowPublishDialog] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -57,6 +79,7 @@ export default function TemplateEditorPage() {
     warnings: [] as string[]
   })
   const [editorWarnings, setEditorWarnings] = useState<EditorWarning[]>([])
+  const [lastSavedData, setLastSavedData] = useState<{formData: typeof formData, editorContent: typeof editorContent} | null>(null)
 
   const fetchData = async () => {
     try {
@@ -138,6 +161,7 @@ export default function TemplateEditorPage() {
 
       if (response.ok) {
         setHasChanges(false)
+        setLastSavedData({ formData: { ...formData }, editorContent: { ...editorContent } })
         await fetchData()
       }
     } catch (error) {
@@ -314,6 +338,21 @@ export default function TemplateEditorPage() {
     }
     setEditorWarnings([])
     setHasChanges(false)
+    setLastSavedData(null)
+  }
+
+  function handleDiscardChanges() {
+    if (!lastSavedData) {
+      // If no last saved data, revert to selected version
+      if (selectedVersion) {
+        handleSelectVersion(selectedVersion)
+      }
+      return
+    }
+    
+    setFormData(lastSavedData.formData)
+    setEditorContent(lastSavedData.editorContent)
+    setHasChanges(false)
   }
 
   const selectedSubmission = submissions.find(s => s.id === selectedSubmissionId) || null
@@ -363,12 +402,18 @@ export default function TemplateEditorPage() {
 
         <div className="flex items-center gap-2">
           {hasChanges && (
-            <span className="text-sm text-amber-600">Unsaved changes</span>
+            <span className="text-sm text-amber-600 flex items-center gap-1.5 mr-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              Unsaved changes
+            </span>
           )}
+
+          {/* Save Button */}
           <Button
             variant="outline"
             onClick={handleSaveDraft}
             disabled={saving || !hasChanges}
+            className="hidden sm:flex"
           >
             {saving ? (
               <>
@@ -382,9 +427,12 @@ export default function TemplateEditorPage() {
               </>
             )}
           </Button>
+
+          {/* Publish Button */}
           <Button
-            onClick={handlePublish}
+            onClick={() => setShowPublishDialog(true)}
             disabled={publishing || !selectedVersion || selectedVersion.isPublished}
+            className="hidden sm:flex"
           >
             {publishing ? (
               <>
@@ -393,11 +441,71 @@ export default function TemplateEditorPage() {
               </>
             ) : (
               <>
-                <CheckCircle className="w-4 h-4 mr-2" />
+                <Send className="w-4 h-4 mr-2" />
                 Publish
               </>
             )}
           </Button>
+
+          {/* Mobile Save Button (Icon only) */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleSaveDraft}
+            disabled={saving || !hasChanges}
+            className="sm:hidden"
+            title="Save Draft"
+          >
+            {saving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+          </Button>
+
+          {/* Mobile Publish Button (Icon only) */}
+          <Button
+            size="icon"
+            onClick={() => setShowPublishDialog(true)}
+            disabled={publishing || !selectedVersion || selectedVersion.isPublished}
+            className="sm:hidden"
+            title="Publish"
+          >
+            {publishing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </Button>
+
+          {/* More Actions Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                onClick={handleDiscardChanges}
+                disabled={!hasChanges}
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Discard Changes
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCreateNewVersion}>
+                <History className="w-4 h-4 mr-2" />
+                New Version
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/templates" className="cursor-pointer">
+                  <X className="w-4 h-4 mr-2" />
+                  Close Editor
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -446,6 +554,83 @@ export default function TemplateEditorPage() {
           />
         }
       />
+
+      {/* Publish Confirmation Dialog */}
+      <Dialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="w-5 h-5 text-primary" />
+              Publish Version
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to publish <strong>{selectedVersion?.name}</strong>?
+              This will make it the active version for all new emails.
+            </DialogDescription>
+          </DialogHeader>
+
+          {publishedVersion && publishedVersion.id !== selectedVersion?.id && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 my-4">
+              <div className="flex items-start gap-3">
+                <History className="w-5 h-5 text-amber-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-amber-900">
+                    Replacing Current Published Version
+                  </p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    v{publishedVersion.versionNumber}: {publishedVersion.name} is currently published.
+                    Publishing this version will replace it.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3 my-4">
+            <div className="text-sm">
+              <span className="text-muted-foreground">Version:</span>{' '}
+              <span className="font-medium">v{selectedVersion?.versionNumber}: {selectedVersion?.name}</span>
+            </div>
+            <div className="text-sm">
+              <span className="text-muted-foreground">Subject:</span>{' '}
+              <span className="font-medium">{selectedVersion?.subject}</span>
+            </div>
+            <div className="text-sm">
+              <span className="text-muted-foreground">Placeholders:</span>{' '}
+              <span className="font-medium">{selectedVersion?.placeholders.length || 0}</span>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowPublishDialog(false)}
+              disabled={publishing}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                await handlePublish()
+                setShowPublishDialog(false)
+              }}
+              disabled={publishing}
+            >
+              {publishing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Confirm Publish
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
