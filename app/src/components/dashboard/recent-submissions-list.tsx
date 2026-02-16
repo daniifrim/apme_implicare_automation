@@ -39,10 +39,10 @@ interface RecentSubmissionsListProps {
 }
 
 const statusConfig = {
-  pending: { label: 'Pending', variant: 'warning', icon: Clock },
-  processed: { label: 'Processed', variant: 'success', icon: CheckCircle },
-  failed: { label: 'Failed', variant: 'destructive', icon: Clock },
-  default: { label: 'Unknown', variant: 'secondary', icon: Clock }
+  pending: { label: 'Pending', variant: 'default' as const, icon: Clock },
+  processed: { label: 'Processed', variant: 'secondary' as const, icon: CheckCircle },
+  failed: { label: 'Failed', variant: 'destructive' as const, icon: Clock },
+  default: { label: 'Unknown', variant: 'outline' as const, icon: Clock }
 }
 
 export function RecentSubmissionsList({
@@ -161,7 +161,7 @@ export function RecentSubmissionsList({
                 {/* Status */}
                 <div className="flex items-center gap-2">
                   <Badge 
-                    variant={status.variant as any}
+                    variant={status.variant}
                     className="gap-1 text-xs"
                   >
                     <StatusIcon className="h-3 w-3" />

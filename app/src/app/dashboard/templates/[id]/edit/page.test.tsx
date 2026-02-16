@@ -83,14 +83,15 @@ describe('Template Editing Flow - Integration', () => {
     
     // Mock useParams
     vi.mocked(nextNavigation.useParams).mockReturnValue({ id: 'tpl-123' })
-    vi.mocked(nextNavigation.useRouter).mockReturnValue({
+    const mockRouter = {
       push: vi.fn(),
       replace: vi.fn(),
       refresh: vi.fn(),
       back: vi.fn(),
       forward: vi.fn(),
       prefetch: vi.fn()
-    } as any)
+    }
+    vi.mocked(nextNavigation.useRouter).mockReturnValue(mockRouter as unknown as ReturnType<typeof nextNavigation.useRouter>)
 
     // Setup fetch mock responses
     mockFetch.mockImplementation((url: string) => {

@@ -24,6 +24,9 @@ export function ActivityChart({
   className,
   loading = false
 }: ActivityChartProps) {
+  // Pre-defined skeleton heights for loading state (deterministic)
+  const skeletonHeights = [35, 55, 42, 68, 28, 50, 45]
+
   if (loading) {
     return (
       <Card className={cn('overflow-hidden', className)}>
@@ -33,8 +36,8 @@ export function ActivityChart({
         </CardHeader>
         <CardContent>
           <div className="flex h-40 items-end justify-between gap-2">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <Skeleton key={i} className="w-full" style={{ height: `${Math.random() * 60 + 20}%` }} />
+            {skeletonHeights.map((height, i) => (
+              <Skeleton key={i} className="w-full" style={{ height: `${height}%` }} />
             ))}
           </div>
         </CardContent>

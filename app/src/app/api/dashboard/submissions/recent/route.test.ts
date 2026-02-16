@@ -54,7 +54,7 @@ describe('GET /api/dashboard/submissions/recent', () => {
       }
     ]
 
-    vi.mocked(prisma.submission.findMany).mockResolvedValueOnce(mockSubmissions as any)
+    vi.mocked(prisma.submission.findMany).mockResolvedValueOnce(mockSubmissions as unknown as Awaited<ReturnType<typeof prisma.submission.findMany>>)
     vi.mocked(prisma.submission.count).mockResolvedValueOnce(100)
 
     const request = new Request('http://localhost/api/dashboard/submissions/recent?page=1&limit=10')
@@ -145,7 +145,7 @@ describe('GET /api/dashboard/submissions/recent', () => {
       ]
     }
 
-    vi.mocked(prisma.submission.findMany).mockResolvedValueOnce([mockSubmission] as any)
+    vi.mocked(prisma.submission.findMany).mockResolvedValueOnce([mockSubmission] as unknown as Awaited<ReturnType<typeof prisma.submission.findMany>>)
     vi.mocked(prisma.submission.count).mockResolvedValueOnce(1)
 
     const request = new Request('http://localhost/api/dashboard/submissions/recent')
