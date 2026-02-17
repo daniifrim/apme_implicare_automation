@@ -1,4 +1,4 @@
-// ABOUTME: Three-column resizable layout for template editing (Editor 60%, Preview 25%, Sidebar 15%)
+// ABOUTME: Three-column resizable layout for template editing (Editor 45%, Preview 30%, Tools 25%)
 // ABOUTME: Provides responsive fallback to tabs on tablet/mobile devices
 'use client'
 
@@ -10,7 +10,7 @@ import {
   ResizablePanel,
   ResizableHandle
 } from '@/components/ui/resizable'
-import { LayoutTemplate, Eye, Settings, type LucideIcon } from 'lucide-react'
+import { LayoutTemplate, Eye, Sparkles, type LucideIcon } from 'lucide-react'
 
 interface TemplateEditorLayoutProps {
   editor: React.ReactNode
@@ -25,11 +25,26 @@ type PanelSize = {
   sidebar: number
 }
 
-// Default sizes based on percentage (60%, 25%, 15%)
+// Refined proportions: Editor 45%, Preview 30%, Sidebar 25%
+// Sidebar needs more room for Placeholders + Versions
 const DEFAULT_SIZES: PanelSize = {
-  editor: 60,
+  editor: 45,
+  preview: 30,
+  sidebar: 25
+}
+
+// Minimum sizes to prevent content crunch
+const MIN_SIZES = {
+  editor: 35,
   preview: 25,
-  sidebar: 15
+  sidebar: 20
+}
+
+// Maximum sizes to maintain usability
+const MAX_SIZES = {
+  editor: 60,
+  preview: 45,
+  sidebar: 35
 }
 
 // Breakpoint for switching to tabs (in pixels)
@@ -55,6 +70,12 @@ export function TemplateEditorLayout({
   const [isTablet, setIsTablet] = useState(false)
   const [activeTab, setActiveTab] = useState('editor')
   const [panelSizes, setPanelSizes] = useState(DEFAULT_SIZES)
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Handle hydration
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Handle responsive detection
   useEffect(() => {
@@ -73,7 +94,7 @@ export function TemplateEditorLayout({
   }, [])
 
   // Handle panel resize
-  const handleLayoutChange = (layout: { [key: string]: number }) => {
+  const handleLayoutChange = (layout: { [id: string]: number }) => {
     const sizes = Object.values(layout)
     if (sizes.length === 3) {
       setPanelSizes({
@@ -85,11 +106,11 @@ export function TemplateEditorLayout({
   }
 
   // Mobile/Tablet view with tabs
-  if (isMobile || isTablet) {
+  if (!isMounted || isMobile || isTablet) {
     const tabs: TabConfig[] = [
       { id: 'editor', label: 'Editor', icon: LayoutTemplate, content: editor },
       { id: 'preview', label: 'Preview', icon: Eye, content: preview },
-      { id: 'sidebar', label: 'Tools', icon: Settings, content: sidebar }
+      { id: 'sidebar', label: 'Tools', icon: Sparkles, content: sidebar }
     ]
 
     return (
@@ -99,17 +120,19 @@ export function TemplateEditorLayout({
           onValueChange={setActiveTab}
           className="flex flex-col h-full"
         >
-          <TabsList className="grid w-full grid-cols-3 shrink-0">
+          <TabsList className="grid w-full grid-cols-3 shrink-0 h-12">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
                   <Icon className="w-4 h-4" />
-                  <span className={isMobile ? 'hidden sm:inline' : ''}>{tab.label}</span>
+                  <span className={isMobile ? 'hidden sm:inline font-medium' : 'font-medium'}>
+                    {tab.label}
+                  </span>
                 </TabsTrigger>
               )
             })}
@@ -119,9 +142,9 @@ export function TemplateEditorLayout({
             <TabsContent
               key={tab.id}
               value={tab.id}
-              className="flex-1 min-h-0 mt-4 data-[state=active]:flex data-[state=active]:flex-col"
+              className="flex-1 min-h-0 mt-0 data-[state=active]:flex data-[state=active]:flex-col"
             >
-              <div className="flex-1 overflow-auto">{tab.content}</div>
+              <div className="flex-1 overflow-auto p-4">{tab.content}</div>
             </TabsContent>
           ))}
         </Tabs>
@@ -134,67 +157,104 @@ export function TemplateEditorLayout({
     <div className={cn('h-full', className)}>
       <ResizablePanelGroup
         orientation="horizontal"
-        className="min-h-[600px] rounded-lg border"
-        onLayoutChange={handleLayoutChange}
+        className="min-h-[600px] rounded-xl border bg-background shadow-sm"
+        onLayoutChanged={handleLayoutChange}
       >
-        {/* Editor Panel - 60% */}
+        {/* Editor Panel - 45% default */}
         <ResizablePanel
           defaultSize={DEFAULT_SIZES.editor}
-          minSize={40}
-          maxSize={75}
-          className="min-w-[400px]"
+          minSize={MIN_SIZES.editor}
+          maxSize={MAX_SIZES.editor}
+          className="min-w-[420px]"
         >
           <div className="h-full flex flex-col">
-            <div className="flex items-center gap-2 px-4 py-2 border-b bg-muted/50">
-              <LayoutTemplate className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Editor</span>
-              <span className="text-xs text-muted-foreground ml-auto">
-                {Math.round(panelSizes.editor)}%
-              </span>
+            {/* Panel Header */}
+            <div className="flex items-center gap-3 px-5 py-3 border-b bg-muted/30">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                <LayoutTemplate className="w-4 h-4 text-primary" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-foreground">Editor</span>
+                <span className="text-xs text-muted-foreground">Content & Settings</span>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                  {Math.round(panelSizes.editor)}%
+                </span>
+              </div>
             </div>
-            <div className="flex-1 overflow-auto p-4">{editor}</div>
+            {/* Panel Content */}
+            <div className="flex-1 overflow-auto p-5">
+              <div className="max-w-3xl mx-auto">
+                {editor}
+              </div>
+            </div>
           </div>
         </ResizablePanel>
 
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle className="bg-border/50 hover:bg-border transition-colors" />
 
-        {/* Preview Panel - 25% */}
+        {/* Preview Panel - 30% default */}
         <ResizablePanel
           defaultSize={DEFAULT_SIZES.preview}
-          minSize={20}
-          maxSize={40}
-          className="min-w-[250px]"
+          minSize={MIN_SIZES.preview}
+          maxSize={MAX_SIZES.preview}
+          className="min-w-[320px]"
         >
           <div className="h-full flex flex-col">
-            <div className="flex items-center gap-2 px-4 py-2 border-b bg-muted/50">
-              <Eye className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Preview</span>
-              <span className="text-xs text-muted-foreground ml-auto">
-                {Math.round(panelSizes.preview)}%
-              </span>
+            {/* Panel Header */}
+            <div className="flex items-center gap-3 px-5 py-3 border-b bg-muted/30">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10">
+                <Eye className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-foreground">Preview</span>
+                <span className="text-xs text-muted-foreground">Live Render</span>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                  {Math.round(panelSizes.preview)}%
+                </span>
+              </div>
             </div>
-            <div className="flex-1 overflow-auto p-4 bg-muted/30">{preview}</div>
+            {/* Panel Content - Subtle background for device frame effect */}
+            <div className="flex-1 overflow-auto p-5 bg-gradient-to-br from-muted/20 via-background to-muted/10">
+              <div className="h-full flex items-start justify-center">
+                {preview}
+              </div>
+            </div>
           </div>
         </ResizablePanel>
 
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle className="bg-border/50 hover:bg-border transition-colors" />
 
-        {/* Sidebar Panel - 15% */}
+        {/* Tools Sidebar - 25% default */}
         <ResizablePanel
           defaultSize={DEFAULT_SIZES.sidebar}
-          minSize={12}
-          maxSize={25}
-          className="min-w-[180px]"
+          minSize={MIN_SIZES.sidebar}
+          maxSize={MAX_SIZES.sidebar}
+          className="min-w-[280px]"
         >
           <div className="h-full flex flex-col">
-            <div className="flex items-center gap-2 px-4 py-2 border-b bg-muted/50">
-              <Settings className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Tools</span>
-              <span className="text-xs text-muted-foreground ml-auto">
-                {Math.round(panelSizes.sidebar)}%
-              </span>
+            {/* Panel Header */}
+            <div className="flex items-center gap-3 px-5 py-3 border-b bg-muted/30">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/10">
+                <Sparkles className="w-4 h-4 text-amber-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-foreground">Tools</span>
+                <span className="text-xs text-muted-foreground">Placeholders & Versions</span>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                  {Math.round(panelSizes.sidebar)}%
+                </span>
+              </div>
             </div>
-            <div className="flex-1 overflow-auto p-4">{sidebar}</div>
+            {/* Panel Content */}
+            <div className="flex-1 overflow-auto">
+              {sidebar}
+            </div>
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

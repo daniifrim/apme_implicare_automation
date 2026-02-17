@@ -1,4 +1,5 @@
 // ABOUTME: Enhanced sidebar panel with placeholders, version history, template metadata, and actions
+// ABOUTME: Optimized for 280px+ width with responsive grid layouts and collapsible sections
 'use client'
 
 import { useState } from 'react'
@@ -20,7 +21,10 @@ import {
   Copy,
   Trash2,
   FileText,
-  Info
+  Info,
+  ChevronDown,
+  ChevronUp,
+  Sparkles
 } from 'lucide-react'
 
 interface SidebarPanelProps {
@@ -38,8 +42,8 @@ interface SidebarPanelProps {
 }
 
 const AVAILABLE_PLACEHOLDERS = [
-  { category: 'Contact Info', items: ['FirstName', 'LastName', 'Email'] },
-  { category: 'Prayer Context', items: ['Missionary', 'EthnicGroup', 'Location'] },
+  { category: 'Contact', items: ['FirstName', 'LastName', 'Email'] },
+  { category: 'Mission', items: ['Missionary', 'EthnicGroup', 'Location'] },
   { category: 'Submission', items: ['SubmissionDate', 'ResponseId'] },
   { category: 'Custom', items: ['Organization', 'Campaign', 'ReferralCode'] }
 ]
@@ -58,12 +62,21 @@ export function SidebarPanel({
   onDeleteVersion
 }: SidebarPanelProps) {
   const [searchTerm, setSearchTerm] = useState('')
-  const [showAllPlaceholders, setShowAllPlaceholders] = useState(false)
+  const [expandedSections, setExpandedSections] = useState({
+    placeholders: true,
+    versions: true,
+    stats: true
+  })
+
+  // Toggle section expansion
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }))
+  }
 
   // Filter placeholders based on search
   const filteredPlaceholders = AVAILABLE_PLACEHOLDERS.map(group => ({
     ...group,
-    items: group.items.filter(item => 
+    items: group.items.filter(item =>
       item.toLowerCase().includes(searchTerm.toLowerCase())
     )
   })).filter(group => group.items.length > 0)
@@ -72,249 +85,303 @@ export function SidebarPanel({
   const selectedVersion = versions.find(v => v.id === selectedVersionId)
 
   return (
-    <div className="space-y-5">
-      {/* Template Info Section */}
+    <div className="h-full flex flex-col">
+      {/* Template Info Header */}
       {(templateName || templateSlug) && (
-        <>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Template Info</h3>
+        <div className="px-4 py-3 border-b bg-gradient-to-r from-muted/30 to-transparent">
+          <div className="flex items-start gap-3">
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 shrink-0">
+              <FileText className="w-4 h-4 text-primary" />
             </div>
-            <div className="space-y-1.5 p-3 rounded-lg bg-muted/50">
+            <div className="flex-1 min-w-0">
               {templateName && (
-                <div>
-                  <Label className="text-[10px] text-muted-foreground uppercase">Name</Label>
-                  <p className="text-sm font-medium truncate">{templateName}</p>
-                </div>
+                <h2 className="text-sm font-semibold truncate leading-tight">
+                  {templateName}
+                </h2>
               )}
               {templateSlug && (
-                <div>
-                  <Label className="text-[10px] text-muted-foreground uppercase">Slug</Label>
-                  <p className="text-xs font-mono text-muted-foreground truncate">{templateSlug}</p>
-                </div>
+                <code className="text-[10px] text-muted-foreground font-mono truncate block">
+                  {templateSlug}
+                </code>
               )}
             </div>
           </div>
-          <Separator />
-        </>
+        </div>
       )}
 
-      {/* Placeholders Section */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Tag className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold">Placeholders</h3>
-          </div>
-          <Badge variant="secondary" className="text-[10px]">
-            {placeholders.length} used
-          </Badge>
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-8 pl-8 text-xs"
-          />
-        </div>
-
-        <ScrollArea className={cn(
-          "pr-2",
-          showAllPlaceholders ? "h-[280px]" : "h-auto max-h-[200px]"
-        )}>
-          <div className="space-y-3">
-            {filteredPlaceholders.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">No placeholders found</p>
-            ) : (
-              filteredPlaceholders.map((group) => (
-                <div key={group.category} className="space-y-1.5">
-                  <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                    {group.category}
-                  </div>
-                  <div className="grid grid-cols-1 gap-1">
-                    {group.items.map((item) => {
-                      const isUsed = placeholders.includes(item)
-                      return (
-                        <Button
-                          key={item}
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            "w-full justify-between h-7 px-2 text-xs font-mono hover:bg-accent group",
-                            isUsed && "bg-blue-50/50 text-blue-700 hover:bg-blue-50"
-                          )}
-                          onClick={() => onInsertPlaceholder(item)}
-                          disabled={!editorInstance}
-                          title={isUsed ? 'Used in template' : 'Click to insert'}
-                        >
-                          <span>{'{{'}{item}{'}}'}</span>
-                          {isUsed && (
-                            <Badge variant="outline" className="h-4 text-[8px] px-1 bg-blue-100 border-blue-200">
-                              used
-                            </Badge>
-                          )}
-                        </Button>
-                      )
-                    })}
-                  </div>
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          {/* Placeholders Section */}
+          <div className="space-y-2">
+            <button
+              onClick={() => toggleSection('placeholders')}
+              className="w-full flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-6 h-6 rounded-md bg-blue-500/10">
+                  <Tag className="w-3.5 h-3.5 text-blue-600" />
                 </div>
-              ))
-            )}
-          </div>
-        </ScrollArea>
+                <h3 className="text-sm font-semibold">Placeholders</h3>
+                <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                  {placeholders.length} used
+                </Badge>
+              </div>
+              {expandedSections.placeholders ? (
+                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              )}
+            </button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full h-7 text-xs text-muted-foreground"
-          onClick={() => setShowAllPlaceholders(!showAllPlaceholders)}
-        >
-          {showAllPlaceholders ? 'Show less' : 'Show more'}
-        </Button>
-      </div>
+            {expandedSections.placeholders && (
+              <div className="space-y-2 pl-8">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Filter placeholders..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="h-8 pl-8 text-xs"
+                  />
+                </div>
 
-      <Separator />
-
-      {/* Version History Section */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <History className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold">Versions</h3>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={onCreateVersion}
-          >
-            <Plus className="w-3 h-3 mr-1" />
-            New
-          </Button>
-        </div>
-
-        <ScrollArea className="h-auto max-h-[280px] pr-2">
-          <div className="space-y-1.5">
-            {versions.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">No versions yet</p>
-            ) : (
-              versions.map((version) => (
-                <div
-                  key={version.id}
-                  className={cn(
-                    'group relative p-2.5 rounded-lg border transition-all',
-                    selectedVersionId === version.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-transparent hover:border-border bg-muted/30'
-                  )}
-                >
-                  <button
-                    onClick={() => onSelectVersion(version)}
-                    className="w-full text-left"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-xs truncate">
-                        v{version.versionNumber}: {version.name}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {version.isPublished ? (
-                          <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" />
-                        ) : (
-                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                        )}
+                {/* Placeholders Grid - 2 columns with wider sidebar */}
+                <div className="space-y-2">
+                  {filteredPlaceholders.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic">No placeholders found</p>
+                  ) : (
+                    filteredPlaceholders.map((group) => (
+                      <div key={group.category} className="space-y-1">
+                        <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                          {group.category}
+                        </div>
+                        <div className="grid grid-cols-1 gap-1">
+                          {group.items.map((item) => {
+                            const isUsed = placeholders.includes(item)
+                            return (
+                              <Button
+                                key={item}
+                                variant="ghost"
+                                size="sm"
+                                className={cn(
+                                  "w-full justify-between h-7 px-2.5 text-xs font-mono group/btn",
+                                  isUsed
+                                    ? "bg-blue-50/70 text-blue-700 hover:bg-blue-50 border border-blue-100"
+                                    : "hover:bg-accent border border-transparent"
+                                )}
+                                onClick={() => onInsertPlaceholder(item)}
+                                disabled={!editorInstance}
+                                title={isUsed ? 'Used in template - click to insert again' : 'Click to insert'}
+                              >
+                                <span className="truncate">{'{{'}{item}{'}}'}</span>
+                                {isUsed && (
+                                  <Badge variant="outline" className="h-4 text-[8px] px-1 bg-blue-100 border-blue-200 shrink-0">
+                                    used
+                                  </Badge>
+                                )}
+                              </Button>
+                            )
+                          })}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-[10px] text-muted-foreground">
-                        {new Date(version.createdAt).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </span>
-                      {version.isPublished && (
-                        <Badge variant="default" className="text-[8px] h-3.5 px-1 bg-green-600">
-                          LIVE
-                        </Badge>
-                      )}
-                      {!version.isPublished && selectedVersionId === version.id && (
-                        <Badge variant="secondary" className="text-[8px] h-3.5 px-1">
-                          EDITING
-                        </Badge>
-                      )}
-                    </div>
-                  </button>
-
-                  {/* Version Actions */}
-                  {selectedVersionId === version.id && !version.isPublished && (
-                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-dashed">
-                      {onDuplicateVersion && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 text-[10px]"
-                          onClick={() => onDuplicateVersion(version.id)}
-                        >
-                          <Copy className="w-3 h-3 mr-1" />
-                          Copy
-                        </Button>
-                      )}
-                      {onDeleteVersion && versions.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 text-[10px] text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => onDeleteVersion(version.id)}
-                        >
-                          <Trash2 className="w-3 h-3 mr-1" />
-                          Delete
-                        </Button>
-                      )}
-                    </div>
+                    ))
                   )}
                 </div>
-              ))
+              </div>
             )}
           </div>
-        </ScrollArea>
-      </div>
 
-      <Separator />
+          <Separator className="opacity-50" />
 
-      {/* Quick Stats */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-muted-foreground" />
-          <h3 className="text-sm font-semibold">Template Stats</h3>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="p-2.5 rounded-lg bg-muted">
-            <div className="text-xl font-semibold">{placeholders.length}</div>
-            <div className="text-[10px] text-muted-foreground">Placeholders</div>
-          </div>
-          <div className="p-2.5 rounded-lg bg-muted">
-            <div className="text-xl font-semibold">{versions.length}</div>
-            <div className="text-[10px] text-muted-foreground">Versions</div>
-          </div>
-          <div className="p-2.5 rounded-lg bg-muted">
-            <div className="text-xl font-semibold">
-              {publishedVersion ? `v${publishedVersion.versionNumber}` : '-'}
+          {/* Version History Section */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => toggleSection('versions')}
+                className="flex items-center gap-2 group flex-1"
+              >
+                <div className="flex items-center justify-center w-6 h-6 rounded-md bg-purple-500/10">
+                  <History className="w-3.5 h-3.5 text-purple-600" />
+                </div>
+                <h3 className="text-sm font-semibold">Versions</h3>
+                <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                  {versions.length}
+                </Badge>
+                {expandedSections.versions ? (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground ml-1" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground ml-1" />
+                )}
+              </button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={onCreateVersion}
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                New
+              </Button>
             </div>
-            <div className="text-[10px] text-muted-foreground">Published</div>
+
+            {expandedSections.versions && (
+              <div className="pl-8 space-y-1.5">
+                {versions.length === 0 ? (
+                  <div className="text-center py-4 px-3 rounded-lg bg-muted/30">
+                    <p className="text-xs text-muted-foreground">No versions yet</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2 h-7 text-xs"
+                      onClick={onCreateVersion}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Create first version
+                    </Button>
+                  </div>
+                ) : (
+                  versions.map((version) => (
+                    <div
+                      key={version.id}
+                      className={cn(
+                        'group relative rounded-lg border transition-all overflow-hidden',
+                        selectedVersionId === version.id
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'border-transparent hover:border-border bg-muted/30 hover:bg-muted/50'
+                      )}
+                    >
+                      <button
+                        onClick={() => onSelectVersion(version)}
+                        className="w-full text-left p-2.5"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium text-xs truncate">
+                            v{version.versionNumber}: {version.name}
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {version.isPublished ? (
+                              <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                            ) : (
+                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(version.createdAt).toLocaleDateString(undefined, {
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </span>
+                          {version.isPublished ? (
+                            <Badge className="text-[8px] h-4 px-1.5 bg-green-600 hover:bg-green-600">
+                              LIVE
+                            </Badge>
+                          ) : selectedVersionId === version.id ? (
+                            <Badge variant="outline" className="text-[8px] h-4 px-1.5 border-primary/50 text-primary">
+                              EDITING
+                            </Badge>
+                          ) : null}
+                        </div>
+                      </button>
+
+                      {/* Version Actions */}
+                      {selectedVersionId === version.id && !version.isPublished && (
+                        <div className="flex items-center gap-1 px-2.5 pb-2">
+                          {onDuplicateVersion && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-[10px]"
+                              onClick={() => onDuplicateVersion(version.id)}
+                            >
+                              <Copy className="w-3 h-3 mr-1" />
+                              Copy
+                            </Button>
+                          )}
+                          {onDeleteVersion && versions.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-[10px] text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => onDeleteVersion(version.id)}
+                            >
+                              <Trash2 className="w-3 h-3 mr-1" />
+                              Delete
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
-          <div className="p-2.5 rounded-lg bg-muted">
-            <div className="text-xl font-semibold">
-              {selectedVersion ? selectedVersion.subject.length : 0}
-            </div>
-            <div className="text-[10px] text-muted-foreground">Subject chars</div>
+
+          <Separator className="opacity-50" />
+
+          {/* Quick Stats Section */}
+          <div className="space-y-2">
+            <button
+              onClick={() => toggleSection('stats')}
+              className="w-full flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-6 h-6 rounded-md bg-amber-500/10">
+                  <Info className="w-3.5 h-3.5 text-amber-600" />
+                </div>
+                <h3 className="text-sm font-semibold">Quick Stats</h3>
+              </div>
+              {expandedSections.stats ? (
+                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              )}
+            </button>
+
+            {expandedSections.stats && (
+              <div className="pl-8">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2.5 rounded-lg bg-gradient-to-br from-muted to-muted/50 border">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3 text-blue-500" />
+                      <span className="text-lg font-semibold">{placeholders.length}</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">Placeholders</div>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-gradient-to-br from-muted to-muted/50 border">
+                    <div className="flex items-center gap-1.5">
+                      <History className="w-3 h-3 text-purple-500" />
+                      <span className="text-lg font-semibold">{versions.length}</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">Versions</div>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-gradient-to-br from-muted to-muted/50 border">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle className="w-3 h-3 text-green-500" />
+                      <span className="text-lg font-semibold">
+                        {publishedVersion ? `v${publishedVersion.versionNumber}` : '-'}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">Published</div>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-gradient-to-br from-muted to-muted/50 border">
+                    <div className="flex items-center gap-1.5">
+                      <Tag className="w-3 h-3 text-amber-500" />
+                      <span className="text-lg font-semibold">
+                        {selectedVersion ? selectedVersion.subject.length : 0}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">Subject chars</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      </ScrollArea>
     </div>
   )
 }

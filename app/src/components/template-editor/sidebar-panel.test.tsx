@@ -70,7 +70,6 @@ describe('SidebarPanel', () => {
     it('renders template name and slug when provided', () => {
       render(<SidebarPanel {...defaultProps} />)
 
-      expect(screen.getByText(/template info/i)).toBeInTheDocument()
       expect(screen.getByText('Test Template')).toBeInTheDocument()
       expect(screen.getByText('test-template')).toBeInTheDocument()
     })
@@ -83,7 +82,7 @@ describe('SidebarPanel', () => {
       }
       render(<SidebarPanel {...propsWithoutInfo} />)
 
-      expect(screen.queryByText(/template info/i)).not.toBeInTheDocument()
+      expect(screen.queryByText('Test Template')).not.toBeInTheDocument()
     })
 
     it('renders only name when slug is not provided', () => {
@@ -109,13 +108,13 @@ describe('SidebarPanel', () => {
     it('renders search input for placeholders', () => {
       render(<SidebarPanel {...defaultProps} />)
 
-      expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument()
+      expect(screen.getByPlaceholderText(/filter placeholders/i)).toBeInTheDocument()
     })
 
     it('filters placeholders based on search term', () => {
       render(<SidebarPanel {...defaultProps} />)
 
-      const searchInput = screen.getByPlaceholderText(/search/i)
+      const searchInput = screen.getByPlaceholderText(/filter/i)
       fireEvent.change(searchInput, { target: { value: 'first' } })
 
       // Should show FirstName but not other placeholders
@@ -125,7 +124,7 @@ describe('SidebarPanel', () => {
     it('shows no results message when search has no matches', () => {
       render(<SidebarPanel {...defaultProps} />)
 
-      const searchInput = screen.getByPlaceholderText(/search/i)
+      const searchInput = screen.getByPlaceholderText(/filter/i)
       fireEvent.change(searchInput, { target: { value: 'xyz123' } })
 
       expect(screen.getByText(/no placeholders found/i)).toBeInTheDocument()
@@ -163,20 +162,26 @@ describe('SidebarPanel', () => {
     it('renders placeholder categories', () => {
       render(<SidebarPanel {...defaultProps} />)
 
-      expect(screen.getByText(/contact info/i)).toBeInTheDocument()
-      expect(screen.getByText(/prayer context/i)).toBeInTheDocument()
+      expect(screen.getByText('Contact')).toBeInTheDocument()
+      expect(screen.getByText('Mission')).toBeInTheDocument()
       // Use getAllByText for 'Submission' as it appears in multiple places
       expect(screen.getAllByText(/submission/i).length).toBeGreaterThan(0)
-      expect(screen.getByText(/custom/i)).toBeInTheDocument()
+      expect(screen.getByText('Custom')).toBeInTheDocument()
     })
 
-    it('toggles show more/less for placeholders', () => {
+    it('collapses and expands placeholders section', () => {
       render(<SidebarPanel {...defaultProps} />)
 
-      const toggleButton = screen.getByRole('button', { name: /show more/i })
+      // Click to collapse
+      const toggleButton = screen.getByRole('button', { name: /placeholders/i })
       fireEvent.click(toggleButton)
 
-      expect(screen.getByRole('button', { name: /show less/i })).toBeInTheDocument()
+      // Search input should be hidden when collapsed
+      expect(screen.queryByPlaceholderText(/filter/i)).not.toBeInTheDocument()
+
+      // Click to expand again
+      fireEvent.click(toggleButton)
+      expect(screen.getByPlaceholderText(/filter/i)).toBeInTheDocument()
     })
   })
 
@@ -198,6 +203,7 @@ describe('SidebarPanel', () => {
       const onCreateVersion = vi.fn()
       render(<SidebarPanel {...defaultProps} onCreateVersion={onCreateVersion} />)
 
+      // Look for the "New" button specifically in the versions section header
       const newButton = screen.getByRole('button', { name: /new/i })
       fireEvent.click(newButton)
 
@@ -287,17 +293,18 @@ describe('SidebarPanel', () => {
     it('shows formatted dates for versions', () => {
       render(<SidebarPanel {...defaultProps} />)
 
-      // Should show formatted dates - use getAllByText since there are multiple dates
-      const dates = screen.getAllByText(/2024/i)
+      // Should show formatted dates (month + day format) - use getAllByText since there are multiple dates
+      // Jan 1, Jan 15, Feb 1 from mock versions
+      const dates = screen.getAllByText(/Jan|Feb/i)
       expect(dates.length).toBeGreaterThan(0)
     })
   })
 
-  describe('Template Stats Section', () => {
-    it('renders template stats section', () => {
+  describe('Quick Stats Section', () => {
+    it('renders quick stats section', () => {
       render(<SidebarPanel {...defaultProps} />)
 
-      expect(screen.getByText(/template stats/i)).toBeInTheDocument()
+      expect(screen.getByText(/quick stats/i)).toBeInTheDocument()
     })
 
     it('displays placeholder count', () => {
@@ -312,7 +319,8 @@ describe('SidebarPanel', () => {
     it('displays version count', () => {
       render(<SidebarPanel {...defaultProps} />)
 
-      expect(screen.getByText('3')).toBeInTheDocument()
+      // Check for the version count (appears in badge and stats)
+      expect(screen.getAllByText('3').length).toBeGreaterThan(0)
       expect(screen.getAllByText(/versions/i).length).toBeGreaterThan(0)
     })
 

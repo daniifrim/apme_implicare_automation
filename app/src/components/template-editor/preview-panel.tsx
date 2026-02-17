@@ -1,10 +1,9 @@
-// ABOUTME: Preview panel component with device switching, live email preview, and submission selector
-// ABOUTME: Supports Desktop/Tablet/Mobile viewport simulation
+// ABOUTME: Compact preview panel with integrated toolbar, tighter spacing, and focused layout
+// ABOUTME: Device controls, submission selector, and subject line combined in minimal header
 'use client'
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -13,8 +12,18 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { Eye, User, AlertTriangle, Monitor, Tablet, Smartphone, RotateCcw } from 'lucide-react'
+import {
+  Eye,
+  User,
+  AlertTriangle,
+  Monitor,
+  Tablet,
+  Smartphone,
+  RotateCcw,
+  X,
+  Check,
+  Mail
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Submission {
@@ -38,10 +47,10 @@ interface PreviewPanelProps {
   isLoading?: boolean
 }
 
-const DEVICE_CONFIG: Record<DeviceType, { width: string; label: string; icon: typeof Monitor }> = {
-  desktop: { width: '100%', label: 'Desktop', icon: Monitor },
-  tablet: { width: '768px', label: 'Tablet', icon: Tablet },
-  mobile: { width: '375px', label: 'Mobile', icon: Smartphone }
+const DEVICE_WIDTHS: Record<DeviceType, string> = {
+  desktop: '100%',
+  tablet: '768px',
+  mobile: '375px'
 }
 
 export function PreviewPanel({
@@ -57,54 +66,78 @@ export function PreviewPanel({
 }: PreviewPanelProps) {
   const [activeTab, setActiveTab] = useState('rendered')
   const [device, setDevice] = useState<DeviceType>('desktop')
+  const [showWarnings, setShowWarnings] = useState(true)
 
-  const DeviceIcon = DEVICE_CONFIG[device].icon
+  const hasContent = html || text
 
   return (
-    <div className="space-y-4">
-      {/* Device Switcher */}
-      <div className="space-y-2">
-        <Label className="text-xs font-medium text-muted-foreground">
-          Device Preview
-        </Label>
-        <ToggleGroup
-          type="single"
-          value={device}
-          onValueChange={(v) => v && setDevice(v as DeviceType)}
-          className="w-full grid grid-cols-3"
-        >
-          {(Object.keys(DEVICE_CONFIG) as DeviceType[]).map((d) => {
-            const Icon = DEVICE_CONFIG[d].icon
-            return (
-              <ToggleGroupItem
-                key={d}
-                value={d}
-                aria-label={DEVICE_CONFIG[d].label}
-                className="text-xs"
-              >
-                <Icon className="w-3.5 h-3.5 mr-1.5" />
-                {DEVICE_CONFIG[d].label}
-              </ToggleGroupItem>
-            )
-          })}
-        </ToggleGroup>
-      </div>
+    <div className="h-full flex flex-col">
+      {/* Compact Toolbar Header */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b bg-muted/30 shrink-0">
+        {/* Device Toggles - Icon Only */}
+        <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
+          <button
+            onClick={() => setDevice('desktop')}
+            title="Desktop"
+            className={cn(
+              'p-1.5 rounded transition-colors',
+              device === 'desktop'
+                ? 'bg-background shadow-sm text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Monitor className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setDevice('tablet')}
+            title="Tablet"
+            className={cn(
+              'p-1.5 rounded transition-colors',
+              device === 'tablet'
+                ? 'bg-background shadow-sm text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Tablet className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setDevice('mobile')}
+            title="Mobile"
+            className={cn(
+              'p-1.5 rounded transition-colors',
+              device === 'mobile'
+                ? 'bg-background shadow-sm text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
-      {/* Submission Selector */}
-      <div className="space-y-2">
-        <Label className="text-xs font-medium text-muted-foreground">
-          Preview as
-        </Label>
+        <div className="w-px h-5 bg-border mx-1" />
+
+        {/* Submission Selector - Compact */}
         <Select
           value={selectedSubmission?.id || ''}
           onValueChange={onSubmissionChange}
         >
-          <SelectTrigger className="h-9 text-sm">
-            <SelectValue placeholder="Select a person..." />
+          <SelectTrigger className="h-7 text-xs w-[160px] border-0 bg-muted focus:ring-0 focus:ring-offset-0">
+            <div className="flex items-center gap-1.5">
+              <User className="w-3 h-3 text-muted-foreground shrink-0" />
+              <SelectValue placeholder="Preview as...">
+                {selectedSubmission ? (
+                  <span className="truncate">
+                    {selectedSubmission.firstName} {selectedSubmission.lastName}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">Preview as...</span>
+                )}
+              </SelectValue>
+            </div>
           </SelectTrigger>
           <SelectContent>
             {submissions.map((sub) => (
-              <SelectItem key={sub.id} value={sub.id}>
+              <SelectItem key={sub.id} value={sub.id} className="text-xs">
                 <div className="flex items-center gap-2">
                   <User className="w-3 h-3 text-muted-foreground" />
                   <span>{sub.firstName} {sub.lastName}</span>
@@ -113,119 +146,152 @@ export function PreviewPanel({
             ))}
           </SelectContent>
         </Select>
-      </div>
 
-      {/* Selected Person Info */}
-      {selectedSubmission && (
-        <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
-          <div className="flex items-center gap-2 text-sm text-blue-900">
-            <User className="w-4 h-4 shrink-0" />
-            <span className="font-medium truncate">
-              {selectedSubmission.firstName} {selectedSubmission.lastName}
-            </span>
-          </div>
-          <div className="text-xs text-blue-700 mt-1 truncate pl-6">
-            {selectedSubmission.email}
-          </div>
-        </div>
-      )}
-
-      {/* Action Row */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1"
-          onClick={onRefresh}
-          disabled={isLoading}
-        >
-          <Eye className="w-4 h-4 mr-2" />
-          {isLoading ? 'Generating...' : 'Refresh'}
-        </Button>
+        {/* Refresh Button - Compact */}
         <Button
           variant="ghost"
-          size="sm"
-          onClick={() => setDevice('desktop')}
-          title="Reset to desktop view"
+          size="icon"
+          className="h-7 w-7 ml-auto"
+          onClick={onRefresh}
+          disabled={isLoading}
+          title="Refresh Preview"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} />
         </Button>
       </div>
 
-      {/* Subject Display */}
-      {subject && (
-        <div className="space-y-1 pt-2 border-t">
-          <span className="text-xs text-muted-foreground">Subject:</span>
-          <p className="text-sm font-medium truncate">{subject}</p>
-        </div>
-      )}
-
-      {/* Preview Warnings */}
-      {warnings.length > 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-          <div className="flex items-center gap-2 text-sm font-medium text-amber-900 mb-1">
-            <AlertTriangle className="w-4 h-4" />
-            Warnings
+        {/* Subject Bar - Integrated */}
+        {subject && (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 border-b shrink-0">
+            <Mail className="w-3 h-3 text-muted-foreground shrink-0" />
+            <span className="text-xs text-muted-foreground shrink-0">Subject:</span>
+            <span className="text-xs font-medium truncate">{subject}</span>
           </div>
-          <ul className="list-disc list-inside text-xs text-amber-800 space-y-1">
-            {warnings.map((warning, index) => (
-              <li key={index}>{warning}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+        )}
 
-      {/* Preview Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 h-8">
-          <TabsTrigger value="rendered" className="text-xs">Email</TabsTrigger>
-          <TabsTrigger value="raw" className="text-xs">HTML</TabsTrigger>
-          <TabsTrigger value="text" className="text-xs">Text</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="rendered" className="mt-3">
-          <div className="flex justify-center overflow-auto">
-            <div
-              className={cn(
-                'rounded-lg border bg-white shadow-sm transition-all duration-300',
-                device === 'mobile' && 'border-gray-300 shadow-lg'
-              )}
-              style={{ width: DEVICE_CONFIG[device].width, maxWidth: '100%' }}
-            >
-              {/* Device Frame Header for Mobile/Tablet */}
-              {device !== 'desktop' && (
-                <div className="h-6 bg-gray-100 rounded-t-lg border-b flex items-center justify-center gap-1">
-                  <div className="w-16 h-1 bg-gray-300 rounded-full" />
-                </div>
-              )}
-              <div className="p-4">
-                <div
-                  className="text-[14px] leading-7 text-gray-900 prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: html || '<p class="text-muted-foreground italic">No content to preview</p>' }}
-                />
-              </div>
-              {/* Device Frame Footer for Mobile */}
-              {device === 'mobile' && (
-                <div className="h-6 bg-gray-100 rounded-b-lg border-t flex items-center justify-center">
-                  <div className="w-8 h-1 bg-gray-300 rounded-full" />
-                </div>
-              )}
+        {/* Compact Warnings Banner */}
+        {warnings.length > 0 && showWarnings && (
+          <div className="flex items-start gap-2 px-3 py-2 bg-amber-50 border-b border-amber-100 shrink-0">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-medium text-amber-900">
+                {warnings.length} warning{warnings.length > 1 ? 's' : ''}
+              </p>
+              <ul className="mt-0.5 space-y-0.5">
+                {warnings.slice(0, 2).map((warning, index) => (
+                  <li key={index} className="text-[10px] text-amber-800 truncate">
+                    {warning}
+                  </li>
+                ))}
+                {warnings.length > 2 && (
+                  <li className="text-[10px] text-amber-700">
+                    +{warnings.length - 2} more
+                  </li>
+                )}
+              </ul>
             </div>
+            <button
+              onClick={() => setShowWarnings(false)}
+              className="text-amber-600 hover:text-amber-800"
+            >
+              <X className="w-3 h-3" />
+            </button>
           </div>
-        </TabsContent>
+        )}
 
-        <TabsContent value="raw" className="mt-3">
-          <pre className="border rounded-lg p-3 bg-muted whitespace-pre-wrap font-mono text-[10px] leading-relaxed max-h-[400px] overflow-auto">
-            {html || '// No HTML content'}
-          </pre>
-        </TabsContent>
+        {/* Preview Tabs - Compact */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+          <div className="flex items-center justify-between px-3 py-1.5 border-b bg-background shrink-0">
+            <TabsList className="h-6 bg-muted p-0.5">
+              <TabsTrigger value="rendered" className="text-[10px] px-2 py-0.5 h-5 gap-1">
+                <Eye className="w-3 h-3" />
+                Email
+              </TabsTrigger>
+              <TabsTrigger value="raw" className="text-[10px] px-2 py-0.5 h-5">
+                HTML
+              </TabsTrigger>
+              <TabsTrigger value="text" className="text-[10px] px-2 py-0.5 h-5">
+                Text
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="text" className="mt-3">
-          <pre className="border rounded-lg p-3 bg-muted whitespace-pre-wrap font-mono text-xs leading-relaxed max-h-[400px] overflow-auto">
-            {text || '// No text content'}
-          </pre>
-        </TabsContent>
-      </Tabs>
-    </div>
+            {/* Selected Person Badge */}
+            {selectedSubmission && (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px]">
+                <Check className="w-3 h-3" />
+                <span className="truncate max-w-[120px]">
+                  {selectedSubmission.firstName} {selectedSubmission.lastName}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Preview Content */}
+          <div className="flex-1 overflow-auto bg-muted/20">
+            <TabsContent value="rendered" className="h-full m-0 p-3">
+              {!hasContent ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <Mail className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">No content to preview</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-center min-h-full">
+                  <div
+                    className={cn(
+                      'bg-white shadow-sm transition-all duration-200',
+                      device === 'mobile' && 'rounded-lg border shadow-lg',
+                      device === 'tablet' && 'rounded-lg border',
+                      device === 'desktop' && 'border rounded-lg w-full'
+                    )}
+                    style={{ width: DEVICE_WIDTHS[device], maxWidth: '100%' }}
+                  >
+                    {/* Device Frame Header */}
+                    {device !== 'desktop' && (
+                      <div className="h-5 bg-gray-100 rounded-t-lg border-b flex items-center justify-center">
+                        <div className="w-12 h-0.5 bg-gray-300 rounded-full" />
+                      </div>
+                    )}
+
+                    {/* Email Content */}
+                    <div className={cn(
+                      'prose prose-sm max-w-none',
+                      device === 'mobile' && 'p-3 text-[13px] leading-6',
+                      device === 'tablet' && 'p-4 text-[14px] leading-6',
+                      device === 'desktop' && 'p-5 text-[14px] leading-7'
+                    )}>
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: html || '<p style="color: #6b7280; font-style: italic;">No HTML content</p>'
+                        }}
+                      />
+                    </div>
+
+                    {/* Device Frame Footer */}
+                    {device === 'mobile' && (
+                      <div className="h-5 bg-gray-100 rounded-b-lg border-t flex items-center justify-center">
+                        <div className="w-6 h-0.5 bg-gray-300 rounded-full" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="raw" className="h-full m-0 p-3">
+              <pre className="h-full border rounded-lg p-3 bg-muted font-mono text-[10px] leading-relaxed overflow-auto whitespace-pre-wrap">
+                {html || '// No HTML content'}
+              </pre>
+            </TabsContent>
+
+            <TabsContent value="text" className="h-full m-0 p-3">
+              <pre className="h-full border rounded-lg p-3 bg-muted font-mono text-xs leading-relaxed overflow-auto whitespace-pre-wrap">
+                {text || '// No text content'}
+              </pre>
+            </TabsContent>
+          </div>
+        </Tabs>
+      </div>
   )
 }
