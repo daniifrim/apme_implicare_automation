@@ -295,34 +295,67 @@ export default function SettingsPage() {
 
       {/* Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-7 w-full max-w-4xl">
-          <TabsTrigger value="general" className="gap-2">
+        {/* Mobile: Horizontal scrollable tabs */}
+        <TabsList className="flex overflow-x-auto w-full sm:hidden h-auto p-1 gap-1">
+          <TabsTrigger value="general" className="gap-2 flex-shrink-0">
             <Building2 className="w-4 h-4" />
             <span className="hidden sm:inline">General</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
+          <TabsTrigger value="notifications" className="gap-2 flex-shrink-0">
             <Bell className="w-4 h-4" />
             <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
+          <TabsTrigger value="security" className="gap-2 flex-shrink-0">
             <Shield className="w-4 h-4" />
             <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
-          <TabsTrigger value="automation" className="gap-2">
+          <TabsTrigger value="automation" className="gap-2 flex-shrink-0">
             <Zap className="w-4 h-4" />
             <span className="hidden sm:inline">Automation</span>
           </TabsTrigger>
-          <TabsTrigger value="backup" className="gap-2">
+          <TabsTrigger value="backup" className="gap-2 flex-shrink-0">
             <Database className="w-4 h-4" />
             <span className="hidden sm:inline">Backup</span>
           </TabsTrigger>
-          <TabsTrigger value="integrations" className="gap-2">
+          <TabsTrigger value="integrations" className="gap-2 flex-shrink-0">
             <Plug className="w-4 h-4" />
             <span className="hidden sm:inline">Integrations</span>
           </TabsTrigger>
-          <TabsTrigger value="appearance" className="gap-2">
+          <TabsTrigger value="appearance" className="gap-2 flex-shrink-0">
             <Palette className="w-4 h-4" />
             <span className="hidden sm:inline">Appearance</span>
+          </TabsTrigger>
+        </TabsList>
+        
+        {/* Desktop: Grid layout */}
+        <TabsList className="hidden sm:grid sm:grid-cols-7 w-full max-w-4xl">
+          <TabsTrigger value="general" className="gap-2">
+            <Building2 className="w-4 h-4" />
+            <span>General</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2">
+            <Bell className="w-4 h-4" />
+            <span>Notifications</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="gap-2">
+            <Shield className="w-4 h-4" />
+            <span>Security</span>
+          </TabsTrigger>
+          <TabsTrigger value="automation" className="gap-2">
+            <Zap className="w-4 h-4" />
+            <span>Automation</span>
+          </TabsTrigger>
+          <TabsTrigger value="backup" className="gap-2">
+            <Database className="w-4 h-4" />
+            <span>Backup</span>
+          </TabsTrigger>
+          <TabsTrigger value="integrations" className="gap-2">
+            <Plug className="w-4 h-4" />
+            <span>Integrations</span>
+          </TabsTrigger>
+          <TabsTrigger value="appearance" className="gap-2">
+            <Palette className="w-4 h-4" />
+            <span>Appearance</span>
           </TabsTrigger>
         </TabsList>
 
