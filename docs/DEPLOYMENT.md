@@ -68,13 +68,32 @@ Required variables:
 
 ### GitHub Action Secrets
 
-For automatic deployment via GitHub Actions, set these secrets:
+The following secrets have been pre-configured for automatic deployment:
 
-- `VPS_HOST` - The VPS IP address
+- `VPS_HOST` - The VPS IP address (88.198.218.71)
 - `VPS_USER` - SSH user (root)
 - `VPS_SSH_KEY` - SSH private key for deployment
 
-Set them in GitHub: Settings → Secrets and variables → Actions
+**Already configured!** These were set via GitHub CLI. To verify:
+
+```bash
+gh secret list --repo daniifrim/apme_implicare_automation
+```
+
+If you need to update them manually:
+
+```bash
+# Update VPS_HOST
+gh secret set VPS_HOST --repo daniifrim/apme_implicare_automation <<< "88.198.218.71"
+
+# Update VPS_USER
+gh secret set VPS_USER --repo daniifrim/apme_implicare_automation <<< "root"
+
+# Update VPS_SSH_KEY
+gh secret set VPS_SSH_KEY --repo daniifrim/apme_implicare_automation < ~/.ssh/id_ed25519_new
+```
+
+Or set them manually via GitHub UI: Settings → Secrets and variables → Actions
 
 ## Architecture
 
@@ -114,6 +133,21 @@ All services run in a Docker Swarm stack named `apme-implicare`.
    ```bash
    docker --context hetzner service logs apme-implicare_web
    ```
+
+### GitHub Actions Fails
+
+If the automatic deployment via GitHub Actions fails:
+
+1. Check the Actions tab in GitHub for error details
+2. Verify secrets are set correctly:
+   ```bash
+   gh secret list --repo daniifrim/apme_implicare_automation
+   ```
+3. Ensure the VPS is accessible:
+   ```bash
+   ssh root@88.198.218.71 "docker swarm join-token worker"
+   ```
+4. Check GitHub Action logs for specific SSH or Docker errors
 
 ### Health Check Fails
 
