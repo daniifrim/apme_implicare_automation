@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APME Email Template Assignment - Visual Explainer</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .diagram-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        .diagram-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .legend-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .legend-box.start { background: #e1f5fe; border: 3px solid #01579b; }
+        .legend-box.decision { background: #fff3e0; border: 2px solid #e65100; }
+        .legend-box.action { background: #e8f5e9; border: 2px solid #2e7d32; }
+        .legend-box.skip { background: #f5f5f5; border: 1px dashed #616161; }
+
+        .explanation {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        .explanation h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .category {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .category h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .category p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .category .field {
+            font-family: 'Courier New', monospace;
+            background: #e3f2fd;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .outcome-list {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+
+        .outcome-list li {
+            margin-bottom: 6px;
+            color: #444;
+        }
+
+        .outcome-list .template {
+            font-weight: 600;
+            color: #2e7d32;
+        }
+
+        .note {
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .note strong {
+            color: #f57c00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 APME Email Template Assignment</h1>
+        <p class="subtitle">Visual explainer of how form responses determine which email templates are sent</p>
+
+        <div class="diagram-container">
+            <h2 class="diagram-title">Decision Flow Diagram</h2>
+            <div class="mermaid">
+flowchart TD
+    START([Form Submission Received]) --> PROCESS[Process New Submission]
+
+    PROCESS --> MISSION{1. Mission Interest?}
+
+    MISSION -->|Declined| MISSION_SKIP[Skip]
+    MISSION -->|Interested| MISSION_SEND[Send: Info Misiune pe termen scurt APME]
+
+    MISSION_SKIP --> PRAYER
+    MISSION_SEND --> PRAYER
+
+    PRAYER{2. Prayer Choice?}
+
+    PRAYER -->|NU| PRAYER_SKIP[Skip All Prayer Emails]
+    PRAYER -->|Misionar| PRAYER_MIS[Send: Prayer Missionary Info]
+    PRAYER -->|Popor neatins| PRAYER_ETH[Send: Prayer Ethnic Group Info]
+
+    PRAYER_SKIP --> CAMP
+    PRAYER_MIS --> PRAYER_GROUPS
+    PRAYER_ETH --> PRAYER_GROUPS
+
+    PRAYER_GROUPS{3. Prayer Groups?}
+
+    PRAYER_GROUPS -->|Not interested| PG_SKIP[Skip]
+    PRAYER_GROUPS -->|WhatsApp only| PG_SKIP
+
+    PRAYER_GROUPS -->|Join group| PG_JOIN{Check Location}
+    PRAYER_GROUPS -->|Start group| PG_START{Check Location}
+
+    PG_JOIN -->|Romania| PG_JOIN_RO[Send: Grupuri zonale Romania]
+    PG_JOIN -->|Diaspora| PG_JOIN_DI[Send: Grupuri zonale Diaspora]
+
+    PG_START -->|Romania| PG_START_RO[Send: Incepere grup Romania]
+    PG_START -->|Diaspora| PG_START_DI[Send: Incepere grup Diaspora]
+
+    PG_SKIP --> CAMP
+    PG_JOIN_RO --> CAMP
+    PG_JOIN_DI --> CAMP
+    PG_START_RO --> CAMP
+    PG_START_DI --> CAMP
+
+    CAMP{4. Camp Interest?}
+
+    CAMP -->|Not interested| CAMP_SKIP[Skip]
+    CAMP -->|Past participant| CAMP_SKIP
+    CAMP -->|Interested| CAMP_SEND[Send: Info Tabere Misiune APME]
+
+    CAMP_SKIP --> COURSE
+    CAMP_SEND --> COURSE
+
+    COURSE{5. Course Interest?}
+
+    COURSE -->|Not interested| COURSE_SKIP[Skip]
+    COURSE -->|Kairos| COURSE_KAI[Send: Info curs Kairos]
+    COURSE -->|Mobilizeaza| COURSE_MOB[Send: Info curs Mobilizeaza]
+    COURSE -->|Imputernicit| COURSE_EMP[Send: Info curs Mobilizeaza]
+    COURSE -->|Coordonatori| COURSE_KAI_C[Send: Info curs Kairos]
+
+    COURSE_SKIP --> DONATION
+    COURSE_KAI --> DONATION
+    COURSE_MOB --> DONATION
+    COURSE_EMP --> DONATION
+    COURSE_KAI_C --> DONATION
+
+    DONATION{6. Financial Support?}
+
+    DONATION -->|TRUE| DONATION_SEND[Send: Info Donatii APME]
+    DONATION -->|FALSE| DONATION_SKIP[Skip]
+
+    DONATION_SEND --> VOLUNTEER
+    DONATION_SKIP --> VOLUNTEER
+
+    VOLUNTEER{7. Volunteer Interest?}
+
+    VOLUNTEER -->|TRUE| VOLUNTEER_SEND[Send: Info Voluntariat APME]
+    VOLUNTEER -->|FALSE| VOLUNTEER_SKIP[Skip]
+
+    VOLUNTEER_SEND --> COMBINE
+    VOLUNTEER_SKIP --> COMBINE
+
+    COMBINE[Combine All Assigned Templates] --> DEDUPE[Remove Duplicates]
+    DEDUPE --> SEND[Send Email Sequence]
+    SEND --> END([Done])
+
+    classDef startEnd fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+    classDef decision fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef action fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef skip fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5
+
+    class START,END startEnd
+    class MISSION,PRAYER,PRAYER_GROUPS,PG_JOIN,PG_START,CAMP,COURSE,DONATION,VOLUNTEER decision
+    class MISSION_SEND,PRAYER_MIS,PRAYER_ETH,PG_JOIN_RO,PG_JOIN_DI,PG_START_RO,PG_START_DI,CAMP_SEND,COURSE_KAI,COURSE_MOB,COURSE_EMP,COURSE_KAI_C,DONATION_SEND,VOLUNTEER_SEND,SEND action
+    class MISSION_SKIP,PRAYER_SKIP,PG_SKIP,CAMP_SKIP,COURSE_SKIP,DONATION_SKIP,VOLUNTEER_SKIP skip
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-box start"></div>
+                    <span>Start/End Points</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box decision"></div>
+                    <span>Decision Points (Form Questions)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box action"></div>
+                    <span>Action (Send Email)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box skip"></div>
+                    <span>Skip (No Email)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="explanation">
+            <h2>📋 Category-by-Category Breakdown</h2>
+
+            <div class="category">
+                <h3>1. Mission Interest</h3>
+                <p><strong>Form Field:</strong> <span class="field">"Vrei să fii informat(ă) despre oportunitățile de a merge pe câmpul de misiune?"</span></p>
+                <p><strong>Logic:</strong> Exclusion-based (send unless explicitly declined)</p>
+                <ul class="outcome-list">
+                    <li>If answer is <strong>NOT</strong> in: "Nu acum, poate mai târziu", "NU", "Nu am resurse financiare" → Send <span class="template">"Info Misiune pe termen scurt APME"</span></li>
+                    <li>Otherwise → Skip</li>
+                </ul>
+            </div>
+
+            <div class="category">
+                <h3>2. Prayer Choice</h3>
+                <p><strong>Form Field:</strong> <span class="field">"Vrei să adopți în rugăciune un misionar sau un popor neatins cu Evanghelia?"</span></p>
+                <p><strong>Logic:</strong> Skip-all if declined, otherwise specific template based on selection</p>
+                <ul class="outcome-list">
+                    <li>If "NU" → <strong>Skip ALL prayer-related emails</strong> (including prayer groups)</li>
+                    <li>If "Misionar" selected → Send <span class="template">Prayer Missionary Info</span> (with {{Missionary}} placeholder)</li>
+                    <li>If "Popor neatins cu Evanghelia" selected → Send <span class="template">Prayer Ethnic Group Info</span> (with {{EthnicGroup}} placeholder)</li>
+                </ul>
+            </div>
+
+            <div class="category">
+                <h3>3. Prayer Groups (Location-Aware)</h3>
+                <p><strong>Form Field:</strong> <span class="field">"Cum ai vrea să te rogi mai mult pentru misiune?"</span></p>
+                <p><strong>Logic:</strong> Location-aware routing (Romania vs Diaspora)</p>
+                <ul class="outcome-list">
+                    <li>"Nu sunt interesat/ă" or "Vreau să fiu adăugat pe grupul de misiune de Whatsapp/Signal" → Skip</li>
+                    <li>"Doresc să particip la un grup de rugăciune în zona mea" + Location=Romania → <span class="template">"Info despre grupuri zonale de rugăciune Romania"</span></li>
+                    <li>"Doresc să particip la un grup de rugăciune în zona mea" + Location=Diaspora → <span class="template">"Info despre grupuri zonale de rugăciune Diaspora"</span></li>
+                    <li>"Doresc mai multe informații despre cum să încep un grup" + Location=Romania → <span class="template">"Info despre începerea unui grup zonal de rugăciune Romania"</span></li>
+                    <li>"Doresc mai multe informații despre cum să încep un grup" + Location=Diaspora → <span class="template">"Info despre începerea unui grup zonal de rugăciune Diaspora"</span></li>
+                </ul>
+            </div>
+
+            <div class="category">
+                <h3>4. Camp Interest</h3>
+                <p><strong>Form Field:</strong> <span class="field">"Vrei să primești informații despre taberele de misiune APME ?"</span></p>
+                <p><strong>Logic:</strong> Exclusion-based with special case for past participants</p>
+                <ul class="outcome-list">
+                    <li>If "Nu sunt interesat/ă" or "Am participat, doresc să mai fiu informat și pe viitor" → Skip</li>
+                    <li>Otherwise → Send <span class="template">"Info Tabere Misiune APME"</span></li>
+                </ul>
+            </div>
+
+            <div class="category">
+                <h3>5. Course Interest</h3>
+                <p><strong>Form Field:</strong> <span class="field">"Ești interesat(ă) să participi la anumite cursuri de pregătire când vor fi disponibile în zona ta?"</span></p>
+                <p><strong>Logic:</strong> Direct mapping from course selection to template</p>
+                <ul class="outcome-list">
+                    <li>"Cursul Kairos" → <span class="template">"Info despre cursul Kairos"</span></li>
+                    <li>"Cursul Mobilizează" → <span class="template">"Info despre cursul Mobilizează"</span></li>
+                    <li>"Împuternicit pentru a influența" → <span class="template">"Info despre cursul Mobilizează"</span></li>
+                    <li>"Curs de coordonatori Kairos" → <span class="template">"Info despre cursul Kairos"</span></li>
+                    <li>"Nu sunt interesat/ă" or Empty → Skip</li>
+                </ul>
+            </div>
+
+            <div class="category">
+                <h3>6. Financial Support</h3>
+                <p><strong>Form Field:</strong> <span class="field">"Dorești să ajuți financiar lucrările și misionarii APME?"</span></p>
+                <p><strong>Logic:</strong> Boolean check (only send if explicitly TRUE)</p>
+                <ul class="outcome-list">
+                    <li>If TRUE (or "true"/"TRUE") → Send <span class="template">"Info Donații APME"</span></li>
+                    <li>Otherwise → Skip</li>
+                </ul>
+            </div>
+
+            <div class="category">
+                <h3>7. Volunteer Interest</h3>
+                <p><strong>Form Field:</strong> <span class="field">"Dorești să te implici ca voluntar APME?"</span></p>
+                <p><strong>Logic:</strong> Boolean check (only send if explicitly TRUE)</p>
+                <ul class="outcome-list">
+                    <li>If TRUE (or "true"/"TRUE") → Send <span class="template">"Info Voluntariat APME"</span></li>
+                    <li>Otherwise → Skip</li>
+                </ul>
+            </div>
+
+            <div class="note">
+                <strong>Note:</strong> All assigned templates are collected, duplicates are removed, and then the email sequence is sent. A user can receive multiple emails if they express interest in multiple categories.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

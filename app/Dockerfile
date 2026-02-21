@@ -23,13 +23,16 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install dependencies
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile --prod
+# Copy standalone output (includes server.js and all necessary files)
+COPY --from=builder /app/.next/standalone ./
 
-# Copy built assets
-COPY --from=builder /app/.next ./.next
+# Copy static files
+COPY --from=builder /app/.next/static ./.next/static
+
+# Copy public files
 COPY --from=builder /app/public ./public
+
+# Copy prisma files for migrations
 COPY --from=builder /app/prisma ./prisma
 
 # Copy the generated Prisma client from builder  

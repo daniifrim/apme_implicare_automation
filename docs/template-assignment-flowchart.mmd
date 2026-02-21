@@ -1,0 +1,115 @@
+---
+title: APME Email Template Assignment Decision Flow
+config:
+  theme: default
+  flowchart:
+    curve: basis
+---
+
+flowchart TD
+    %% Start
+    START([Form Submission Received]) --> PROCESS[Process New Submission]
+
+    %% Main Processing
+    PROCESS --> MISSION{1. Mission Interest\nVrei să fii informat(ă) despre\noportunitățile de a merge pe\ncâmpul de misiune?}
+
+    %% Mission Interest Branch
+    MISSION -->|Nu acum, poate mai târziu| MISSION_SKIP[Skip]
+    MISSION -->|NU| MISSION_SKIP
+    MISSION -->|Nu am resurse financiare| MISSION_SKIP
+    MISSION -->|Other| MISSION_SEND[Send:\nInfo Misiune pe termen scurt APME]
+
+    MISSION_SKIP --> PRAYER
+    MISSION_SEND --> PRAYER
+
+    %% Prayer Choice Branch
+    PRAYER{2. Prayer Choice\nVrei să adopți în rugăciune\nun misionar sau un popor\nneatins cu Evanghelia?}
+
+    PRAYER -->|NU| PRAYER_SKIP[Skip ALL Prayer Emails]
+    PRAYER -->|Misionar selected| PRAYER_MIS[Send:\nPrayer Missionary Info]
+    PRAYER -->|Popor neatins\ncu Evanghelia| PRAYER_ETH[Send:\nPrayer Ethnic Group Info]
+
+    PRAYER_SKIP --> CAMP
+    PRAYER_MIS --> PRAYER_GROUPS
+    PRAYER_ETH --> PRAYER_GROUPS
+
+    %% Prayer Groups Branch (Location-Aware)
+    PRAYER_GROUPS{3. Prayer Groups\nCum ai vrea să te rogi\nmai mult pentru misiune?}
+
+    PRAYER_GROUPS -->|Nu sunt interesat/ă| PG_SKIP[Skip]
+    PRAYER_GROUPS -->|Vreau să fiu adăugat pe\ngrupul de misiune de\nWhatsapp/Signal| PG_SKIP
+
+    PRAYER_GROUPS -->|Doresc să particip la\nun grup de rugăciune\nîn zona mea| PG_JOIN{Check Location}
+    PRAYER_GROUPS -->|Doresc mai multe informații\ndespre cum să încep un grup| PG_START{Check Location}
+
+    PG_JOIN -->|Romania| PG_JOIN_RO[Send:\nInfo despre grupuri zonale\nde rugăciune Romania]
+    PG_JOIN -->|Diaspora| PG_JOIN_DI[Send:\nInfo despre grupuri zonale\nde rugăciune Diaspora]
+
+    PG_START -->|Romania| PG_START_RO[Send:\nInfo despre începerea unui\ngrup zonal de rugăciune Romania]
+    PG_START -->|Diaspora| PG_START_DI[Send:\nInfo despre începerea unui\ngrup zonal de rugăciune Diaspora]
+
+    PG_SKIP --> CAMP
+    PG_JOIN_RO --> CAMP
+    PG_JOIN_DI --> CAMP
+    PG_START_RO --> CAMP
+    PG_START_DI --> CAMP
+
+    %% Camp Interest Branch
+    CAMP{4. Camp Interest\nVrei să primești informații\ndespre taberele de misiune APME?}
+
+    CAMP -->|Nu sunt interesat/ă| CAMP_SKIP[Skip]
+    CAMP -->|Am participat, doresc să\nmai fiu informat și pe viitor| CAMP_SKIP
+    CAMP -->|Interested| CAMP_SEND[Send:\nInfo Tabere Misiune APME]
+
+    CAMP_SKIP --> COURSE
+    CAMP_SEND --> COURSE
+
+    %% Course Interest Branch
+    COURSE{5. Course Interest\nEști interesat(ă) să participi la\nanumite cursuri de pregătire?}
+
+    COURSE -->|Nu sunt interesat/ă| COURSE_SKIP[Skip]
+    COURSE -->|Empty| COURSE_SKIP
+    COURSE -->|Cursul Kairos| COURSE_KAI[Send:\nInfo despre cursul Kairos]
+    COURSE -->|Cursul Mobilizează| COURSE_MOB[Send:\nInfo despre cursul Mobilizează]
+    COURSE -->|Împuternicit pentru\na influența| COURSE_EMP[Send:\nInfo despre cursul Mobilizează]
+    COURSE -->|Curs de coordonatori\nKairos| COURSE_KAI_C[Send:\nInfo despre cursul Kairos]
+
+    COURSE_SKIP --> DONATION
+    COURSE_KAI --> DONATION
+    COURSE_MOB --> DONATION
+    COURSE_EMP --> DONATION
+    COURSE_KAI_C --> DONATION
+
+    %% Financial Support Branch
+    DONATION{6. Financial Support\nDorești să ajuți financiar\nlucrările și misionarii APME?}
+
+    DONATION -->|TRUE| DONATION_SEND[Send:\nInfo Donații APME]
+    DONATION -->|FALSE / Empty| DONATION_SKIP[Skip]
+
+    DONATION_SEND --> VOLUNTEER
+    DONATION_SKIP --> VOLUNTEER
+
+    %% Volunteer Interest Branch
+    VOLUNTEER{7. Volunteer Interest\nDorești să te implici\nca voluntar APME?}
+
+    VOLUNTEER -->|TRUE| VOLUNTEER_SEND[Send:\nInfo Voluntariat APME]
+    VOLUNTEER -->|FALSE / Empty| VOLUNTEER_SKIP[Skip]
+
+    VOLUNTEER_SEND --> COMBINE
+    VOLUNTEER_SKIP --> COMBINE
+
+    %% Final Steps
+    COMBINE[Combine All Assigned Templates] --> DEDUPE[Remove Duplicates]
+    DEDUPE --> SEND[Send Email Sequence]
+    SEND --> END([Done])
+
+    %% Styling
+    classDef startEnd fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+    classDef decision fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef action fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef skip fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5
+
+    class START,END startEnd
+    class MISSION,PRAYER,PRAYER_GROUPS,PG_JOIN,PG_START,CAMP,COURSE,DONATION,VOLUNTEER decision
+    class MISSION_SEND,PRAYER_MIS,PRAYER_ETH,PG_JOIN_RO,PG_JOIN_DI,PG_START_RO,PG_START_DI,CAMP_SEND,COURSE_KAI,COURSE_MOB,COURSE_EMP,COURSE_KAI_C,DONATION_SEND,VOLUNTEER_SEND,SEND action
+    class MISSION_SKIP,PRAYER_SKIP,PG_SKIP,CAMP_SKIP,COURSE_SKIP,DONATION_SKIP,VOLUNTEER_SKIP skip

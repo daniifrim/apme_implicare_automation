@@ -43,25 +43,6 @@ services:
         - "traefik.http.services.apme-implicare.loadbalancer.healthcheck.interval=10s"
         - "traefik.http.services.apme-implicare.loadbalancer.healthcheck.timeout=5s"
 
-  worker:
-    image: ghcr.io/daniifrim/apme-implicare-web:latest
-    networks:
-      - internal
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - FILLOUT_API_KEY=${FILLOUT_API_KEY}
-      - FILLOUT_WEBHOOK_SECRET=${FILLOUT_WEBHOOK_SECRET}
-      - REDIS_URL=${REDIS_URL}
-    command: ["node", "dist/worker.js"]
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-
   postgres:
     image: postgres:16-alpine
     networks:
