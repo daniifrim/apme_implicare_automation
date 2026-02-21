@@ -14,7 +14,12 @@
     "push-main": "cd main-project && clasp push",
     "push-wrapper": "cd wrapper-project && clasp push",
     "pull-main": "cd main-project && clasp pull",
-    "pull-wrapper": "cd wrapper-project && clasp pull"
+    "pull-wrapper": "cd wrapper-project && clasp pull",
+    "docker:build": "docker buildx bake app-local",
+    "docker:push": "docker buildx bake --push",
+    "deploy": "./scripts/deploy.sh",
+    "deploy:full": "npm run docker:push && npm run deploy",
+    "vps:migrate": "docker --context hetzner run --rm --network apme-implicare_internal -v /opt/stacks/apme-implicare/.env:/app/.env:ro ghcr.io/daniifrim/apme-implicare-web:latest npx prisma migrate deploy"
   },
   "keywords": [
     "google-apps-script",
