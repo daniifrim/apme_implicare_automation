@@ -545,9 +545,74 @@ export default function TemplateEditorPage() {
 
         {/* Editor Tab - Shows Editor + Tools in resizable panels */}
         <TabsContent value="editor" className="flex-1 min-h-0 mt-0 data-[state=active]:flex">
+          {/* Mobile: Stacked vertical layout */}
+          <div className="flex flex-col lg:hidden flex-1 gap-4 overflow-auto">
+            {/* Editor Panel */}
+            <div className="flex-1 min-h-[400px] rounded-xl border bg-background shadow-sm flex flex-col">
+              {/* Panel Header */}
+              <div className="flex items-center gap-3 px-4 py-2 border-b bg-muted/30">
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10">
+                  <LayoutTemplate className="w-3.5 h-3.5 text-primary" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold">Editor</span>
+                  <span className="text-xs text-muted-foreground">Content & Settings</span>
+                </div>
+              </div>
+              {/* Panel Content */}
+              <div className="flex-1 overflow-auto p-4">
+                <div className="max-w-4xl mx-auto">
+                  <EditorPanel
+                    formData={formData}
+                    editorContent={editorContent}
+                    editorWarnings={editorWarnings}
+                    onFormChange={(data) => {
+                      setFormData(data)
+                      setHasChanges(true)
+                    }}
+                    onEditorChange={handleEditorChange}
+                    onEditorReady={setEditorInstance}
+                    onValidationChange={setEditorWarnings}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Tools Sidebar */}
+            <div className="min-h-[300px] rounded-xl border bg-background shadow-sm flex flex-col">
+              {/* Panel Header */}
+              <div className="flex items-center gap-3 px-4 py-2 border-b bg-muted/30">
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/10">
+                  <History className="w-3.5 h-3.5 text-amber-600" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold">Tools</span>
+                  <span className="text-xs text-muted-foreground">Placeholders & Versions</span>
+                </div>
+              </div>
+              {/* Panel Content */}
+              <div className="flex-1 overflow-auto">
+                <SidebarPanel
+                  placeholders={editorContent.placeholders}
+                  versions={versions}
+                  selectedVersionId={selectedVersion?.id || null}
+                  editorInstance={editorInstance}
+                  templateName={template?.name}
+                  templateSlug={template?.slug}
+                  onInsertPlaceholder={handleInsertPlaceholder}
+                  onSelectVersion={handleSelectVersion}
+                  onCreateVersion={handleCreateNewVersion}
+                  onDuplicateVersion={handleDuplicateVersion}
+                  onDeleteVersion={handleDeleteVersion}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop: Resizable panels */}
           <ResizablePanelGroup
             orientation="horizontal"
-            className="flex-1 rounded-xl border bg-background shadow-sm"
+            className="hidden lg:flex flex-1 rounded-xl border bg-background shadow-sm"
             onLayoutChanged={(layout) => {
               const sizes = Object.values(layout)
               if (sizes.length === 2) {
