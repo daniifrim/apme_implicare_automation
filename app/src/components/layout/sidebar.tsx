@@ -30,11 +30,22 @@ const systemNavigation = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  mobile?: boolean;
+}
+
+export function Sidebar({ mobile }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 border-r border-border flex flex-col fixed inset-y-0 z-40 bg-card">
+    <aside
+      className={cn(
+        "w-64 border-r border-border flex flex-col bg-card",
+        mobile
+          ? "h-full"
+          : "fixed inset-y-0 z-40 hidden md:block"
+      )}
+    >
       {/* Logo */}
       <div className="p-6 flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -49,7 +60,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 space-y-1">
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
