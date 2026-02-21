@@ -438,123 +438,128 @@ export default function SubmissionsPage() {
           </div>
         ) : (
           <>
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-4 py-3">
-                    <button
-                      onClick={toggleAllSelection}
-                      className="p-1 hover:bg-gray-200 rounded"
-                    >
-                      {selectedIds.size === submissions.length && submissions.length > 0 ? (
-                        <CheckSquare className="w-5 h-5 text-blue-600" />
-                      ) : (
-                        <Square className="w-5 h-5 text-gray-400" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Person
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Location
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Templates
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {submissions.map((submission) => (
-                  <tr 
-                    key={submission.id} 
-                    role="button"
-                    tabIndex={0}
-                    className={cn(
-                      "hover:bg-gray-50 cursor-pointer",
-                      selectedIds.has(submission.id) && "bg-blue-50"
-                    )}
-                    onClick={() => openSubmissionDetail(submission.id)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        openSubmissionDetail(submission.id)
-                      }
-                    }}
-                  >
-                    <td className="px-4 py-4">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px]">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3">
                       <button
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          toggleSelection(submission.id)
-                        }}
-                        aria-label={`Select submission ${submission.submissionId}`}
+                        onClick={toggleAllSelection}
                         className="p-1 hover:bg-gray-200 rounded"
                       >
-                        {selectedIds.has(submission.id) ? (
+                        {selectedIds.size === submissions.length && submissions.length > 0 ? (
                           <CheckSquare className="w-5 h-5 text-blue-600" />
                         ) : (
                           <Square className="w-5 h-5 text-gray-400" />
                         )}
                       </button>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="block">
-                        <p className="font-medium text-gray-900">
-                          {submission.firstName} {submission.lastName}
-                        </p>
-                        <p className="text-sm text-gray-500">{submission.email}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {submission.city || submission.country || 'Unknown'}
-                      </div>
-                      <div className="text-xs text-gray-500 capitalize">
-                        {submission.locationType || 'unknown'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={cn(
-                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                        submission.status === 'processed' && 'bg-green-100 text-green-800',
-                        submission.status === 'pending' && 'bg-yellow-100 text-yellow-800',
-                        submission.status === 'failed' && 'bg-red-100 text-red-800'
-                      )}>
-                        {submission.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-1">
-                        {submission.assignments.map((assignment) => (
-                          <span 
-                            key={assignment.id}
-                            className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 text-blue-700"
-                          >
-                            {assignment.template.name}
-                          </span>
-                        ))}
-                        {submission.assignments.length === 0 && (
-                          <span className="text-xs text-gray-400">None</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(submission.submissionTime).toLocaleDateString()}
-                      </div>
-                    </td>
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Person
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                      Location
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                      Templates
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                      Date
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {submissions.map((submission) => (
+                    <tr 
+                      key={submission.id} 
+                      role="button"
+                      tabIndex={0}
+                      className={cn(
+                        "hover:bg-gray-50 cursor-pointer",
+                        selectedIds.has(submission.id) && "bg-blue-50"
+                      )}
+                      onClick={() => openSubmissionDetail(submission.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          openSubmissionDetail(submission.id)
+                        }
+                      }}
+                    >
+                      <td className="px-4 py-4">
+                        <button
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            toggleSelection(submission.id)
+                          }}
+                          aria-label={`Select submission ${submission.submissionId}`}
+                          className="p-1 hover:bg-gray-200 rounded"
+                        >
+                          {selectedIds.has(submission.id) ? (
+                            <CheckSquare className="w-5 h-5 text-blue-600" />
+                          ) : (
+                            <Square className="w-5 h-5 text-gray-400" />
+                          )}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="block">
+                          <p className="font-medium text-gray-900">
+                            {submission.firstName} {submission.lastName}
+                          </p>
+                          <p className="text-sm text-gray-500">{submission.email}</p>
+                          <p className="text-xs text-gray-400 sm:hidden mt-1">
+                            {submission.city || submission.country || 'Unknown'} • {new Date(submission.submissionTime).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 hidden sm:table-cell">
+                        <div className="text-sm text-gray-900">
+                          {submission.city || submission.country || 'Unknown'}
+                        </div>
+                        <div className="text-xs text-gray-500 capitalize">
+                          {submission.locationType || 'unknown'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={cn(
+                          'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                          submission.status === 'processed' && 'bg-green-100 text-green-800',
+                          submission.status === 'pending' && 'bg-yellow-100 text-yellow-800',
+                          submission.status === 'failed' && 'bg-red-100 text-red-800'
+                        )}>
+                          {submission.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 hidden md:table-cell">
+                        <div className="flex flex-wrap gap-1">
+                          {submission.assignments.map((assignment) => (
+                            <span 
+                              key={assignment.id}
+                              className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 text-blue-700"
+                            >
+                              {assignment.template.name}
+                            </span>
+                          ))}
+                          {submission.assignments.length === 0 && (
+                            <span className="text-xs text-gray-400">None</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 hidden sm:table-cell">
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(submission.submissionTime).toLocaleDateString()}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {/* Pagination */}
             {pagination && pagination.pages > 1 && (
