@@ -1,23 +1,17 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { StatCard } from './stat-card'
-import { FileText, TrendingUp } from 'lucide-react'
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { StatCard } from "./stat-card";
+import { FileText, TrendingUp } from "lucide-react";
 
-describe('StatCard', () => {
-  it('renders with required props', () => {
-    render(
-      <StatCard
-        title="Total Submissions"
-        value={100}
-        icon={FileText}
-      />
-    )
+describe("StatCard", () => {
+  it("renders with required props", () => {
+    render(<StatCard title="Total Submissions" value={100} icon={FileText} />);
 
-    expect(screen.getByText('Total Submissions')).toBeInTheDocument()
-    expect(screen.getByText('100')).toBeInTheDocument()
-  })
+    expect(screen.getByText("Total Submissions")).toBeInTheDocument();
+    expect(screen.getByText("100")).toBeInTheDocument();
+  });
 
-  it('renders with trend indicator when trend is positive', () => {
+  it("renders with trend indicator when trend is positive", () => {
     render(
       <StatCard
         title="Submissions"
@@ -25,66 +19,61 @@ describe('StatCard', () => {
         icon={FileText}
         trend={15}
         trendLabel="vs last week"
-      />
-    )
+      />,
+    );
 
-    expect(screen.getByText('15%')).toBeInTheDocument()
-    expect(screen.getByText('vs last week')).toBeInTheDocument()
-    expect(screen.getByTestId('trend-up')).toBeInTheDocument()
-  })
+    expect(screen.getByText("15%")).toBeInTheDocument();
+    expect(screen.getByText("vs last week")).toBeInTheDocument();
+    expect(screen.getByTestId("trend-up")).toBeInTheDocument();
+  });
 
-  it('renders with trend indicator when trend is negative', () => {
+  it("renders with trend indicator when trend is negative", () => {
     render(
-      <StatCard
-        title="Submissions"
-        value={100}
-        icon={FileText}
-        trend={-10}
-      />
-    )
+      <StatCard title="Submissions" value={100} icon={FileText} trend={-10} />,
+    );
 
-    expect(screen.getByText('10%')).toBeInTheDocument()
-    expect(screen.getByTestId('trend-down')).toBeInTheDocument()
-  })
+    expect(screen.getByText("10%")).toBeInTheDocument();
+    expect(screen.getByTestId("trend-down")).toBeInTheDocument();
+  });
 
-  it('renders description when no trend', () => {
+  it("renders description when no trend", () => {
     render(
       <StatCard
         title="Submissions"
         value={100}
         icon={FileText}
         description="Updated just now"
-      />
-    )
+      />,
+    );
 
-    expect(screen.getByText('Updated just now')).toBeInTheDocument()
-  })
+    expect(screen.getByText("Updated just now")).toBeInTheDocument();
+  });
 
-  it('renders loading skeleton when loading is true', () => {
+  it("renders loading skeleton when loading is true", () => {
     const { container } = render(
       <StatCard
         title="Submissions"
         value={100}
         icon={FileText}
         loading={true}
-      />
-    )
+      />,
+    );
 
     // Loading state uses animate-pulse divs
-    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
-  })
+    expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
+  });
 
-  it('applies variant styles correctly', () => {
+  it("applies variant styles correctly", () => {
     const { container } = render(
       <StatCard
         title="Submissions"
         value={100}
         icon={FileText}
         variant="success"
-      />
-    )
+      />,
+    );
 
-    const iconContainer = container.querySelector('.bg-green-50')
-    expect(iconContainer).toBeInTheDocument()
-  })
-})
+    const iconContainer = container.querySelector(".bg-green-50");
+    expect(iconContainer).toBeInTheDocument();
+  });
+});

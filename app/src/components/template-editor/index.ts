@@ -1,5 +1,10 @@
-export { TemplateEditorLayout } from '../template-editor-layout'
-export { EditorPanel } from './editor-panel'
-export { PreviewPanel } from './preview-panel'
-export { SidebarPanel } from './sidebar-panel'
-export type { Template, TemplateVersion, Submission, PreviewData } from './types'
+export { TemplateEditorLayout } from "../template-editor-layout";
+export { EditorPanel } from "./editor-panel";
+export { PreviewPanel } from "./preview-panel";
+export { SidebarPanel } from "./sidebar-panel";
+export type {
+  Template,
+  TemplateVersion,
+  Submission,
+  PreviewData,
+} from "./types";

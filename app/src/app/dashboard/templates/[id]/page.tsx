@@ -22,30 +22,36 @@ export default async function TemplateDetailPage({
 
   if (!template) notFound();
 
-  const published = template.versions.find((v: { isPublished: boolean }) => v.isPublished) ?? null;
+  const published =
+    template.versions.find((v: { isPublished: boolean }) => v.isPublished) ??
+    null;
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold tracking-tight truncate">{template.name}</h1>
+            <h1 className="text-xl font-bold tracking-tight truncate">
+              {template.name}
+            </h1>
             <Badge variant="outline" className="font-mono text-[10px]">
               {template.slug}
             </Badge>
-            <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">
+            <Badge
+              variant="secondary"
+              className="text-[10px] uppercase tracking-wider"
+            >
               {template.status}
             </Badge>
           </div>
           <div className="text-sm text-muted-foreground mt-1">
-            {template.description ?? "No description"} • {template._count.assignments} assignments
+            {template.description ?? "No description"} •{" "}
+            {template._count.assignments} assignments
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href={`/templates/${params.id}/edit`}
-          >
+          <Link href={`/templates/${params.id}/edit`}>
             <Button variant="outline" size="sm">
               <Edit className="w-4 h-4 mr-2" />
               Edit Template
@@ -66,32 +72,44 @@ export default async function TemplateDetailPage({
             Versions
           </div>
           <div className="mt-3 divide-y border rounded-custom overflow-hidden">
-            {template.versions.map((v: { id: string; versionNumber: number; name: string; isPublished: boolean; subject: string; createdAt: Date }) => (
-              <div
-                key={v.id}
-                className="p-3 flex items-center justify-between gap-3 hover:bg-accent/30 transition-colors"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-primary">
-                      v{v.versionNumber}
-                    </span>
-                    <span className="font-semibold truncate">{v.name}</span>
-                    {v.isPublished && (
-                      <Badge variant="outline" className="text-[9px] uppercase">
-                        Published
-                      </Badge>
-                    )}
+            {template.versions.map(
+              (v: {
+                id: string;
+                versionNumber: number;
+                name: string;
+                isPublished: boolean;
+                subject: string;
+                createdAt: Date;
+              }) => (
+                <div
+                  key={v.id}
+                  className="p-3 flex items-center justify-between gap-3 hover:bg-accent/30 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-primary">
+                        v{v.versionNumber}
+                      </span>
+                      <span className="font-semibold truncate">{v.name}</span>
+                      {v.isPublished && (
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] uppercase"
+                        >
+                          Published
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      Subject: {v.subject}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    Subject: {v.subject}
+                  <div className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+                    {new Date(v.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-                  {new Date(v.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-            ))}
+              ),
+            )}
             {template.versions.length === 0 && (
               <div className="p-4 text-sm text-muted-foreground">
                 No versions yet.

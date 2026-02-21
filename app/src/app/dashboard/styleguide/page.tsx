@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -24,8 +30,12 @@ export default function StyleguidePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">UI Lab & Styleguide</h2>
-        <p className="text-muted-foreground">Component library and design system reference</p>
+        <h2 className="text-2xl font-bold tracking-tight">
+          UI Lab & Styleguide
+        </h2>
+        <p className="text-muted-foreground">
+          Component library and design system reference
+        </p>
       </div>
 
       <Tabs defaultValue="buttons" className="w-full">
@@ -41,7 +51,9 @@ export default function StyleguidePage() {
           <Card>
             <CardHeader>
               <CardTitle>Button Variants</CardTitle>
-              <CardDescription>All button styles used in the application</CardDescription>
+              <CardDescription>
+                All button styles used in the application
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-wrap gap-3">
@@ -58,7 +70,9 @@ export default function StyleguidePage() {
                 <Button size="sm">Small</Button>
                 <Button size="default">Default</Button>
                 <Button size="lg">Large</Button>
-                <Button size="icon"><Plus className="h-4 w-4" /></Button>
+                <Button size="icon">
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
 
               <Separator />
@@ -120,10 +134,7 @@ export default function StyleguidePage() {
 
                 <div className="space-y-2">
                   <Label>Monospace (for placeholders)</Label>
-                  <Input
-                    defaultValue="{{FirstName}}"
-                    className="font-mono"
-                  />
+                  <Input defaultValue="{{FirstName}}" className="font-mono" />
                 </div>
 
                 <div className="space-y-2">
@@ -183,10 +194,16 @@ export default function StyleguidePage() {
               <Separator />
 
               <div className="flex flex-wrap gap-3">
-                <Badge variant="outline" className="text-[9px] font-bold uppercase px-1.5 py-0.5 bg-primary/5 text-primary border-primary/20">
+                <Badge
+                  variant="outline"
+                  className="text-[9px] font-bold uppercase px-1.5 py-0.5 bg-primary/5 text-primary border-primary/20"
+                >
                   Template Tag
                 </Badge>
-                <Badge variant="outline" className="text-[9px] font-bold uppercase px-1.5 py-0.5">
+                <Badge
+                  variant="outline"
+                  className="text-[9px] font-bold uppercase px-1.5 py-0.5"
+                >
                   v2.4.1
                 </Badge>
               </div>
@@ -199,20 +216,30 @@ export default function StyleguidePage() {
             <CardHeader>
               <CardTitle>Typography</CardTitle>
               <CardDescription>Font families and text styles</CardDescription>
-            </CardHeader>            <CardContent className="space-y-6">
+            </CardHeader>{" "}
+            <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-wider">Sans-serif (Open Sans)</Label>
-                <p className="text-2xl font-bold">The quick brown fox jumps over the lazy dog</p>
+                <Label className="text-[10px] uppercase tracking-wider">
+                  Sans-serif (Open Sans)
+                </Label>
+                <p className="text-2xl font-bold">
+                  The quick brown fox jumps over the lazy dog
+                </p>
                 <p className="text-base">
-                  Regular text body. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                  Regular text body. Lorem ipsum dolor sit amet, consectetur
+                  adipiscing elit.
                 </p>
               </div>
 
               <Separator />
 
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-wider">Serif (Georgia)</Label>
-                <p className="text-xl font-serif">The quick brown fox jumps over the lazy dog</p>
+                <Label className="text-[10px] uppercase tracking-wider">
+                  Serif (Georgia)
+                </Label>
+                <p className="text-xl font-serif">
+                  The quick brown fox jumps over the lazy dog
+                </p>
                 <p className="font-serif text-muted-foreground">
                   Used for long-form text and email content.
                 </p>
@@ -221,9 +248,13 @@ export default function StyleguidePage() {
               <Separator />
 
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-wider">Monospace (JetBrains Mono)</Label>
+                <Label className="text-[10px] uppercase tracking-wider">
+                  Monospace (JetBrains Mono)
+                </Label>
                 <p className="font-mono text-sm">sub_98412_xm</p>
-                <p className="font-mono text-sm text-primary">{'{{FirstName}}'} {'{{LastName}}'}</p>
+                <p className="font-mono text-sm text-primary">
+                  {"{{FirstName}}"} {"{{LastName}}"}
+                </p>
                 <p className="font-mono text-xs text-muted-foreground">
                   Used for IDs, placeholders, and code.
                 </p>
@@ -241,20 +272,48 @@ export default function StyleguidePage() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { name: "Primary", var: "bg-primary", text: "text-primary-foreground" },
-                  { name: "Secondary", var: "bg-secondary", text: "text-secondary-foreground" },
-                  { name: "Accent", var: "bg-accent", text: "text-accent-foreground" },
-                  { name: "Muted", var: "bg-muted", text: "text-muted-foreground" },
-                  { name: "Card", var: "bg-card", text: "text-card-foreground" },
-                  { name: "Destructive", var: "bg-destructive", text: "text-destructive-foreground" },
+                  {
+                    name: "Primary",
+                    var: "bg-primary",
+                    text: "text-primary-foreground",
+                  },
+                  {
+                    name: "Secondary",
+                    var: "bg-secondary",
+                    text: "text-secondary-foreground",
+                  },
+                  {
+                    name: "Accent",
+                    var: "bg-accent",
+                    text: "text-accent-foreground",
+                  },
+                  {
+                    name: "Muted",
+                    var: "bg-muted",
+                    text: "text-muted-foreground",
+                  },
+                  {
+                    name: "Card",
+                    var: "bg-card",
+                    text: "text-card-foreground",
+                  },
+                  {
+                    name: "Destructive",
+                    var: "bg-destructive",
+                    text: "text-destructive-foreground",
+                  },
                   { name: "Border", var: "bg-border", text: "" },
                   { name: "Ring", var: "bg-ring", text: "" },
                 ].map((color) => (
                   <div key={color.name} className="space-y-2">
-                    <div className={`h-16 ${color.var} rounded-custom border ${color.text ? color.text : ""} flex items-center justify-center font-mono text-xs`}>
+                    <div
+                      className={`h-16 ${color.var} rounded-custom border ${color.text ? color.text : ""} flex items-center justify-center font-mono text-xs`}
+                    >
                       {color.text ? color.name : ""}
                     </div>
-                    <div className="text-xs text-muted-foreground text-center">{color.name}</div>
+                    <div className="text-xs text-muted-foreground text-center">
+                      {color.name}
+                    </div>
                   </div>
                 ))}
               </div>

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/settings - Retrieve all settings
 export async function GET() {
@@ -7,17 +7,17 @@ export async function GET() {
     // For now, we'll return default settings
     const settings = {
       general: {
-        appName: 'APME Implicare',
-        timezone: 'Europe/Bucharest',
-        dateFormat: 'DD/MM/YYYY',
-        language: 'ro',
+        appName: "APME Implicare",
+        timezone: "Europe/Bucharest",
+        dateFormat: "DD/MM/YYYY",
+        language: "ro",
       },
       notifications: {
         emailEnabled: true,
         emailOnNewSubmission: true,
         emailOnAssignmentFailure: true,
         emailOnUserAction: false,
-        emailDigest: 'daily',
+        emailDigest: "daily",
         pushEnabled: false,
         webhookEnabled: true,
       },
@@ -42,43 +42,43 @@ export async function GET() {
       },
       backup: {
         autoBackupEnabled: true,
-        backupFrequency: 'daily',
+        backupFrequency: "daily",
         backupRetentionDays: 30,
         includeAttachments: true,
       },
       integration: {
-        apiKey: 'sk_live_apme_xxxxxxxxxxxxxxxx',
+        apiKey: "sk_live_apme_xxxxxxxxxxxxxxxx",
         smtpSecure: true,
       },
       appearance: {
-        theme: 'system',
+        theme: "system",
         sidebarCollapsed: false,
         denseMode: false,
-        accentColor: 'blue',
+        accentColor: "blue",
       },
-    }
+    };
 
-    return NextResponse.json(settings)
+    return NextResponse.json(settings);
   } catch (error) {
-    console.error('Error fetching settings:', error)
+    console.error("Error fetching settings:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch settings' },
-      { status: 500 }
-    )
+      { error: "Failed to fetch settings" },
+      { status: 500 },
+    );
   }
 }
 
 // POST /api/settings - Save all settings
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await request.json();
 
     // Validate the request body
-    if (!body || typeof body !== 'object') {
+    if (!body || typeof body !== "object") {
       return NextResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
-      )
+        { error: "Invalid request body" },
+        { status: 400 },
+      );
     }
 
     // In a real implementation, you would save settings to the database
@@ -89,38 +89,38 @@ export async function POST(request: NextRequest) {
     //   create: { id: 'default', ...body },
     // })
 
-    console.log('Settings saved:', body)
+    console.log("Settings saved:", body);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: 'Settings saved successfully' 
-    })
+      message: "Settings saved successfully",
+    });
   } catch (error) {
-    console.error('Error saving settings:', error)
+    console.error("Error saving settings:", error);
     return NextResponse.json(
-      { error: 'Failed to save settings' },
-      { status: 500 }
-    )
+      { error: "Failed to save settings" },
+      { status: 500 },
+    );
   }
 }
 
 // PUT /api/settings - Update settings (alias for POST to match frontend)
 export async function PUT(request: NextRequest) {
   // Reuse POST logic
-  return POST(request)
+  return POST(request);
 }
 
 // PATCH /api/settings - Update specific settings
 export async function PATCH(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { category, settings } = body
+    const body = await request.json();
+    const { category, settings } = body;
 
     if (!category || !settings) {
       return NextResponse.json(
-        { error: 'Category and settings are required' },
-        { status: 400 }
-      )
+        { error: "Category and settings are required" },
+        { status: 400 },
+      );
     }
 
     // In a real implementation, you would update specific settings
@@ -129,17 +129,17 @@ export async function PATCH(request: NextRequest) {
     //   data: { [category]: settings },
     // })
 
-    console.log(`Settings updated for ${category}:`, settings)
+    console.log(`Settings updated for ${category}:`, settings);
 
     return NextResponse.json({
       success: true,
       message: `${category} settings updated successfully`,
-    })
+    });
   } catch (error) {
-    console.error('Error updating settings:', error)
+    console.error("Error updating settings:", error);
     return NextResponse.json(
-      { error: 'Failed to update settings' },
-      { status: 500 }
-    )
+      { error: "Failed to update settings" },
+      { status: 500 },
+    );
   }
 }

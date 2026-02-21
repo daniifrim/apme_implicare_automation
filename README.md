@@ -28,10 +28,15 @@ The web app lives in `app/` and includes:
 
 Common commands:
 ```bash
+npm run dev
 pnpm -C app dev
 pnpm -C app test
 pnpm -C app build
 ```
+
+`npm run dev` bootstraps local Postgres (Docker), runs Prisma migrations,
+generates the Prisma client, imports realistic local data when the database is
+empty, then starts the app dev server.
 
 ## Apps Script IDs
 

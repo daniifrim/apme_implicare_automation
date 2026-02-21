@@ -1,54 +1,45 @@
-import { Search, Bell, Menu } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
-  breadcrumb?: {
-    parent: string;
-    current: string;
-  };
   onMenuClick?: () => void;
+  showMenuButton?: boolean;
 }
 
-export function Header({ breadcrumb, onMenuClick }: HeaderProps) {
+export function Header({
+  onMenuClick,
+  showMenuButton = false,
+}: HeaderProps) {
   return (
-    <header className="h-16 border-b border-border flex items-center justify-between px-4 md:px-8 sticky top-0 bg-background z-30">
-      <div className="flex items-center gap-3">
-        {/* Mobile menu button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={onMenuClick}
-          aria-label="Open menu"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-
-        {/* Breadcrumb / Title */}
-        {breadcrumb ? (
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground hidden sm:inline">{breadcrumb.parent}</span>
-            <span className="text-muted-foreground/50 hidden sm:inline">/</span>
-            <span className="font-semibold">{breadcrumb.current}</span>
-          </div>
-        ) : (
-          <span className="font-semibold">Dashboard</span>
-        )}
+    <header className="h-16 border-b border-border flex items-center justify-between px-4 md:px-6 lg:px-8 sticky top-0 bg-background z-30">
+      {/* Left: Logo and Title (mobile only) */}
+      <div className="flex items-center gap-3 lg:hidden">
+        <img
+          src="/logo.png"
+          alt="APME Logo"
+          className="w-9 h-9 rounded-lg object-contain bg-white flex-shrink-0"
+        />
+        <h1 className="font-bold text-lg tracking-tight truncate">
+          APME <span className="text-primary">Implicare</span>
+        </h1>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            type="text"
-            placeholder="Search components..."
-            className="pl-10 pr-4 py-2 w-64"
-          />
-        </div>
-        <button className="p-2 text-muted-foreground hover:text-primary transition-colors">
-          <Bell className="w-5 h-5" />
-        </button>
+      {/* Left: Empty on desktop (sidebar has logo) */}
+      <div className="hidden lg:block" />
+
+      {/* Right: Hamburger Menu Only */}
+      <div className="flex items-center">
+        {showMenuButton && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onMenuClick}
+            className="lg:hidden h-10 w-10 flex-shrink-0"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+        )}
       </div>
     </header>
   );

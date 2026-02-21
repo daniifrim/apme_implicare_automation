@@ -1,33 +1,54 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Key, Globe, Trash2, Plus, Copy, RefreshCw, Eye, EyeOff, Webhook as WebhookIcon } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Checkbox } from '@/components/ui/checkbox'
-import { WEBHOOK_EVENTS, Webhook, IntegrationSettings, DEFAULT_SETTINGS } from '@/types/settings'
+import { useState } from "react";
+import {
+  Key,
+  Globe,
+  Trash2,
+  Plus,
+  Copy,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  Webhook as WebhookIcon,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  WEBHOOK_EVENTS,
+  Webhook,
+  IntegrationSettings,
+  DEFAULT_SETTINGS,
+} from "@/types/settings";
 
 interface IntegrationSettingsPanelProps {
-  settings?: IntegrationSettings
-  webhooks?: Webhook[]
-  onSettingsChange?: (settings: IntegrationSettings) => void
-  onWebhooksChange?: (webhooks: Webhook[]) => void
+  settings?: IntegrationSettings;
+  webhooks?: Webhook[];
+  onSettingsChange?: (settings: IntegrationSettings) => void;
+  onWebhooksChange?: (webhooks: Webhook[]) => void;
 }
 
 const INITIAL_WEBHOOKS: Webhook[] = [
-  { 
-    id: '1', 
-    url: 'https://example.com/webhook', 
-    events: ['submission.created', 'assignment.completed'], 
-    status: 'active',
-    lastTriggered: '2024-01-15T10:30:00Z',
-    createdAt: '2024-01-01T00:00:00Z'
+  {
+    id: "1",
+    url: "https://example.com/webhook",
+    events: ["submission.created", "assignment.completed"],
+    status: "active",
+    lastTriggered: "2024-01-15T10:30:00Z",
+    createdAt: "2024-01-01T00:00:00Z",
   },
-]
+];
 
 export function IntegrationSettingsPanel({
   settings = DEFAULT_SETTINGS.integration,
@@ -35,62 +56,67 @@ export function IntegrationSettingsPanel({
   onSettingsChange,
   onWebhooksChange,
 }: IntegrationSettingsPanelProps) {
-  const [localSettings, setLocalSettings] = useState<IntegrationSettings>(settings)
-  const [localWebhooks, setLocalWebhooks] = useState<Webhook[]>(webhooks)
-  const [showApiKey, setShowApiKey] = useState(false)
-  const [newWebhookUrl, setNewWebhookUrl] = useState('')
-  const [newWebhookEvents, setNewWebhookEvents] = useState<string[]>(['submission.created'])
-  const [copied, setCopied] = useState(false)
+  const [localSettings, setLocalSettings] =
+    useState<IntegrationSettings>(settings);
+  const [localWebhooks, setLocalWebhooks] = useState<Webhook[]>(webhooks);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [newWebhookUrl, setNewWebhookUrl] = useState("");
+  const [newWebhookEvents, setNewWebhookEvents] = useState<string[]>([
+    "submission.created",
+  ]);
+  const [copied, setCopied] = useState(false);
 
   const handleSettingsChange = (updates: Partial<IntegrationSettings>) => {
-    const newSettings = { ...localSettings, ...updates }
-    setLocalSettings(newSettings)
-    onSettingsChange?.(newSettings)
-  }
+    const newSettings = { ...localSettings, ...updates };
+    setLocalSettings(newSettings);
+    onSettingsChange?.(newSettings);
+  };
 
   const handleWebhooksChange = (newWebhooks: Webhook[]) => {
-    setLocalWebhooks(newWebhooks)
-    onWebhooksChange?.(newWebhooks)
-  }
+    setLocalWebhooks(newWebhooks);
+    onWebhooksChange?.(newWebhooks);
+  };
 
   const handleCopyApiKey = () => {
-    navigator.clipboard.writeText(localSettings.apiKey)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(localSettings.apiKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleRegenerateApiKey = () => {
-    const newKey = `sk_live_apme_${Math.random().toString(36).substring(2, 18)}${Math.random().toString(36).substring(2, 18)}`
-    handleSettingsChange({ apiKey: newKey })
-  }
+    const newKey = `sk_live_apme_${Math.random().toString(36).substring(2, 18)}${Math.random().toString(36).substring(2, 18)}`;
+    handleSettingsChange({ apiKey: newKey });
+  };
 
   const handleAddWebhook = () => {
-    if (!newWebhookUrl || !newWebhookUrl.startsWith('http')) return
-    
+    if (!newWebhookUrl || !newWebhookUrl.startsWith("http")) return;
+
     const newWebhook: Webhook = {
       id: Date.now().toString(),
       url: newWebhookUrl,
       events: newWebhookEvents,
-      status: 'active',
+      status: "active",
       createdAt: new Date().toISOString(),
-    }
-    
-    handleWebhooksChange([...localWebhooks, newWebhook])
-    setNewWebhookUrl('')
-    setNewWebhookEvents(['submission.created'])
-  }
+    };
+
+    handleWebhooksChange([...localWebhooks, newWebhook]);
+    setNewWebhookUrl("");
+    setNewWebhookEvents(["submission.created"]);
+  };
 
   const handleRemoveWebhook = (webhookId: string) => {
-    handleWebhooksChange(localWebhooks.filter(w => w.id !== webhookId))
-  }
+    handleWebhooksChange(localWebhooks.filter((w) => w.id !== webhookId));
+  };
 
   const handleToggleWebhookStatus = (webhookId: string) => {
-    handleWebhooksChange(localWebhooks.map(w => 
-      w.id === webhookId 
-        ? { ...w, status: w.status === 'active' ? 'inactive' : 'active' }
-        : w
-    ))
-  }
+    handleWebhooksChange(
+      localWebhooks.map((w) =>
+        w.id === webhookId
+          ? { ...w, status: w.status === "active" ? "inactive" : "active" }
+          : w,
+      ),
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -100,7 +126,9 @@ export function IntegrationSettingsPanel({
             <Key className="w-5 h-5" />
             API Key
           </CardTitle>
-          <CardDescription>Your secret API key for external integrations</CardDescription>
+          <CardDescription>
+            Your secret API key for external integrations
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -108,7 +136,7 @@ export function IntegrationSettingsPanel({
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Input
-                  type={showApiKey ? 'text' : 'password'}
+                  type={showApiKey ? "text" : "password"}
                   value={localSettings.apiKey}
                   readOnly
                   className="font-mono pr-10"
@@ -120,14 +148,19 @@ export function IntegrationSettingsPanel({
                   className="absolute right-0 top-0 h-full"
                   onClick={() => setShowApiKey(!showApiKey)}
                 >
-                  {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showApiKey ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
               <Button variant="outline" onClick={handleCopyApiKey}>
                 <Copy className="w-4 h-4 mr-2" />
-                {copied ? 'Copied!' : 'Copy'}
+                {copied ? "Copied!" : "Copy"}
               </Button>
-            </div>            <p className="text-xs text-muted-foreground">
+            </div>{" "}
+            <p className="text-xs text-muted-foreground">
               Keep this key secure. Do not share it in client-side code.
             </p>
           </div>
@@ -147,7 +180,9 @@ export function IntegrationSettingsPanel({
             <WebhookIcon className="w-5 h-5" />
             Webhooks
           </CardTitle>
-          <CardDescription>Configure webhook endpoints for real-time events</CardDescription>
+          <CardDescription>
+            Configure webhook endpoints for real-time events
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -175,9 +210,11 @@ export function IntegrationSettingsPanel({
                     checked={newWebhookEvents.includes(event.value)}
                     onCheckedChange={(checked) => {
                       if (checked) {
-                        setNewWebhookEvents([...newWebhookEvents, event.value])
+                        setNewWebhookEvents([...newWebhookEvents, event.value]);
                       } else {
-                        setNewWebhookEvents(newWebhookEvents.filter(e => e !== event.value))
+                        setNewWebhookEvents(
+                          newWebhookEvents.filter((e) => e !== event.value),
+                        );
                       }
                     }}
                   />
@@ -194,19 +231,25 @@ export function IntegrationSettingsPanel({
           <div className="space-y-2">
             <Label>Active Webhooks</Label>
             {localWebhooks.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No webhooks configured</p>
+              <p className="text-sm text-muted-foreground">
+                No webhooks configured
+              </p>
             ) : (
               <div className="space-y-2">
                 {localWebhooks.map((webhook) => (
-                  <div 
-                    key={webhook.id} 
+                  <div
+                    key={webhook.id}
                     className="flex items-center justify-between p-3 rounded-lg border"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="font-medium truncate">{webhook.url}</p>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <Badge 
-                          variant={webhook.status === 'active' ? 'default' : 'secondary'}
+                        <Badge
+                          variant={
+                            webhook.status === "active"
+                              ? "default"
+                              : "secondary"
+                          }
                           className="cursor-pointer"
                           onClick={() => handleToggleWebhookStatus(webhook.id)}
                         >
@@ -217,7 +260,8 @@ export function IntegrationSettingsPanel({
                         </span>
                         {webhook.lastTriggered && (
                           <span className="text-xs text-muted-foreground">
-                            Last: {new Date(webhook.lastTriggered).toLocaleString()}
+                            Last:{" "}
+                            {new Date(webhook.lastTriggered).toLocaleString()}
                           </span>
                         )}
                       </div>
@@ -253,8 +297,10 @@ export function IntegrationSettingsPanel({
               id="filloutSecret"
               type="password"
               placeholder="Enter your Fillout webhook secret"
-              value={localSettings.filloutWebhookSecret || ''}
-              onChange={(e) => handleSettingsChange({ filloutWebhookSecret: e.target.value })}
+              value={localSettings.filloutWebhookSecret || ""}
+              onChange={(e) =>
+                handleSettingsChange({ filloutWebhookSecret: e.target.value })
+              }
             />
             <p className="text-xs text-muted-foreground">
               Used to verify webhook requests from Fillout
@@ -263,5 +309,5 @@ export function IntegrationSettingsPanel({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

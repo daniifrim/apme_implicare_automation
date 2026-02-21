@@ -32,23 +32,27 @@ A modern web application for managing email automation based on Fillout form sub
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 2. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your values
 ```
 
 3. Set up the database:
+
 ```bash
 npx prisma migrate dev
 npx prisma generate
 ```
 
 4. Run the development server:
+
 ```bash
 pnpm dev
 ```
@@ -115,11 +119,13 @@ The schema includes:
 ## Testing
 
 Run tests:
+
 ```bash
 pnpm test
 ```
 
 Run tests with coverage:
+
 ```bash
 pnpm test:coverage
 ```
@@ -139,17 +145,20 @@ docker push ghcr.io/daniifrim/apme-implicare-web:latest
 ### Deploy to VPS
 
 1. Copy stack file to VPS:
+
 ```bash
 cp docker-compose.yml /path/to/vps-infra/stacks/apme-implicare/
 ```
 
 2. Set up environment on VPS:
+
 ```bash
 # Copy real .env to VPS
 scp .env root@88.198.218.71:/opt/stacks/apme-implicare/
 ```
 
 3. Deploy with Docker Swarm:
+
 ```bash
 docker --context hetzner stack deploy -c /opt/stacks/apme-implicare/compose.yml apme-implicare
 ```
@@ -157,6 +166,7 @@ docker --context hetzner stack deploy -c /opt/stacks/apme-implicare/compose.yml 
 ### Database Migrations
 
 After deployment, run migrations:
+
 ```bash
 docker --context hetzner exec $(docker --context hetzner ps -q -f name=apme-implicare_web) npx prisma migrate deploy
 ```

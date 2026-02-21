@@ -1,5 +1,5 @@
-export { StatCard } from './stat-card'
-export { ActivityChart } from './activity-chart'
-export { RecentSubmissionsList } from './recent-submissions-list'
-export { QuickActions } from './quick-actions'
-export { TemplatePerformanceWidget } from './template-performance'
+export { StatCard } from "./stat-card";
+export { ActivityChart } from "./activity-chart";
+export { RecentSubmissionsList } from "./recent-submissions-list";
+export { QuickActions } from "./quick-actions";
+export { TemplatePerformanceWidget } from "./template-performance";

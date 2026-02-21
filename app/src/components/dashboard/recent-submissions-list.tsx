@@ -1,61 +1,71 @@
-'use client'
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
-import { ArrowRight, User, Mail, Clock, CheckCircle } from 'lucide-react'
-import Link from 'next/link'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { ArrowRight, User, Mail, Clock, CheckCircle } from "lucide-react";
+import Link from "next/link";
 
 interface TemplateInfo {
-  id: string
-  name: string
-  slug: string
-  status: string
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
 }
 
 interface Submission {
-  id: string
-  submissionId: string
-  email: string
-  firstName: string | null
-  lastName: string | null
-  status: string
-  submissionTime: Date | string
-  createdAt: Date | string
-  locationType: string | null
-  assignmentCount: number
-  templates: TemplateInfo[]
+  id: string;
+  submissionId: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  status: string;
+  submissionTime: Date | string;
+  createdAt: Date | string;
+  locationType: string | null;
+  assignmentCount: number;
+  templates: TemplateInfo[];
 }
 
 interface RecentSubmissionsListProps {
-  submissions: Submission[]
-  title?: string
-  description?: string
-  className?: string
-  loading?: boolean
-  viewAllHref?: string
+  submissions: Submission[];
+  title?: string;
+  description?: string;
+  className?: string;
+  loading?: boolean;
+  viewAllHref?: string;
 }
 
 const statusConfig = {
-  pending: { label: 'Pending', variant: 'default' as const, icon: Clock },
-  processed: { label: 'Processed', variant: 'secondary' as const, icon: CheckCircle },
-  failed: { label: 'Failed', variant: 'destructive' as const, icon: Clock },
-  default: { label: 'Unknown', variant: 'outline' as const, icon: Clock }
-}
+  pending: { label: "Pending", variant: "default" as const, icon: Clock },
+  processed: {
+    label: "Processed",
+    variant: "secondary" as const,
+    icon: CheckCircle,
+  },
+  failed: { label: "Failed", variant: "destructive" as const, icon: Clock },
+  default: { label: "Unknown", variant: "outline" as const, icon: Clock },
+};
 
 export function RecentSubmissionsList({
   submissions,
-  title = 'Recent Submissions',
+  title = "Recent Submissions",
   description,
   className,
   loading = false,
-  viewAllHref = '/dashboard/submissions'
+  viewAllHref = "/dashboard/submissions",
 }: RecentSubmissionsListProps) {
   if (loading) {
     return (
-      <Card className={cn('overflow-hidden', className)}>
+      <Card className={cn("overflow-hidden", className)}>
         <CardHeader>
           <Skeleton className="h-5 w-40" />
           {description && <Skeleton className="h-4 w-56" />}
@@ -73,36 +83,37 @@ export function RecentSubmissionsList({
           ))}
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const formatDate = (date: Date | string) => {
-    const d = new Date(date)
-    return d.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: d.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-    })
-  }
+    const d = new Date(date);
+    return d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year:
+        d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+    });
+  };
 
   const getInitials = (firstName: string | null, lastName: string | null) => {
-    const first = firstName?.[0] || ''
-    const last = lastName?.[0] || ''
-    return (first + last).toUpperCase() || '??'
-  }
+    const first = firstName?.[0] || "";
+    const last = lastName?.[0] || "";
+    return (first + last).toUpperCase() || "??";
+  };
 
   const getStatusConfig = (status: string) => {
-    return statusConfig[status as keyof typeof statusConfig] || statusConfig.default
-  }
+    return (
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.default
+    );
+  };
 
   return (
-    <Card className={cn('overflow-hidden', className)}>
+    <Card className={cn("overflow-hidden", className)}>
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
           <CardTitle className="text-base font-semibold">{title}</CardTitle>
-          {description && (
-            <CardDescription>{description}</CardDescription>
-          )}
+          {description && <CardDescription>{description}</CardDescription>}
         </div>
         {viewAllHref && (
           <Button variant="ghost" size="sm" asChild>
@@ -119,15 +130,17 @@ export function RecentSubmissionsList({
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
               <Mail className="h-6 w-6 text-gray-400" />
             </div>
-            <p className="text-sm font-medium text-gray-900">No submissions yet</p>
+            <p className="text-sm font-medium text-gray-900">
+              No submissions yet
+            </p>
             <p className="text-xs text-gray-500 mt-1">
               Submissions will appear here when forms are submitted
             </p>
           </div>
         ) : (
           submissions.map((submission) => {
-            const status = getStatusConfig(submission.status)
-            const StatusIcon = status.icon
+            const status = getStatusConfig(submission.status);
+            const StatusIcon = status.icon;
 
             return (
               <div
@@ -147,7 +160,8 @@ export function RecentSubmissionsList({
                     </p>
                     {submission.assignmentCount > 0 && (
                       <Badge variant="secondary" className="text-xs">
-                        {submission.assignmentCount} template{submission.assignmentCount !== 1 ? 's' : ''}
+                        {submission.assignmentCount} template
+                        {submission.assignmentCount !== 1 ? "s" : ""}
                       </Badge>
                     )}
                   </div>
@@ -160,10 +174,7 @@ export function RecentSubmissionsList({
 
                 {/* Status */}
                 <div className="flex items-center gap-2">
-                  <Badge 
-                    variant={status.variant}
-                    className="gap-1 text-xs"
-                  >
+                  <Badge variant={status.variant} className="gap-1 text-xs">
                     <StatusIcon className="h-3 w-3" />
                     {status.label}
                   </Badge>
@@ -179,10 +190,10 @@ export function RecentSubmissionsList({
                   </Button>
                 </div>
               </div>
-            )
+            );
           })
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

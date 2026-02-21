@@ -1,28 +1,28 @@
-import crypto from 'crypto'
+import crypto from "crypto";
 
 export function verifyWebhookSignature(
   payload: string,
   signature: string,
-  secret: string
+  secret: string,
 ): boolean {
   const expectedSignature = crypto
-    .createHmac('sha256', secret)
+    .createHmac("sha256", secret)
     .update(payload)
-    .digest('hex')
+    .digest("hex");
 
   try {
     return crypto.timingSafeEqual(
       Buffer.from(signature),
-      Buffer.from(expectedSignature)
-    )
+      Buffer.from(expectedSignature),
+    );
   } catch {
-    return false
+    return false;
   }
 }
 
-export function generateWebhookSignature(payload: string, secret: string): string {
-  return crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex')
+export function generateWebhookSignature(
+  payload: string,
+  secret: string,
+): string {
+  return crypto.createHmac("sha256", secret).update(payload).digest("hex");
 }

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "APME email automation system for missionary follow-ups",
   "scripts": {
+    "dev": "./scripts/dev-with-data.sh",
     "app:dev": "pnpm -C app dev",
     "app:build": "pnpm -C app build",
     "app:start": "pnpm -C app start",

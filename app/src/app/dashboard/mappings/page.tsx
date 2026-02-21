@@ -1,6 +1,8 @@
 import { AlertCircle, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -49,18 +51,39 @@ const mappings = {
   PRAYER_DURATION: "q10",
 };
 
+function StatusIndicator({ mapped }: { mapped: boolean }) {
+  return mapped ? (
+    <div className="flex items-center gap-1.5 text-green-700">
+      <Check className="w-3 h-3" />
+      <span className="text-xs font-medium">Mapped</span>
+    </div>
+  ) : (
+    <div className="flex items-center gap-1.5 text-amber-700">
+      <AlertCircle className="w-3 h-3" />
+      <span className="text-xs font-medium">Unmapped</span>
+    </div>
+  );
+}
+
 export default function MappingsPage() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Field Mappings</h2>
-          <p className="text-sm text-muted-foreground">Map canonical fields to Fillout question IDs</p>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight">
+            Field Mappings
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Map canonical fields to Fillout question IDs
+          </p>
         </div>
-        <Button variant="outline">Auto-detect Fields</Button>
+        <Button variant="outline" className="self-start">
+          Auto-detect Fields
+        </Button>
       </div>
 
-      <div className="bg-card border rounded-custom overflow-hidden">
+      {/* Desktop: Table */}
+      <div className="hidden md:block bg-card border rounded-custom overflow-hidden">
         <table className="w-full text-left">
           <thead className="bg-muted border-b">
             <tr>
@@ -87,24 +110,18 @@ export default function MappingsPage() {
                 <tr key={field.key} className="hover:bg-accent/30">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-primary">{field.key}</span>
+                      <span className="font-mono text-xs font-bold text-primary">
+                        {field.key}
+                      </span>
                       {field.required && (
-                        <Badge variant="secondary" className="text-[9px]">Required</Badge>
+                        <Badge variant="secondary" className="text-[9px]">
+                          Required
+                        </Badge>
                       )}
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    {mapped ? (
-                      <div className="flex items-center gap-1.5 text-green-700">
-                        <Check className="w-3 h-3" />
-                        <span className="text-xs font-medium">Mapped</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5 text-amber-700">
-                        <AlertCircle className="w-3 h-3" />
-                        <span className="text-xs font-medium">Unmapped</span>
-                      </div>
-                    )}
+                    <StatusIndicator mapped={!!mapped} />
                   </td>
                   <td className="px-4 py-3">
                     <Select defaultValue={mapped || "unmapped"}>
@@ -131,13 +148,71 @@ export default function MappingsPage() {
         </table>
       </div>
 
+      {/* Mobile: Cards */}
+      <div className="md:hidden space-y-3">
+        {canonicalFields.map((field) => {
+          const mapped = mappings[field.key as keyof typeof mappings];
+          const question = filloutQuestions.find((q) => q.id === mapped);
+
+          return (
+            <Card key={field.key} className="overflow-hidden">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-primary">
+                      {field.key}
+                    </span>
+                    {field.required && (
+                      <Badge variant="secondary" className="text-[9px]">
+                        Required
+                      </Badge>
+                    )}
+                  </div>
+                  <StatusIndicator mapped={!!mapped} />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">
+                    Map to question:
+                  </label>
+                  <Select defaultValue={mapped || "unmapped"}>
+                    <SelectTrigger className="w-full h-9 text-sm">
+                      <SelectValue placeholder="Select question..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unmapped">Unmapped</SelectItem>
+                      {filloutQuestions.map((q) => (
+                        <SelectItem key={q.id} value={q.id}>
+                          {q.id}: {q.name.slice(0, 40)}
+                          {q.name.length > 40 && "..."}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {question && (
+                  <p className="text-sm text-muted-foreground">
+                    <span className="text-xs text-gray-500">Mapped to: </span>
+                    {question.name}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
       <div className="bg-amber-50 border border-amber-200 rounded-custom p-4 flex items-start gap-3">
         <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
         <div>
           <h4 className="font-semibold text-amber-900">Unmapped Questions</h4>
           <p className="text-sm text-amber-800 mt-1">
-            There are 3 questions in the form that are not mapped to any canonical field.
-            <button className="text-primary underline ml-1">Review unmapped questions</button>
+            There are 3 questions in the form that are not mapped to any
+            canonical field.
+            <button className="text-primary underline ml-1">
+              Review unmapped questions
+            </button>
           </p>
         </div>
       </div>

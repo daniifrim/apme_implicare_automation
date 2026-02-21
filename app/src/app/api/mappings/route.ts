@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { createAuditLog } from '@/lib/audit'
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET() {
   try {
@@ -8,81 +8,81 @@ export async function GET() {
       include: {
         question: {
           include: {
-            form: true
-          }
-        }
+            form: true,
+          },
+        },
       },
-      orderBy: { canonicalKey: 'asc' }
-    })
+      orderBy: { canonicalKey: "asc" },
+    });
 
-    return NextResponse.json({ mappings })
+    return NextResponse.json({ mappings });
   } catch (error) {
-    console.error('Error fetching field mappings:', error)
+    console.error("Error fetching field mappings:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch field mappings' },
-      { status: 500 }
-    )
+      { error: "Failed to fetch field mappings" },
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { canonicalKey, questionId, description, isRequired } = body
+    const body = await request.json();
+    const { canonicalKey, questionId, description, isRequired } = body;
 
     if (!canonicalKey || !questionId) {
       return NextResponse.json(
-        { error: 'canonicalKey and questionId are required' },
-        { status: 400 }
-      )
+        { error: "canonicalKey and questionId are required" },
+        { status: 400 },
+      );
     }
 
     const question = await prisma.filloutQuestion.findUnique({
-      where: { id: questionId }
-    })
+      where: { id: questionId },
+    });
 
     if (!question) {
       return NextResponse.json(
-        { error: 'Question not found' },
-        { status: 404 }
-      )
+        { error: "Question not found" },
+        { status: 404 },
+      );
     }
 
     const existingMapping = await prisma.fieldMapping.findUnique({
-      where: { canonicalKey }
-    })
+      where: { canonicalKey },
+    });
 
-    let mapping
-    let oldValue = null
+    let mapping;
+    let oldValue = null;
 
     if (existingMapping) {
       oldValue = {
         canonicalKey: existingMapping.canonicalKey,
         questionId: existingMapping.questionId,
         description: existingMapping.description,
-        isRequired: existingMapping.isRequired
-      }
+        isRequired: existingMapping.isRequired,
+      };
 
       mapping = await prisma.fieldMapping.update({
         where: { canonicalKey },
         data: {
           questionId,
           description: description || existingMapping.description,
-          isRequired: isRequired ?? existingMapping.isRequired
+          isRequired: isRequired ?? existingMapping.isRequired,
         },
         include: {
           question: {
             include: {
-              form: true
-            }
-          }
-        }
-      })
+              form: true,
+            },
+          },
+        },
+      });
 
       await createAuditLog({
-        userId: 'system',
-        action: 'updated',
-        resource: 'mapping',
+        userId: "system",
+        action: "updated",
+        resource: "mapping",
         resourceId: mapping.id,
         oldValue,
         newValue: {
@@ -90,30 +90,30 @@ export async function POST(request: NextRequest) {
           questionId: mapping.questionId,
           description: mapping.description,
           isRequired: mapping.isRequired,
-          questionName: question.name
-        }
-      })
+          questionName: question.name,
+        },
+      });
     } else {
       mapping = await prisma.fieldMapping.create({
         data: {
           canonicalKey,
           questionId,
           description: description || null,
-          isRequired: isRequired ?? false
+          isRequired: isRequired ?? false,
         },
         include: {
           question: {
             include: {
-              form: true
-            }
-          }
-        }
-      })
+              form: true,
+            },
+          },
+        },
+      });
 
       await createAuditLog({
-        userId: 'system',
-        action: 'created',
-        resource: 'mapping',
+        userId: "system",
+        action: "created",
+        resource: "mapping",
         resourceId: mapping.id,
         oldValue: null,
         newValue: {
@@ -121,18 +121,20 @@ export async function POST(request: NextRequest) {
           questionId: mapping.questionId,
           description: mapping.description,
           isRequired: mapping.isRequired,
-          questionName: question.name
-        }
-      })
+          questionName: question.name,
+        },
+      });
     }
 
-    return NextResponse.json({ mapping }, { status: existingMapping ? 200 : 201 })
-
-  } catch (error) {
-    console.error('Error creating/updating field mapping:', error)
     return NextResponse.json(
-      { error: 'Failed to create/update field mapping' },
-      { status: 500 }
-    )
+      { mapping },
+      { status: existingMapping ? 200 : 201 },
+    );
+  } catch (error) {
+    console.error("Error creating/updating field mapping:", error);
+    return NextResponse.json(
+      { error: "Failed to create/update field mapping" },
+      { status: 500 },
+    );
   }
 }

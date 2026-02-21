@@ -2,15 +2,15 @@
 // ABOUTME: Provides strongly typed contracts between editor UI and template screens
 
 export type EditorWarning = {
-  code: string
-  message: string
-  severity: 'info' | 'warning'
-}
+  code: string;
+  message: string;
+  severity: "info" | "warning";
+};
 
 export type EmailEditorAllowedFeatures = {
-  paragraphs?: boolean
-  lineBreaks?: boolean
-  lists?: boolean
-  links?: boolean
-  placeholders?: boolean
-}
+  paragraphs?: boolean;
+  lineBreaks?: boolean;
+  lists?: boolean;
+  links?: boolean;
+  placeholders?: boolean;
+};

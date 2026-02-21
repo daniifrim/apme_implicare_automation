@@ -1,37 +1,41 @@
 // ABOUTME: Editor panel component containing the email editor and template form fields
-'use client'
+"use client";
 
-import { EmailEditor } from '@/components/email-editor'
-import { BlockNoteEditor, PartialBlock } from '@blocknote/core'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import type { EditorWarning } from '@/types/email-editor'
+import { EmailEditor } from "@/components/email-editor";
+import { BlockNoteEditor, PartialBlock } from "@blocknote/core";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import type { EditorWarning } from "@/types/email-editor";
 
 interface EditorPanelProps {
   formData: {
-    name: string
-    subject: string
-    preheader: string
-  }
+    name: string;
+    subject: string;
+    preheader: string;
+  };
   editorContent: {
-    blocks: PartialBlock[]
-    html: string
-    text: string
-    placeholders: string[]
-    warnings: string[]
-  }
-  editorWarnings: EditorWarning[]
-  onFormChange: (data: { name: string; subject: string; preheader: string }) => void
+    blocks: PartialBlock[];
+    html: string;
+    text: string;
+    placeholders: string[];
+    warnings: string[];
+  };
+  editorWarnings: EditorWarning[];
+  onFormChange: (data: {
+    name: string;
+    subject: string;
+    preheader: string;
+  }) => void;
   onEditorChange: (
     blocks: PartialBlock[],
     html: string,
     text: string,
     placeholders: string[],
-    warnings: string[]
-  ) => void
-  onEditorReady: (editor: BlockNoteEditor) => void
-  onValidationChange: (warnings: EditorWarning[]) => void
+    warnings: string[],
+  ) => void;
+  onEditorReady: (editor: BlockNoteEditor) => void;
+  onValidationChange: (warnings: EditorWarning[]) => void;
 }
 
 export function EditorPanel({
@@ -41,11 +45,11 @@ export function EditorPanel({
   onFormChange,
   onEditorChange,
   onEditorReady,
-  onValidationChange
+  onValidationChange,
 }: EditorPanelProps) {
   const handleFormChange = (field: keyof typeof formData, value: string) => {
-    onFormChange({ ...formData, [field]: value })
-  }
+    onFormChange({ ...formData, [field]: value });
+  };
 
   return (
     <div className="space-y-6">
@@ -58,7 +62,7 @@ export function EditorPanel({
           <Input
             id="version-name"
             value={formData.name}
-            onChange={(e) => handleFormChange('name', e.target.value)}
+            onChange={(e) => handleFormChange("name", e.target.value)}
             placeholder="e.g., Welcome Email v2"
             className="h-10"
           />
@@ -70,7 +74,7 @@ export function EditorPanel({
           <Input
             id="subject"
             value={formData.subject}
-            onChange={(e) => handleFormChange('subject', e.target.value)}
+            onChange={(e) => handleFormChange("subject", e.target.value)}
             placeholder="e.g., Welcome to APME!"
             className="h-10"
           />
@@ -84,7 +88,7 @@ export function EditorPanel({
         <Input
           id="preheader"
           value={formData.preheader}
-          onChange={(e) => handleFormChange('preheader', e.target.value)}
+          onChange={(e) => handleFormChange("preheader", e.target.value)}
           placeholder="Preview text that appears in email clients"
           className="h-10"
         />
@@ -105,7 +109,7 @@ export function EditorPanel({
               lineBreaks: true,
               links: true,
               lists: true,
-              placeholders: true
+              placeholders: true,
             }}
           />
         </div>
@@ -128,14 +132,18 @@ export function EditorPanel({
       {/* Detected Placeholders */}
       {editorContent.placeholders.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap pt-2 border-t">
-          <span className="text-sm text-muted-foreground">Detected placeholders:</span>
+          <span className="text-sm text-muted-foreground">
+            Detected placeholders:
+          </span>
           {editorContent.placeholders.map((p) => (
             <Badge key={p} variant="secondary" className="font-mono text-xs">
-              {'{{'}{p}{'}}'}
+              {"{{"}
+              {p}
+              {"}}"}
             </Badge>
           ))}
         </div>
       )}
     </div>
-  )
+  );
 }

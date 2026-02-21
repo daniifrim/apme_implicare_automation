@@ -1,122 +1,196 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Users, UserPlus, Trash2, Shield, Mail, Lock, RotateCcw, Ban, CheckCircle, MoreHorizontal, Search, Filter } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { useFormDirty } from '@/hooks/use-unsaved-changes'
-import { User, UserRole, ROLE_PERMISSIONS, UserStatus } from '@/types/settings'
+import { useState } from "react";
+import {
+  Users,
+  UserPlus,
+  Trash2,
+  Shield,
+  Mail,
+  Lock,
+  RotateCcw,
+  Ban,
+  CheckCircle,
+  MoreHorizontal,
+  Search,
+  Filter,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useFormDirty } from "@/hooks/use-unsaved-changes";
+import { User, UserRole, ROLE_PERMISSIONS, UserStatus } from "@/types/settings";
 
 interface UserManagementPanelProps {
-  initialUsers?: User[]
-  onUsersChange?: (users: User[]) => void
+  initialUsers?: User[];
+  onUsersChange?: (users: User[]) => void;
 }
 
 const INITIAL_USERS: User[] = [
-  { id: '1', name: 'Jane Doe', email: 'admin@apme.ro', role: 'admin', status: 'active', lastLoginAt: '2024-01-15T10:30:00Z' },
-  { id: '2', name: 'John Smith', email: 'editor@apme.ro', role: 'editor', status: 'active', lastLoginAt: '2024-01-14T15:20:00Z' },
-  { id: '3', name: 'Alice Johnson', email: 'viewer@apme.ro', role: 'viewer', status: 'pending', invitedAt: '2024-01-15T08:00:00Z' },
-  { id: '4', name: 'Bob Wilson', email: 'bob@example.com', role: 'editor', status: 'disabled', lastLoginAt: '2024-01-10T09:00:00Z' },
-]
+  {
+    id: "1",
+    name: "Jane Doe",
+    email: "admin@apme.ro",
+    role: "admin",
+    status: "active",
+    lastLoginAt: "2024-01-15T10:30:00Z",
+  },
+  {
+    id: "2",
+    name: "John Smith",
+    email: "editor@apme.ro",
+    role: "editor",
+    status: "active",
+    lastLoginAt: "2024-01-14T15:20:00Z",
+  },
+  {
+    id: "3",
+    name: "Alice Johnson",
+    email: "viewer@apme.ro",
+    role: "viewer",
+    status: "pending",
+    invitedAt: "2024-01-15T08:00:00Z",
+  },
+  {
+    id: "4",
+    name: "Bob Wilson",
+    email: "bob@example.com",
+    role: "editor",
+    status: "disabled",
+    lastLoginAt: "2024-01-10T09:00:00Z",
+  },
+];
 
-export function UserManagementPanel({ 
+export function UserManagementPanel({
   initialUsers = INITIAL_USERS,
-  onUsersChange 
+  onUsersChange,
 }: UserManagementPanelProps) {
-  const [users, setUsers] = useState<User[]>(initialUsers)
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<UserRole>('editor')
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<UserStatus | 'all'>('all')
-  const [actionInProgress, setActionInProgress] = useState<string | null>(null)
+  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<UserRole>("editor");
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<UserStatus | "all">("all");
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
-  useFormDirty('users', initialUsers as unknown as Record<string, unknown>, users as unknown as Record<string, unknown>)
+  useFormDirty(
+    "users",
+    initialUsers as unknown as Record<string, unknown>,
+    users as unknown as Record<string, unknown>,
+  );
 
   const handleUsersChange = (newUsers: User[]) => {
-    setUsers(newUsers)
-    onUsersChange?.(newUsers)
-  }
+    setUsers(newUsers);
+    onUsersChange?.(newUsers);
+  };
 
   const handleInviteUser = async () => {
-    if (!inviteEmail || !inviteEmail.includes('@')) return
-    
-    setActionInProgress('invite')
-    
+    if (!inviteEmail || !inviteEmail.includes("@")) return;
+
+    setActionInProgress("invite");
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     const newUser: User = {
       id: Date.now().toString(),
-      name: inviteEmail.split('@')[0],
+      name: inviteEmail.split("@")[0],
       email: inviteEmail,
       role: inviteRole,
-      status: 'pending',
+      status: "pending",
       invitedAt: new Date().toISOString(),
-    }
-    
-    handleUsersChange([...users, newUser])
-    setInviteEmail('')
-    setInviteRole('editor')
-    setInviteDialogOpen(false)
-    setActionInProgress(null)
-  }
+    };
+
+    handleUsersChange([...users, newUser]);
+    setInviteEmail("");
+    setInviteRole("editor");
+    setInviteDialogOpen(false);
+    setActionInProgress(null);
+  };
 
   const handleRemoveUser = (userId: string) => {
-    handleUsersChange(users.filter(u => u.id !== userId))
-  }
+    handleUsersChange(users.filter((u) => u.id !== userId));
+  };
 
   const handleToggleUserStatus = (userId: string) => {
-    handleUsersChange(users.map(u => {
-      if (u.id !== userId) return u
-      return {
-        ...u,
-        status: u.status === 'active' ? 'disabled' : 'active'
-      }
-    }))
-  }
+    handleUsersChange(
+      users.map((u) => {
+        if (u.id !== userId) return u;
+        return {
+          ...u,
+          status: u.status === "active" ? "disabled" : "active",
+        };
+      }),
+    );
+  };
 
   const handleResendInvite = async (userId: string) => {
-    setActionInProgress(userId)
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    handleUsersChange(users.map(u => {
-      if (u.id !== userId) return u
-      return { ...u, invitedAt: new Date().toISOString() }
-    }))
-    setActionInProgress(null)
-  }
+    setActionInProgress(userId);
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    handleUsersChange(
+      users.map((u) => {
+        if (u.id !== userId) return u;
+        return { ...u, invitedAt: new Date().toISOString() };
+      }),
+    );
+    setActionInProgress(null);
+  };
 
   const handleResetPassword = async (userId: string) => {
-    setActionInProgress(`reset-${userId}`)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    setActionInProgress(null)
+    setActionInProgress(`reset-${userId}`);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setActionInProgress(null);
     // In real implementation, this would call an API to send reset email
-  }
+  };
 
   const handleChangeRole = (userId: string, role: UserRole) => {
-    handleUsersChange(users.map(u => 
-      u.id === userId ? { ...u, role } : u
-    ))
-  }
+    handleUsersChange(users.map((u) => (u.id === userId ? { ...u, role } : u)));
+  };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || user.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-  const activeCount = users.filter(u => u.status === 'active').length
-  const pendingCount = users.filter(u => u.status === 'pending').length
-  const disabledCount = users.filter(u => u.status === 'disabled').length
+  const activeCount = users.filter((u) => u.status === "active").length;
+  const pendingCount = users.filter((u) => u.status === "pending").length;
+  const disabledCount = users.filter((u) => u.status === "disabled").length;
 
   return (
     <div className="space-y-6">
@@ -170,7 +244,10 @@ export function UserManagementPanel({
             </div>
             <div className="grid gap-2">
               <Label>Role</Label>
-              <Select value={inviteRole} onValueChange={(v: UserRole) => setInviteRole(v)}>
+              <Select
+                value={inviteRole}
+                onValueChange={(v: UserRole) => setInviteRole(v)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -185,14 +262,21 @@ export function UserManagementPanel({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setInviteDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button 
-              onClick={handleInviteUser} 
-              disabled={!inviteEmail || !inviteEmail.includes('@') || actionInProgress === 'invite'}
+            <Button
+              onClick={handleInviteUser}
+              disabled={
+                !inviteEmail ||
+                !inviteEmail.includes("@") ||
+                actionInProgress === "invite"
+              }
             >
-              {actionInProgress === 'invite' ? (
+              {actionInProgress === "invite" ? (
                 <>Sending...🔄</>
               ) : (
                 <>Send Invitation</>
@@ -209,7 +293,9 @@ export function UserManagementPanel({
             <Users className="w-5 h-5" />
             Team Members
           </CardTitle>
-          <CardDescription>Manage existing users and their permissions</CardDescription>
+          <CardDescription>
+            Manage existing users and their permissions
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filters */}
@@ -223,7 +309,10 @@ export function UserManagementPanel({
                 className="pl-9"
               />
             </div>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as UserStatus | 'all')}>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as UserStatus | "all")}
+            >
               <SelectTrigger className="w-[140px]">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="Filter by status" />
@@ -245,45 +334,62 @@ export function UserManagementPanel({
               </div>
             ) : (
               filteredUsers.map((user) => (
-                <div 
-                  key={user.id} 
+                <div
+                  key={user.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border gap-4"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
-                      {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      {user.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <p className="font-medium truncate">{user.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {user.email}
+                      </p>
                       {user.lastLoginAt && (
                         <p className="text-xs text-muted-foreground">
-                          Last login: {new Date(user.lastLoginAt).toLocaleDateString()}
+                          Last login:{" "}
+                          {new Date(user.lastLoginAt).toLocaleDateString()}
                         </p>
                       )}
-                      {user.invitedAt && user.status === 'pending' && (
+                      {user.invitedAt && user.status === "pending" && (
                         <p className="text-xs text-muted-foreground">
-                          Invited: {new Date(user.invitedAt).toLocaleDateString()}
+                          Invited:{" "}
+                          {new Date(user.invitedAt).toLocaleDateString()}
                         </p>
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Badge 
+                    <Badge
                       variant={
-                        user.status === 'active' ? 'default' : 
-                        user.status === 'pending' ? 'secondary' : 'outline'
+                        user.status === "active"
+                          ? "default"
+                          : user.status === "pending"
+                            ? "secondary"
+                            : "outline"
                       }
-                      className={user.status === 'disabled' ? 'text-muted-foreground' : ''}
+                      className={
+                        user.status === "disabled"
+                          ? "text-muted-foreground"
+                          : ""
+                      }
                     >
                       {user.status}
                     </Badge>
 
-                    <Select 
-                      value={user.role} 
-                      onValueChange={(value: UserRole) => handleChangeRole(user.id, value)}
-                      disabled={user.status === 'disabled'}
+                    <Select
+                      value={user.role}
+                      onValueChange={(value: UserRole) =>
+                        handleChangeRole(user.id, value)
+                      }
+                      disabled={user.status === "disabled"}
                     >
                       <SelectTrigger className="w-[110px]">
                         <SelectValue />
@@ -302,35 +408,41 @@ export function UserManagementPanel({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {user.status === 'pending' && (
-                          <DropdownMenuItem 
+                        {user.status === "pending" && (
+                          <DropdownMenuItem
                             onClick={() => handleResendInvite(user.id)}
                             disabled={actionInProgress === user.id}
                           >
                             <Mail className="w-4 h-4 mr-2" />
-                            {actionInProgress === user.id ? 'Resending...' : 'Resend Invite'}
+                            {actionInProgress === user.id
+                              ? "Resending..."
+                              : "Resend Invite"}
                           </DropdownMenuItem>
                         )}
-                        
-                        {user.status !== 'pending' && (
-                          <DropdownMenuItem 
+
+                        {user.status !== "pending" && (
+                          <DropdownMenuItem
                             onClick={() => handleResetPassword(user.id)}
                             disabled={actionInProgress === `reset-${user.id}`}
                           >
                             <Lock className="w-4 h-4 mr-2" />
-                            {actionInProgress === `reset-${user.id}` ? 'Sending...' : 'Reset Password'}
+                            {actionInProgress === `reset-${user.id}`
+                              ? "Sending..."
+                              : "Reset Password"}
                           </DropdownMenuItem>
                         )}
-                        
+
                         <DropdownMenuSeparator />
-                        
-                        <DropdownMenuItem onClick={() => handleToggleUserStatus(user.id)}>
-                          {user.status === 'active' ? (
+
+                        <DropdownMenuItem
+                          onClick={() => handleToggleUserStatus(user.id)}
+                        >
+                          {user.status === "active" ? (
                             <>
                               <Ban className="w-4 h-4 mr-2" />
                               Disable User
                             </>
-                          ) : user.status === 'disabled' ? (
+                          ) : user.status === "disabled" ? (
                             <>
                               <CheckCircle className="w-4 h-4 mr-2" />
                               Enable User
@@ -342,10 +454,10 @@ export function UserManagementPanel({
                             </>
                           )}
                         </DropdownMenuItem>
-                        
+
                         <DropdownMenuSeparator />
-                        
-                        <DropdownMenuItem 
+
+                        <DropdownMenuItem
                           onClick={() => handleRemoveUser(user.id)}
                           className="text-destructive focus:text-destructive"
                         >
@@ -377,7 +489,9 @@ export function UserManagementPanel({
               <div key={role} className="p-4 rounded-lg border">
                 <div className="flex items-center gap-2 mb-2">
                   <Shield className="w-4 h-4 text-primary" />
-                  <h4 className="font-semibold capitalize">{ROLE_PERMISSIONS[role].label}</h4>
+                  <h4 className="font-semibold capitalize">
+                    {ROLE_PERMISSIONS[role].label}
+                  </h4>
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
                   {ROLE_PERMISSIONS[role].description}
@@ -395,5 +509,5 @@ export function UserManagementPanel({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
