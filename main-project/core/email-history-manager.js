@@ -190,7 +190,8 @@ class EmailHistoryManager {
         const rowTemplate = row[templateCol];
         const rowDate = row[dateCol];
         
-        if (rowEmail === email && rowTemplate === templateName) {
+        const templateMatches = templateName === '*' || rowTemplate === templateName;
+        if (rowEmail === email && templateMatches) {
           try {
             const sentDate = new Date(rowDate);
             if (sentDate > thresholdDate) {

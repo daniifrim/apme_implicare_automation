@@ -156,6 +156,7 @@ class AutomationEngine {
   static sendTemplateEmail(person, templateName) {
     try {
       const email = TemplateAssignment.getFieldValue(person, 'EMAIL');
+      const firstName = TemplateAssignment.getFieldValue(person, 'FIRST_NAME') || 'Prieten';
       console.log(`📧 Sending template "${templateName}" to ${email}`);
       
       // 1. Get template information from sheets
@@ -219,6 +220,15 @@ class AutomationEngine {
         templateData
       );
       
+      EmailHistoryManager.logEmailSent(
+        email,
+        templateName,
+        TemplateAssignment.getFieldValue(person, 'CONTEXT') || '',
+        person['Submission ID'] || person['Response ID'] || '',
+        firstName,
+        `Sent from automation engine to ${result.recipient}`
+      );
+
       console.log(`✅ Template "${templateName}" sent successfully`);
       
       return {

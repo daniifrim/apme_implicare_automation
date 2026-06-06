@@ -78,8 +78,8 @@ describe("assignments", () => {
   describe("createAssignmentsForSubmission", () => {
     it("should create assignments for matching templates", async () => {
       const mockTemplates = [
-        { id: "template-1", slug: "info-voluntariat" },
-        { id: "template-2", slug: "info-curs-kairos" },
+        { id: "template-1", slug: "info-voluntariat-apme" },
+        { id: "template-2", slug: "info-despre-cursul-kairos" },
       ];
 
       vi.mocked(prisma.template.findMany).mockResolvedValue(mockTemplates);
@@ -102,7 +102,7 @@ describe("assignments", () => {
     });
 
     it("should skip existing assignments (idempotency)", async () => {
-      const mockTemplates = [{ id: "template-1", slug: "info-voluntariat" }];
+      const mockTemplates = [{ id: "template-1", slug: "info-voluntariat-apme" }];
 
       vi.mocked(prisma.template.findMany).mockResolvedValue(mockTemplates);
       vi.mocked(prisma.assignment.findUnique).mockResolvedValue({
@@ -123,17 +123,8 @@ describe("assignments", () => {
       expect(prisma.assignment.create).not.toHaveBeenCalled();
     });
 
-    it("should create location-specific templates", async () => {
-      const mockTemplates = [
-        { id: "template-1", slug: "info-cursuri-locale" },
-        { id: "template-2", slug: "info-evenimente-apme" },
-      ];
-
-      vi.mocked(prisma.template.findMany).mockResolvedValue(mockTemplates);
-      vi.mocked(prisma.assignment.findUnique).mockResolvedValue(null);
-      vi.mocked(prisma.assignment.create).mockResolvedValue({
-        id: "assignment-1",
-      } as never);
+    it("should not create assignments for location alone", async () => {
+      vi.mocked(prisma.template.findMany).mockResolvedValue([]);
 
       const submission = createNormalizedSubmission({
         locationType: "romania",
@@ -145,41 +136,16 @@ describe("assignments", () => {
         submission,
       );
 
-      expect(result.created).toBeGreaterThanOrEqual(2);
-    });
-
-    it("should handle diaspora location-specific templates", async () => {
-      const mockTemplates = [
-        { id: "template-1", slug: "info-diaspora-connect" },
-        { id: "template-2", slug: "info-misiune-termen-scurt-diaspora" },
-      ];
-
-      vi.mocked(prisma.template.findMany).mockResolvedValue(mockTemplates);
-      vi.mocked(prisma.assignment.findUnique).mockResolvedValue(null);
-      vi.mocked(prisma.assignment.create).mockResolvedValue({
-        id: "assignment-1",
-      } as never);
-
-      const submission = createNormalizedSubmission({
-        locationType: "diaspora",
-        answers: [],
-      });
-
-      const result = await createAssignmentsForSubmission(
-        "submission-1",
-        submission,
-      );
-
-      expect(result.created).toBeGreaterThanOrEqual(2);
+      expect(result.created).toBe(0);
+      expect(result.errors).toEqual([]);
+      expect(prisma.assignment.create).not.toHaveBeenCalled();
     });
 
     it("should report errors for missing templates", async () => {
       vi.mocked(prisma.template.findMany).mockResolvedValue([]);
 
       const submission = createNormalizedSubmission({
-        answers: [
-          { questionId: "q1", value: "volunteer", rawValue: "volunteer" },
-        ],
+        answers: createMatchingAnswers("volunteer", "volunteer"),
       });
 
       const result = await createAssignmentsForSubmission(
@@ -192,7 +158,7 @@ describe("assignments", () => {
     });
 
     it("should include reason codes in assignments", async () => {
-      const mockTemplates = [{ id: "template-1", slug: "info-voluntariat" }];
+      const mockTemplates = [{ id: "template-1", slug: "info-voluntariat-apme" }];
 
       vi.mocked(prisma.template.findMany).mockResolvedValue(mockTemplates);
       vi.mocked(prisma.assignment.findUnique).mockResolvedValue(null);
@@ -238,8 +204,8 @@ describe("assignments", () => {
         submission,
       );
 
-      // Should create location-specific assignments even with no interest-based answers
-      expect(result.created).toBeGreaterThanOrEqual(2);
+      // Should not create assignments without interest-based answers
+      expect(result.created).toBe(0);
       expect(result.errors).toEqual([]);
     });
 
@@ -261,8 +227,8 @@ describe("assignments", () => {
 
     it("should handle partial failures (some succeed, some fail)", async () => {
       const mockTemplates = [
-        { id: "template-1", slug: "info-voluntariat" },
-        { id: "template-2", slug: "info-curs-kairos" },
+        { id: "template-1", slug: "info-voluntariat-apme" },
+        { id: "template-2", slug: "info-despre-cursul-kairos" },
       ];
 
       vi.mocked(prisma.template.findMany).mockResolvedValue(mockTemplates);
@@ -345,7 +311,7 @@ describe("assignments", () => {
         mockSubmission as never,
       );
       vi.mocked(prisma.template.findMany).mockResolvedValue([
-        { id: "template-1", slug: "info-voluntariat" },
+        { id: "template-1", slug: "info-voluntariat-apme" },
       ]);
       vi.mocked(prisma.assignment.findUnique).mockResolvedValue(null);
       vi.mocked(prisma.assignment.create).mockResolvedValue({

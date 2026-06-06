@@ -1,5 +1,15 @@
 const DIACRITICS_REGEX = /[\u0300-\u036f]/g;
 
+function normalizeDiacritics(input) {
+  if (!input) return "";
+  return input
+    .toString()
+    .trim()
+    .normalize("NFD")
+    .replace(DIACRITICS_REGEX, "")
+    .toLowerCase();
+}
+
 function normalizeTemplateName(input) {
   if (!input) return "";
 
@@ -100,6 +110,20 @@ function parseLegacySentDate(input) {
   return d;
 }
 
+/**
+ * Maps legacy template names that differ from app template names
+ * but represent the same logical template per Apps Script behavior.
+ */
+const LEGACY_TO_APP_NAME_MAP = {
+  "Info despre cursul Împuternicit pentru a influența": "Info despre cursul Mobilizează",
+  "Info despre cursul de coordonatori Kairos": "Info despre cursul Kairos",
+};
+
+function normalizeLegacyTemplateName(input) {
+  const raw = (input || "").toString().trim();
+  return LEGACY_TO_APP_NAME_MAP[raw] || raw;
+}
+
 function chunkArray(items, chunkSize) {
   if (!Array.isArray(items)) throw new Error("items must be an array");
   if (!Number.isFinite(chunkSize) || chunkSize <= 0)
@@ -114,7 +138,9 @@ function chunkArray(items, chunkSize) {
 
 module.exports = {
   normalizeTemplateName,
+  normalizeDiacritics,
   getTemplateLookupKeys,
   parseLegacySentDate,
+  normalizeLegacyTemplateName,
   chunkArray,
 };

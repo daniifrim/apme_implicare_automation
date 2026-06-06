@@ -153,8 +153,8 @@ const SETTINGS = {
   TEMPLATES: {
     // Universal templates (matching your Email Templates sheet exactly)
     MISSION_SHORT_TERM: "Info Misiune pe termen scurt APME",
-    PRAYER_MISSIONARY: "Info Donații APME", // Temporary: Using existing template since prayer template doesn't exist
-    PRAYER_ETHNIC: "Info Donații APME", // Temporary: Using existing template since prayer template doesn't exist
+    PRAYER_MISSIONARY: "Info rugăciune pentru misionari",
+    PRAYER_ETHNIC: "Info rugăciune pentru grup etnic",
     CAMP_INFO: "Info Tabere Misiune APME",
     COURSE_KAIROS: "Info despre cursul Kairos",
     COURSE_KAIROS_COORDINATOR: "Info despre cursul Kairos", // Using Kairos since coordinator doesn't exist

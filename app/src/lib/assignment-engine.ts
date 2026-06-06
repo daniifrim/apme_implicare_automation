@@ -58,8 +58,14 @@ export class AssignmentEngine {
   private defineRules(): AssignmentRule[] {
     return [
       {
-        templateSlug: "rugaciune-grup-etnic",
+        templateSlug: "info-rugaciune-pentru-grup-etnic",
         condition: (sub, answers) => {
+          // Check if prayer_adoption indicates exclusion
+          const prayerAdoption = this.getAnswerValue(answers, "prayer_adoption");
+          if (prayerAdoption) {
+            const prayerExclusions = ["nu"];
+            if (this.isExcluded(prayerAdoption, prayerExclusions)) return false;
+          }
           // Check if they want to adopt an ethnic group for prayer
           const prayerMethod = this.getAnswerValue(answers, "prayer_method");
           const ethnicGroupChoice = this.getAnswerValue(
@@ -74,8 +80,14 @@ export class AssignmentEngine {
         reason: "User wants to adopt an ethnic group for prayer",
       },
       {
-        templateSlug: "rugaciune-misionari",
+        templateSlug: "info-rugaciune-pentru-misionari",
         condition: (sub, answers) => {
+          // Check if prayer_adoption indicates exclusion
+          const prayerAdoption = this.getAnswerValue(answers, "prayer_adoption");
+          if (prayerAdoption) {
+            const prayerExclusions = ["nu"];
+            if (this.isExcluded(prayerAdoption, prayerExclusions)) return false;
+          }
           // Check if they want to pray for missionaries
           const prayerMethod = this.getAnswerValue(answers, "prayer_method");
           return prayerMethod?.includes("missionary") ?? false;
@@ -83,7 +95,7 @@ export class AssignmentEngine {
         reason: "User wants to pray for missionaries",
       },
       {
-        templateSlug: "info-misiune-termen-scurt",
+        templateSlug: "info-misiune-pe-termen-scurt-apme",
         condition: (sub, answers) => {
           // Check interest in short-term missions
           const interests = this.getAnswerValue(answers, "mission_interests");
@@ -92,7 +104,7 @@ export class AssignmentEngine {
         reason: "User interested in short-term missions",
       },
       {
-        templateSlug: "info-misionar",
+        templateSlug: "info-misiune-pe-termen-lung-apme",
         condition: (sub, answers) => {
           // Check if they want to become a missionary
           const role = this.getAnswerValue(answers, "desired_role");
@@ -101,8 +113,17 @@ export class AssignmentEngine {
         reason: "User wants to become a missionary",
       },
       {
-        templateSlug: "info-tabere-misiune",
+        templateSlug: "info-tabere-misiune-apme",
         condition: (sub, answers) => {
+          // Check if camp_info indicates exclusion (past participant or not interested)
+          const campInfo = this.getAnswerValue(answers, "camp_info");
+          if (campInfo) {
+            const campExclusions = [
+              "nu sunt interesat/ă",
+              "am participat, doresc să mai fiu informat și pe viitor"
+            ];
+            if (this.isExcluded(campInfo, campExclusions)) return false;
+          }
           // Check interest in mission camps
           const interests = this.getAnswerValue(answers, "mission_interests");
           return interests?.includes("camps") ?? false;
@@ -110,7 +131,7 @@ export class AssignmentEngine {
         reason: "User interested in mission camps",
       },
       {
-        templateSlug: "info-voluntariat",
+        templateSlug: "info-voluntariat-apme",
         condition: (sub, answers) => {
           // Check interest in volunteering
           const interests = this.getAnswerValue(answers, "mission_interests");
@@ -119,7 +140,7 @@ export class AssignmentEngine {
         reason: "User interested in volunteering",
       },
       {
-        templateSlug: "info-donatii",
+        templateSlug: "info-donatii-apme",
         condition: (sub, answers) => {
           // Check interest in donations
           const interests = this.getAnswerValue(answers, "support_interests");
@@ -128,7 +149,7 @@ export class AssignmentEngine {
         reason: "User interested in supporting financially",
       },
       {
-        templateSlug: "info-curs-kairos",
+        templateSlug: "info-despre-cursul-kairos",
         condition: (sub, answers) => {
           // Check interest in Kairos course
           const courses = this.getAnswerValue(answers, "course_interests");
@@ -137,7 +158,7 @@ export class AssignmentEngine {
         reason: "User interested in Kairos course",
       },
       {
-        templateSlug: "info-curs-mobilizeaza",
+        templateSlug: "info-despre-cursul-mobilizeaza",
         condition: (sub, answers) => {
           // Check interest in Mobilizeaza course
           const courses = this.getAnswerValue(answers, "course_interests");
@@ -155,6 +176,11 @@ export class AssignmentEngine {
         reason: "User interested in CRST",
       },
     ];
+  }
+
+  private isExcluded(value: string | null, exclusions: string[]): boolean {
+    if (!value) return false;
+    return exclusions.includes(value.trim());
   }
 
   private getAnswerValue(
@@ -219,16 +245,9 @@ export class AssignmentEngine {
     return results;
   }
 
-  // For diaspora vs Romania specific templates
+  // Location alone should not assign templates unless matching templates exist in the catalog.
   getLocationSpecificTemplates(locationType: string | null): string[] {
-    if (locationType === "diaspora") {
-      return ["info-diaspora-connect", "info-misiune-termen-scurt-diaspora"];
-    }
-
-    if (locationType === "romania") {
-      return ["info-cursuri-locale", "info-evenimente-apme"];
-    }
-
+    void locationType;
     return [];
   }
 }

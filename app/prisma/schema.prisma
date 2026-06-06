@@ -115,6 +115,7 @@ model Submission {
   form      FilloutForm?      @relation(fields: [formId], references: [id])
   answers   SubmissionAnswer[]
   assignments Assignment[]
+  shadowDecisions ShadowDecision[]
 
   @@index([formId])
   @@index([submissionTime])
@@ -259,10 +260,30 @@ model LegacyEmailHistory {
   bounced          String?  @default("NO")
   createdAt        DateTime @default(now()) @map("created_at")
 
+  @@unique([email, templateName, sentDate])
   @@index([email])
   @@index([templateName])
   @@index([sentDate])
   @@map("legacy_email_history")
+}
+
+model ShadowDecision {
+  id                  String   @id @default(cuid())
+  submissionId        String?  @map("submission_id")
+  email               String
+  appTemplateSlugs    Json     @map("app_template_slugs")
+  legacyTemplateNames Json     @map("legacy_template_names")
+  status              String
+  reasonCodes         Json     @map("reason_codes")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  submission Submission? @relation(fields: [submissionId], references: [id])
+
+  @@index([submissionId])
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+  @@map("shadow_decisions")
 }
 
 model Settings {

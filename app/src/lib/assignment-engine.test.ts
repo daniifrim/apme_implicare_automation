@@ -29,9 +29,11 @@ describe("AssignmentEngine", () => {
 
     const results = engine.assignTemplates(submission);
 
-    expect(results.some((r) => r.templateSlug === "rugaciune-grup-etnic")).toBe(
-      true,
-    );
+    expect(
+      results.some(
+        (r) => r.templateSlug === "info-rugaciune-pentru-grup-etnic",
+      ),
+    ).toBe(true);
   });
 
   it("should assign prayer for missionaries template", () => {
@@ -41,9 +43,11 @@ describe("AssignmentEngine", () => {
 
     const results = engine.assignTemplates(submission);
 
-    expect(results.some((r) => r.templateSlug === "rugaciune-misionari")).toBe(
-      true,
-    );
+    expect(
+      results.some(
+        (r) => r.templateSlug === "info-rugaciune-pentru-misionari",
+      ),
+    ).toBe(true);
   });
 
   it("should assign short-term missions template", () => {
@@ -54,7 +58,7 @@ describe("AssignmentEngine", () => {
     const results = engine.assignTemplates(submission);
 
     expect(
-      results.some((r) => r.templateSlug === "info-misiune-termen-scurt"),
+      results.some((r) => r.templateSlug === "info-misiune-pe-termen-scurt-apme"),
     ).toBe(true);
   });
 
@@ -65,7 +69,7 @@ describe("AssignmentEngine", () => {
 
     const results = engine.assignTemplates(submission);
 
-    expect(results.some((r) => r.templateSlug === "info-voluntariat")).toBe(
+    expect(results.some((r) => r.templateSlug === "info-voluntariat-apme")).toBe(
       true,
     );
   });
@@ -77,7 +81,7 @@ describe("AssignmentEngine", () => {
 
     const results = engine.assignTemplates(submission);
 
-    expect(results.some((r) => r.templateSlug === "info-curs-kairos")).toBe(
+    expect(results.some((r) => r.templateSlug === "info-despre-cursul-kairos")).toBe(
       true,
     );
   });
@@ -93,32 +97,24 @@ describe("AssignmentEngine", () => {
 
     expect(results.length).toBeGreaterThan(1);
     expect(
-      results.some((r) => r.templateSlug === "info-misiune-termen-scurt"),
+      results.some((r) => r.templateSlug === "info-misiune-pe-termen-scurt-apme"),
     ).toBe(true);
-    expect(results.some((r) => r.templateSlug === "info-voluntariat")).toBe(
+    expect(results.some((r) => r.templateSlug === "info-voluntariat-apme")).toBe(
       true,
     );
-    expect(results.some((r) => r.templateSlug === "info-tabere-misiune")).toBe(
+    expect(results.some((r) => r.templateSlug === "info-tabere-misiune-apme")).toBe(
       true,
     );
-    expect(results.some((r) => r.templateSlug === "info-curs-kairos")).toBe(
+    expect(results.some((r) => r.templateSlug === "info-despre-cursul-kairos")).toBe(
       true,
     );
-    expect(results.some((r) => r.templateSlug === "info-donatii")).toBe(true);
+    expect(results.some((r) => r.templateSlug === "info-donatii-apme")).toBe(true);
   });
 
-  it("should return location-specific templates for diaspora", () => {
-    const templates = engine.getLocationSpecificTemplates("diaspora");
-
-    expect(templates).toContain("info-diaspora-connect");
-    expect(templates).toContain("info-misiune-termen-scurt-diaspora");
-  });
-
-  it("should return location-specific templates for Romania", () => {
-    const templates = engine.getLocationSpecificTemplates("romania");
-
-    expect(templates).toContain("info-cursuri-locale");
-    expect(templates).toContain("info-evenimente-apme");
+  it("should not assign templates from location alone", () => {
+    expect(engine.getLocationSpecificTemplates("diaspora")).toEqual([]);
+    expect(engine.getLocationSpecificTemplates("romania")).toEqual([]);
+    expect(engine.getLocationSpecificTemplates(null)).toEqual([]);
   });
 
   it("should handle empty answers gracefully", () => {
@@ -139,5 +135,57 @@ describe("AssignmentEngine", () => {
     expect(results.length).toBeGreaterThan(0);
     expect(results[0].reason).toBeTruthy();
     expect(typeof results[0].reason).toBe("string");
+  });
+
+  it("should not assign camp template when camp_info indicates past participant or not interested", () => {
+    const notInterested = createSubmission({
+      camp_info: "Nu sunt interesat/ă",
+      mission_interests: "camps",
+    });
+
+    let results = engine.assignTemplates(notInterested);
+    expect(
+      results.some((r) => r.templateSlug === "info-tabere-misiune-apme"),
+    ).toBe(false);
+
+    const pastParticipant = createSubmission({
+      camp_info: "Am participat, doresc să mai fiu informat și pe viitor",
+      mission_interests: "camps",
+    });
+
+    results = engine.assignTemplates(pastParticipant);
+    expect(
+      results.some((r) => r.templateSlug === "info-tabere-misiune-apme"),
+    ).toBe(false);
+  });
+
+  it("should not assign prayer missionary when prayer_adoption is NU", () => {
+    const submission = createSubmission({
+      prayer_adoption: "NU",
+      prayer_method: "missionary",
+    });
+
+    const results = engine.assignTemplates(submission);
+
+    expect(
+      results.some(
+        (r) => r.templateSlug === "info-rugaciune-pentru-misionari",
+      ),
+    ).toBe(false);
+  });
+
+  it("should not assign prayer ethnic when prayer_adoption is NU", () => {
+    const submission = createSubmission({
+      prayer_adoption: "NU",
+      prayer_method: "I want to adopt an ethnic group for prayer",
+    });
+
+    const results = engine.assignTemplates(submission);
+
+    expect(
+      results.some(
+        (r) => r.templateSlug === "info-rugaciune-pentru-grup-etnic",
+      ),
+    ).toBe(false);
   });
 });
