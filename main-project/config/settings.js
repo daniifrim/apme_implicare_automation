@@ -511,6 +511,14 @@ Respond ONLY with the exact field name that best matches, or "NO_MATCH" if none 
       INCLUDE_TOP_CITIES: 5,
       INCLUDE_TOP_COUNTRIES: 3
     }
+  },
+
+  // ============================================================================
+  // WEBHOOK CONFIGURATION
+  // ============================================================================
+  WEBHOOK: {
+    API_KEY: PropertiesService.getScriptProperties().getProperty('WEBHOOK_API_KEY') || 'default-insecure-key-change-me',
+    ENABLED: true
   }
 };
 

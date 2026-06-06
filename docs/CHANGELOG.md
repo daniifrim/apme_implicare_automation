@@ -1,6 +1,6 @@
 # Project Knowledge Changelog
 
-> Living project state document. Not a git log. Last updated: 2026-06-06 23:58
+> Living project state document. Not a git log. Last updated: 2026-06-07 01:36
 
 ## Current State
 
@@ -27,6 +27,20 @@ for submissions, templates, mappings, webhooks, and audit history.
 - **Shadow comparison results** — Match rate improved from 0.3% → 49.9% (+49.6 pp). Mismatches down from 81.7% → 32.2%.
 - **PRD created** — `docs/prds/backend-migration-appscript-to-next.md` documents migration phases, cutover checklist, and open work.
 - **74 focused tests passing** across 7 test files (up from 64).
+
+### 2026-06-07
+
+- **Apps Script thin adapter implemented** — Phase 5 sender migration:
+  - Next.js `SendJob` model with states (pending/sending/sent/failed/skipped/retrying), idempotency key, retry count
+  - `send-dispatcher.ts` with `createSendJob()`, `dispatchSendJob()`, `processPendingSendJobs()`
+  - Exponential backoff retry: 5min → 15min → 45min, max 3 attempts
+  - Feature flag `USE_APPS_SCRIPT_SENDER=false` by default (safe by default)
+  - Apps Script webhook adapter (`main-project/api/webhook-adapter.js`) with API key validation
+  - Apps Script `doPost()` entry point delegates to existing `GDocsConverter.sendEmailFromGDoc()`
+  - Apps Script `doGet()` health check endpoint
+  - 10 send-dispatcher tests added (idempotency, feature flag, retry, failure)
+  - Total: **84 tests passing** across 8 focused test files
+- **PRD updated** with Phase 5 architecture, deployment steps, and cutover checklist progress
 
 ### February 14, 2026
 

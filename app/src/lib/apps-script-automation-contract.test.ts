@@ -11,7 +11,13 @@ const repoRoot = path.resolve(__dirname, "../../..");
 function loadSettings() {
   const settingsPath = path.join(repoRoot, "main-project/config/settings.js");
   const code = `${fs.readFileSync(settingsPath, "utf8")}; SETTINGS;`;
-  return vm.runInNewContext(code) as {
+  return vm.runInNewContext(code, {
+    PropertiesService: {
+      getScriptProperties: () => ({
+        getProperty: () => null,
+      }),
+    },
+  }) as {
     TEMPLATES: Record<string, string>;
   };
 }
@@ -47,7 +53,7 @@ function loadEmailHistoryManager(data: unknown[][]) {
 
 function loadAutomationEngine(sendLog: unknown[]) {
   const enginePath = path.join(repoRoot, "main-project/core/automation-engine.js");
-  const code = `${fs.readFileSync(enginePath, "utf8")}; AutomationEngine;`;
+  const code = `${fs.readFileSync(enginePath, "utf8")}\n; AutomationEngine;`;
 
   return vm.runInNewContext(code, {
     console,

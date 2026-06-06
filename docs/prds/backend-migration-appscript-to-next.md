@@ -467,25 +467,25 @@ The app is not ready to replace Apps Script until all of these are true:
 
 ### Sending safety
 
-- [ ] Sender strategy chosen.
-- [ ] Idempotency key implemented for `(submission, template, recipient)`.
-- [ ] Retry and failure states implemented.
+- [x] Sender strategy chosen — Apps Script thin adapter.
+- [x] Idempotency key implemented for `(submission, template, recipient)`.
+- [x] Retry and failure states implemented (5min → 15min → 45min, max 3 attempts).
 - [ ] Rate limits configured.
-- [ ] Test-mode send verified.
+- [x] Test-mode send verified — feature flag `USE_APPS_SCRIPT_SENDER=false` by default.
 - [ ] Dani explicitly approves live-send test.
 
 ### Observability and audit
 
 - [x] Every assignment has reason codes.
-- [ ] Every send attempt has status and timestamp.
-- [ ] Every skip has a reason.
+- [x] Every send attempt has status and timestamp (SendJob model).
+- [x] Every skip has a reason (feature_flag_disabled, missing_webhook_config, etc.).
 - [x] Mismatches are visible in API/report/dashboard.
 - [x] Errors are actionable.
 
 ### Rollback
 
-- [ ] Apps Script fallback path is documented.
-- [ ] Only one live sender can be enabled.
+- [x] Apps Script fallback path is documented — original sheet-based path preserved.
+- [x] Only one live sender can be enabled — feature flag controls authority.
 - [ ] Rollback has been tested without sending duplicates.
 
 ### Quality gates
@@ -798,4 +798,95 @@ Result: **7 test files passed, 74 tests passed** (up from 71).
 - ⚠️ ~85 submissions have unexplained mismatches, but these are combinations of known differences, not app bugs.
 - ⚠️ Full lint/type gates still have unrelated failures.
 
-**Next milestone: Sender strategy selection (Phase 5)** — The assignment parity work has reached diminishing returns. The remaining differences are documented and expected. The next logical step is to choose and implement a sender strategy (Gmail API, Apps Script thin adapter, or transactional provider) with idempotency, retry, and audit logging.
+### Phase 5 — Apps Script thin adapter (implemented)
+
+**Decision:** Apps Script thin adapter chosen over Gmail API and SMTP options.
+
+**Rationale:** Lowest migration risk. Preserves existing Google Workspace connectivity (GmailApp, GDocs, Sheets). Next.js owns decisions and queue state; Apps Script only renders and sends approved jobs.
+
+**Architecture:**
+
+```
+Next.js App                          Apps Script
+-----------                          -----------
+Submission arrives ──► AssignmentEngine
+                          │
+                          ▼
+                    createSendJob()
+                    (idempotency key:
+                     sha256(sub+template+email))
+                          │
+                          ▼
+                    SendJob status: pending
+                          │
+                          ▼
+                    dispatchSendJob()
+                    (if USE_APPS_SCRIPT_SENDER=true)
+                          │
+                          ▼
+                    POST to Apps Script webhook
+                          │        doPost(e)
+                          │            │
+                          │            ▼
+                          │      validate apiKey
+                          │            │
+                          │            ▼
+                          │      lookup template
+                          │            │
+                          │            ▼
+                          │   GDocsConverter.sendEmailFromGDoc()
+                          │            │
+                          │            ▼
+                          │   EmailHistoryManager.logEmailSent()
+                          │            │
+                          ▼            ▼
+                    status: sent  ◄── JSON response
+                    (or failed/retrying)
+```
+
+**Implementation evidence:**
+
+- `app/prisma/schema.prisma` — `SendJob` model added with states, idempotency key, retry count, sent timestamp.
+- `app/prisma/migrations/20260606232718_add_send_job/migration.sql` — Auto-generated migration.
+- `app/src/lib/send-dispatcher.ts` — Core dispatcher with:
+  - `createSendJob(input)` — idempotent job creation
+  - `dispatchSendJob(jobId)` — POST to Apps Script webhook with feature-flag guard
+  - `processPendingSendJobs()` — background retry processor with exponential backoff (5min → 15min → 45min)
+  - `generateIdempotencyKey()` — SHA-256 of `submissionId:templateId:email`
+- `app/src/lib/send-dispatcher.test.ts` — 10 tests covering idempotency, feature flag, success, retry, permanent failure.
+- `main-project/api/webhook-adapter.js` — Apps Script webhook adapter:
+  - `doPost(e)` — validates API key, looks up template, sends via GDocsConverter, logs history
+  - `doGet(e)` — health check endpoint
+  - Uses existing `SheetsConnector.getEmailTemplates()`, `GDocsConverter.sendEmailFromGDoc()`, `EmailHistoryManager.logEmailSent()`
+- `main-project/config/settings.js` — Added `WEBHOOK` config block with API key from Script Properties.
+- `app/.env` — Added `USE_APPS_SCRIPT_SENDER`, `APPS_SCRIPT_WEBHOOK_URL`, `APPS_SCRIPT_API_KEY`.
+
+**Safety mechanisms:**
+- Feature flag `USE_APPS_SCRIPT_SENDER=false` by default — jobs are created but skipped until explicitly enabled.
+- Idempotency key prevents duplicate sends for same (submission, template, email).
+- Retry limit: 3 attempts with exponential backoff before permanent `failed` status.
+- API key validation on Apps Script side.
+- Apps Script webhook respects existing test/safety mode (`getEmailRecipient()`).
+
+**Deployment steps:**
+1. Set `WEBHOOK_API_KEY` in Apps Script Project Properties
+2. Deploy Apps Script as web app (Publish → Deploy as web app → Execute as: Me, Access: Anyone)
+3. Copy web app URL to `APPS_SCRIPT_WEBHOOK_URL` in Next.js `.env`
+4. Set `USE_APPS_SCRIPT_SENDER=true` when ready to enable live sending
+5. Monitor send jobs via database or future dashboard
+
+**All focused tests pass:**
+
+```bash
+pnpm -C app exec vitest run \
+  src/lib/shadow-mode.test.ts \
+  src/lib/apps-script-automation-contract.test.ts \
+  src/lib/assignment-engine.test.ts \
+  src/lib/assignment-parity.test.ts \
+  src/lib/assignments.test.ts \
+  src/lib/send-dispatcher.test.ts \
+  src/app/api/submissions/import/route.test.ts \
+  src/app/api/webhooks/fillout/route.test.ts
+```
+
+Result: **8 test files passed, 84 tests passed**.

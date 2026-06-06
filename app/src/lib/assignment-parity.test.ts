@@ -35,7 +35,14 @@ function loadAppsScriptRuntime(): AppsScriptRuntime {
 ${fs.readFileSync(assignmentPath, "utf8")}
 ;({ SETTINGS, TemplateAssignment });`;
 
-  return vm.runInNewContext(code, { console }) as AppsScriptRuntime;
+  return vm.runInNewContext(code, {
+    console,
+    PropertiesService: {
+      getScriptProperties: () => ({
+        getProperty: () => null,
+      }),
+    },
+  }) as AppsScriptRuntime;
 }
 
 function slugify(name: string): string {

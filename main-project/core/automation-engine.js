@@ -939,4 +939,11 @@ class AutomationEngine {
       throw error;
     }
   }
-} 
+}
+
+// ============================================================================
+// WEBHOOK ENTRY POINT
+// ============================================================================
+// The doPost and doGet handlers for the webhook adapter are defined in:
+// main-project/api/webhook-adapter.js
+// Deploy as web app (Publish -> Deploy as web app) to enable external POST requests. 
