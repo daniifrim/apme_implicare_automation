@@ -124,9 +124,73 @@ export async function runHealthCheck(): Promise<AlertState> {
 }
 
 /**
- * Log alerts to console. Replace with email/Slack/PagerDuty later.
+ * Send alert notification email via Apps Script webhook.
+ * Uses the same webhook adapter but with a special alert template.
  */
-export function logAlerts(state: AlertState): void {
+export async function sendAlertNotification(state: AlertState): Promise<void> {
+  const alertEmail = process.env.ALERT_EMAIL;
+  const webhookUrl = process.env.APPS_SCRIPT_WEBHOOK_URL;
+  const apiKey = process.env.APPS_SCRIPT_API_KEY;
+
+  if (!alertEmail || !webhookUrl || !apiKey) {
+    console.warn("[Alerting] Cannot send email: ALERT_EMAIL, APPS_SCRIPT_WEBHOOK_URL, or APPS_SCRIPT_API_KEY not configured");
+    return;
+  }
+
+  if (state.alerts.length === 0) {
+    return;
+  }
+
+  const subject = `🚨 APME Alert: ${state.alerts.length} issue(s) detected`;
+  const body = state.alerts.join("\n");
+
+  try {
+    const postRes = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        apiKey,
+        jobId: `alert-${Date.now()}`,
+        email: alertEmail,
+        templateName: "Info Misiune pe termen scurt APME", // Generic template for alert format
+        submissionId: "alert",
+        personalizationData: {
+          FirstName: "Admin",
+          AlertSubject: subject,
+          AlertBody: body,
+        },
+      }),
+      redirect: "manual",
+    });
+
+    if (postRes.status !== 302) {
+      console.error("[Alerting] Failed to send alert email:", await postRes.text());
+      return;
+    }
+
+    const redirectUrl = postRes.headers.get("location");
+    if (!redirectUrl) {
+      console.error("[Alerting] Alert email redirect missing");
+      return;
+    }
+
+    const getRes = await fetch(redirectUrl, { method: "GET" });
+    const data = await getRes.json();
+
+    if (data.status === "success") {
+      console.log(`[Alerting] Alert email sent to ${alertEmail}`);
+    } else {
+      console.error("[Alerting] Alert email webhook error:", data.message);
+    }
+  } catch (error) {
+    console.error("[Alerting] Failed to send alert email:", error);
+  }
+}
+
+/**
+ * Log alerts to console and send email notification if configured.
+ */
+export async function logAndNotifyAlerts(state: AlertState): Promise<void> {
   if (state.alerts.length === 0) {
     console.log("[Alerting] All systems healthy");
     return;
@@ -136,4 +200,6 @@ export function logAlerts(state: AlertState): void {
   for (const alert of state.alerts) {
     console.warn(`  ⚠️  ${alert}`);
   }
+
+  await sendAlertNotification(state);
 }

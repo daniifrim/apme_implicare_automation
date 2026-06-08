@@ -214,6 +214,86 @@ async function main() {
   failed += checks6.filter((c) => !c).length;
 
   // ──────────────────────────────────────────────
+  // 7. Execute duplicate-prevention logic in VM
+  // ──────────────────────────────────────────────
+  section("7. Execute EmailHistoryManager duplicate-prevention logic");
+
+  const vm = require("vm");
+
+  // Build a minimal VM context with mocked Sheets
+  const today = new Date();
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(today.getDate() - 30);
+
+  // Use ISO strings for reliable Date parsing
+  const mockSheetData = [
+    ["Email", "TemplateName", "SentDate", "Status", "CampaignContext", "ResponseID", "PersonName", "Notes", "DeliveryStatus", "Opened", "Clicked", "Bounced"],
+    ["test@example.com", "Info Misiune pe termen scurt APME", today.toISOString(), "SENT", "Test", "resp-1", "Test", "", "SENT", "UNKNOWN", "UNKNOWN", "NO"],
+    ["test@example.com", "Rugăciune pentru misionari", today.toISOString(), "SENT", "Test", "resp-1", "Test", "", "SENT", "UNKNOWN", "UNKNOWN", "NO"],
+    ["old@example.com", "Info Misiune pe termen scurt APME", thirtyDaysAgo.toISOString(), "SENT", "Test", "resp-2", "Old", "", "SENT", "UNKNOWN", "UNKNOWN", "NO"],
+  ];
+
+  const mockSpreadsheet = {
+    getSheetByName: (name) => {
+      if (name === "Email History") {
+        return {
+          getDataRange: () => ({
+            getValues: () => mockSheetData,
+          }),
+          getLastRow: () => mockSheetData.length,
+          getRange: () => ({
+            setValues: () => {},
+          }),
+        };
+      }
+      return null;
+    },
+  };
+
+  const ctx = {
+    console,
+    SpreadsheetApp: {
+      openById: () => mockSpreadsheet,
+    },
+    SheetsConnector: {
+      getPeopleDBSpreadsheet: () => mockSpreadsheet,
+    },
+  };
+
+  // Load EmailHistoryManager and execute hasReceivedTemplateRecently
+  const emailHistoryMgrCode = fs.readFileSync(emailHistoryPath, "utf8");
+
+  try {
+    const script = emailHistoryMgrCode + "; EmailHistoryManager;";
+    const EmailHistoryManagerClass = vm.runInNewContext(script, ctx);
+
+    const vmChecks = [
+      check(
+        EmailHistoryManagerClass.hasReceivedTemplateRecently("test@example.com", "Info Misiune pe termen scurt APME", 30) === true,
+        "hasReceivedTemplateRecently detects recent send correctly",
+      ),
+      check(
+        EmailHistoryManagerClass.hasReceivedTemplateRecently("test@example.com", "*", 30) === true,
+        "hasReceivedTemplateRecently wildcard (*) matches any template",
+      ),
+      check(
+        EmailHistoryManagerClass.hasReceivedTemplateRecently("unknown@example.com", "Info Misiune pe termen scurt APME", 30) === false,
+        "hasReceivedTemplateRecently returns false for unknown email",
+      ),
+      check(
+        EmailHistoryManagerClass.hasReceivedTemplateRecently("old@example.com", "Info Misiune pe termen scurt APME", 1) === false,
+        "hasReceivedTemplateRecently returns false when outside days threshold",
+      ),
+    ];
+
+    passed += vmChecks.filter(Boolean).length;
+    failed += vmChecks.filter((c) => !c).length;
+  } catch (vmError) {
+    console.log(`  ❌ VM execution failed: ${vmError.message}`);
+    failed += 4;
+  }
+
+  // ──────────────────────────────────────────────
   // Summary
   // ──────────────────────────────────────────────
   console.log();
@@ -231,6 +311,7 @@ async function main() {
     console.log("  • Old path will NOT duplicate emails sent via new path");
     console.log("  • Safety mode redirects unknown emails to test address");
     console.log("  • Next.js feature flag can disable sending instantly");
+    console.log("  • Duplicate-prevention logic executes correctly in VM");
     console.log();
     console.log("Rollback procedure:");
     console.log("  1. Set USE_APPS_SCRIPT_SENDER=false in Next.js .env");

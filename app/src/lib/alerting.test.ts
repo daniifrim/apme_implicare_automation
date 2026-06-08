@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { checkWebhookHealth, runHealthCheck } from "@/lib/alerting";
+import { checkWebhookHealth, runHealthCheck, sendAlertNotification } from "@/lib/alerting";
 import { prisma } from "@/lib/prisma";
 
 vi.mock("@/lib/prisma", () => ({
@@ -16,10 +16,13 @@ describe("alerting", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.APPS_SCRIPT_WEBHOOK_URL = TEST_WEBHOOK_URL;
+    process.env.APPS_SCRIPT_API_KEY = "test-api-key";
   });
 
   afterEach(() => {
     delete process.env.APPS_SCRIPT_WEBHOOK_URL;
+    delete process.env.APPS_SCRIPT_API_KEY;
+    delete process.env.ALERT_EMAIL;
   });
 
   describe("checkWebhookHealth", () => {
@@ -123,6 +126,65 @@ describe("alerting", () => {
 
       expect(result.retryingJobCount).toBe(15);
       expect(result.alerts).toContain("15 jobs stuck in retrying state");
+    });
+  });
+
+  describe("sendAlertNotification", () => {
+    it("should skip when ALERT_EMAIL is not configured", async () => {
+      const mockFetch = vi.fn();
+      global.fetch = mockFetch;
+
+      await sendAlertNotification({
+        webhookHealthy: true,
+        failedJobCount: 3,
+        retryingJobCount: 0,
+        lastCheckAt: new Date().toISOString(),
+        alerts: ["3 send job(s) in failed state"],
+      });
+
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("should skip when no alerts exist", async () => {
+      process.env.ALERT_EMAIL = "admin@example.com";
+      const mockFetch = vi.fn();
+      global.fetch = mockFetch;
+
+      await sendAlertNotification({
+        webhookHealthy: true,
+        failedJobCount: 0,
+        retryingJobCount: 0,
+        lastCheckAt: new Date().toISOString(),
+        alerts: [],
+      });
+
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("should send alert email via webhook when alerts exist", async () => {
+      process.env.ALERT_EMAIL = "admin@example.com";
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          status: 302,
+          headers: new Map([["location", "https://script.googleusercontent.com/redirect"]]),
+        })
+        .mockResolvedValueOnce({
+          json: vi.fn().mockResolvedValue({ status: "success", message: "Sent" }),
+        });
+      global.fetch = mockFetch;
+
+      await sendAlertNotification({
+        webhookHealthy: false,
+        failedJobCount: 3,
+        retryingJobCount: 0,
+        lastCheckAt: new Date().toISOString(),
+        alerts: ["Webhook unhealthy: timeout", "3 send job(s) in failed state"],
+      });
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      const postCall = mockFetch.mock.calls[0];
+      expect(postCall[1].body).toContain("admin@example.com");
     });
   });
 });

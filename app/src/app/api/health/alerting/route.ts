@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { runHealthCheck, logAlerts } from "@/lib/alerting";
+import { runHealthCheck, logAndNotifyAlerts } from "@/lib/alerting";
 
 export async function GET() {
   try {
     const state = await runHealthCheck();
-    logAlerts(state);
+    await logAndNotifyAlerts(state);
 
     return NextResponse.json(state);
   } catch (error) {
