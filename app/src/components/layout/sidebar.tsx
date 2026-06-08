@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Inbox,
   FileText,
+  Mail,
   GitBranch,
   Webhook,
   History,
@@ -23,6 +24,7 @@ const navigation = [
   { name: "Dashboard", href: "/overview", icon: LayoutDashboard },
   { name: "Submissions", href: "/submissions", icon: Inbox },
   { name: "Templates", href: "/templates", icon: FileText },
+  { name: "Send Jobs", href: "/dashboard/sends", icon: Mail },
   { name: "Field Mappings", href: "/mappings", icon: GitBranch },
   { name: "Webhooks", href: "/webhooks", icon: Webhook },
 ];
