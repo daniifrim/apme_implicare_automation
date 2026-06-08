@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { checkWebhookHealth, runHealthCheck, sendAlertNotification } from "@/lib/alerting";
+import { checkWebhookHealth, runHealthCheck, sendAlertEmail, logAlertsToConsole } from "@/lib/alerting";
 import { prisma } from "@/lib/prisma";
 
 vi.mock("@/lib/prisma", () => ({
@@ -129,12 +129,45 @@ describe("alerting", () => {
     });
   });
 
-  describe("sendAlertNotification", () => {
+  describe("logAlertsToConsole", () => {
+    it("should log healthy state when no alerts", () => {
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+      logAlertsToConsole({
+        webhookHealthy: true,
+        failedJobCount: 0,
+        retryingJobCount: 0,
+        lastCheckAt: new Date().toISOString(),
+        alerts: [],
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith("[Alerting] All systems healthy");
+      consoleSpy.mockRestore();
+    });
+
+    it("should log alerts to console", () => {
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      logAlertsToConsole({
+        webhookHealthy: false,
+        failedJobCount: 3,
+        retryingJobCount: 0,
+        lastCheckAt: "2026-06-08T12:00:00Z",
+        alerts: ["Webhook unhealthy: timeout"],
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("1 issue(s) detected"));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Webhook unhealthy: timeout"));
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe("sendAlertEmail", () => {
     it("should skip when ALERT_EMAIL is not configured", async () => {
       const mockFetch = vi.fn();
       global.fetch = mockFetch;
 
-      await sendAlertNotification({
+      await sendAlertEmail({
         webhookHealthy: true,
         failedJobCount: 3,
         retryingJobCount: 0,
@@ -150,7 +183,7 @@ describe("alerting", () => {
       const mockFetch = vi.fn();
       global.fetch = mockFetch;
 
-      await sendAlertNotification({
+      await sendAlertEmail({
         webhookHealthy: true,
         failedJobCount: 0,
         retryingJobCount: 0,
@@ -174,7 +207,7 @@ describe("alerting", () => {
         });
       global.fetch = mockFetch;
 
-      await sendAlertNotification({
+      await sendAlertEmail({
         webhookHealthy: false,
         failedJobCount: 3,
         retryingJobCount: 0,

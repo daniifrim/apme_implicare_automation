@@ -16,6 +16,10 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - APP_URL=${APP_URL}
+      - APPS_SCRIPT_WEBHOOK_URL=${APPS_SCRIPT_WEBHOOK_URL}
+      - APPS_SCRIPT_API_KEY=${APPS_SCRIPT_API_KEY}
+      - USE_APPS_SCRIPT_SENDER=${USE_APPS_SCRIPT_SENDER:-false}
+      - ALERT_EMAIL=${ALERT_EMAIL}
     deploy:
       replicas: 1
       update_config:
@@ -73,6 +77,30 @@ services:
         condition: any
         delay: 5s
         max_attempts: 3
+
+  # Scheduled health monitor — calls alerting endpoint every 5 minutes
+  health-monitor:
+    image: alpine/curl:latest
+    networks:
+      - internal
+    environment:
+      - MONITOR_URL=http://web:3000/api/health/alerting
+      - MONITOR_INTERVAL=300
+    command: >
+      sh -c '
+        echo "[HealthMonitor] Starting scheduled health checks every $${MONITOR_INTERVAL}s"
+        while true; do
+          echo "[HealthMonitor] $$(date -Iseconds) — Checking health..."
+          curl -sf "$${MONITOR_URL}" -o /dev/null && echo "[HealthMonitor] OK" || echo "[HealthMonitor] ALERT endpoint returned non-2xx"
+          sleep "$${MONITOR_INTERVAL}"
+        done
+      '
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 3
+      replicas: 1
 
 volumes:
   postgres_data:

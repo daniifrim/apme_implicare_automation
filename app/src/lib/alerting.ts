@@ -1,5 +1,6 @@
-// ABOUTME: Simple alerting system for webhook health and send job failures
-// Extensible to email/Slack notifications later
+// ABOUTME: Production alerting system for webhook health and send job failures
+// Primary channel: stdout (captured by Docker logs, always works)
+// Secondary channel: email via Apps Script webhook (best-effort, may fail if webhook is down)
 
 import { prisma } from "@/lib/prisma";
 
@@ -124,16 +125,33 @@ export async function runHealthCheck(): Promise<AlertState> {
 }
 
 /**
- * Send alert notification email via Apps Script webhook.
- * Uses the same webhook adapter but with a special alert template.
+ * Log alerts to console as the primary channel.
+ * This always works and is captured by Docker/infra logging.
  */
-export async function sendAlertNotification(state: AlertState): Promise<void> {
+export function logAlertsToConsole(state: AlertState): void {
+  if (state.alerts.length === 0) {
+    console.log("[Alerting] All systems healthy");
+    return;
+  }
+
+  console.warn(`[ALERT] ${state.alerts.length} issue(s) detected at ${state.lastCheckAt}`);
+  for (const alert of state.alerts) {
+    console.warn(`[ALERT] ${alert}`);
+  }
+}
+
+/**
+ * Best-effort alert email via Apps Script webhook.
+ * WARN: If the webhook itself is down, this will fail.
+ * The primary alert channel is stdout (logAlertsToConsole).
+ */
+export async function sendAlertEmail(state: AlertState): Promise<void> {
   const alertEmail = process.env.ALERT_EMAIL;
   const webhookUrl = process.env.APPS_SCRIPT_WEBHOOK_URL;
   const apiKey = process.env.APPS_SCRIPT_API_KEY;
 
   if (!alertEmail || !webhookUrl || !apiKey) {
-    console.warn("[Alerting] Cannot send email: ALERT_EMAIL, APPS_SCRIPT_WEBHOOK_URL, or APPS_SCRIPT_API_KEY not configured");
+    console.warn("[Alerting] Email not configured: set ALERT_EMAIL, APPS_SCRIPT_WEBHOOK_URL, APPS_SCRIPT_API_KEY");
     return;
   }
 
@@ -188,18 +206,14 @@ export async function sendAlertNotification(state: AlertState): Promise<void> {
 }
 
 /**
- * Log alerts to console and send email notification if configured.
+ * Production alerting entrypoint.
+ * 1. Always logs to console (primary, reliable)
+ * 2. Best-effort email via webhook (secondary, may fail if webhook down)
  */
 export async function logAndNotifyAlerts(state: AlertState): Promise<void> {
-  if (state.alerts.length === 0) {
-    console.log("[Alerting] All systems healthy");
-    return;
-  }
+  logAlertsToConsole(state);
 
-  console.warn(`[Alerting] ${state.alerts.length} alert(s):`);
-  for (const alert of state.alerts) {
-    console.warn(`  ⚠️  ${alert}`);
+  if (state.alerts.length > 0) {
+    await sendAlertEmail(state);
   }
-
-  await sendAlertNotification(state);
 }
