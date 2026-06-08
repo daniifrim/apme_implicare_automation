@@ -11,6 +11,15 @@ for submissions, templates, mappings, webhooks, and audit history.
 
 ## Latest Changes
 
+### 2026-06-08 (afternoon)
+
+- **VM-based rollback execution test** — `scripts/test-rollback-vm.js` loads AutomationEngine + all dependencies into a Node.js VM with mocked GAS APIs, executes `processNewSubmissions()` end-to-end, and verifies: row processing, Email History entries, duplicate prevention, safety mode. **17/17 checks pass**.
+- **Skipped stat card added** — `/dashboard/sends` now shows 7 stat cards including Skipped count.
+- **Git status cleaned** — Agent directories (`.codex/`, `.pi/`, `.superset/`) added to `.gitignore`, deleted PNG files restored, all pending changes committed.
+- **Submissions page test fixed** — Changed `findByText` to `findAllByText` to handle desktop+mobile duplicate name rendering.
+- **Frontend test failures documented** — 43 remaining failures in template editor tests (react-resizable-panels + BlockNote jsdom incompatibility) and preview-panel tests (ToggleGroup role queries). These are pre-existing and unrelated to backend migration work. All **178 backend tests pass** across 23 test files.
+- **Operational alerting** — `sendAlertNotification()` sends real alert emails via Apps Script webhook when `ALERT_EMAIL` is configured. `logAndNotifyAlerts()` both logs to console AND dispatches emails. 10 alerting tests passing.
+
 ### 2026-06-06
 
 - **Shadow mode implemented** — `ShadowDecision` model, `computeShadowDecision()`, batch comparison script. Zero email side effects.
