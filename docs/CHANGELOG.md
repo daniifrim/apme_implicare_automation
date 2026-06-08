@@ -1,6 +1,6 @@
 # Project Knowledge Changelog
 
-> Living project state document. Not a git log. Last updated: 2026-06-07 01:36
+> Living project state document. Not a git log. Last updated: 2026-06-08 12:07
 
 ## Current State
 
@@ -27,6 +27,17 @@ for submissions, templates, mappings, webhooks, and audit history.
 - **Shadow comparison results** — Match rate improved from 0.3% → 49.9% (+49.6 pp). Mismatches down from 81.7% → 32.2%.
 - **PRD created** — `docs/prds/backend-migration-appscript-to-next.md` documents migration phases, cutover checklist, and open work.
 - **74 focused tests passing** across 7 test files (up from 64).
+
+### 2026-06-08
+
+- **Apps Script webhook deployed and tested** — End-to-end live test successful:
+  - Web app deployed at `https://script.google.com/macros/s/AKfycbxpNX.../exec`
+  - `WEBHOOK_API_KEY` configured in Script Properties
+  - Health check (`doGet`) returns `{"status":"ok","webhookEnabled":true}`
+  - Live email send test successful: POST → 302 redirect → GET response → `{"status":"success","message":"Email sent successfully"}`
+- **Fixed Apps Script POST redirect handling** — Apps Script web apps return 302 on POST; response is only available via GET to redirect URL. Updated `send-dispatcher.ts` with `postToAppsScriptWebhook()` helper that handles the two-step flow.
+- **Updated `.env`** with production webhook URL and API key.
+- **84 tests passing** across 8 focused test files.
 
 ### 2026-06-07
 
