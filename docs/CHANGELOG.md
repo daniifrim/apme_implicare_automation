@@ -1,6 +1,6 @@
 # Project Knowledge Changelog
 
-> Living project state document. Not a git log. Last updated: 2026-06-08 12:07
+> Living project state document. Not a git log. Last updated: 2026-06-08 15:05
 
 ## Current State
 
@@ -13,6 +13,8 @@ for submissions, templates, mappings, webhooks, and audit history.
 
 ### 2026-06-08 (afternoon)
 
+- **Send Jobs pending-count correction** — `/api/dashboard/sends` now treats only actionable future sends as pending; pending jobs already covered by sent assignments or responseId-aware legacy sent history are presented as skipped with `already_sent_*` reasons.
+- **Send job reconciliation helper** — `send-job-actionability.ts` exports idempotent reconciliation for pending jobs, marking already-sent work as `skipped` without dispatching emails; route + reconciliation tests and a dry-run/apply operator script added.
 - **VM-based rollback execution test** — `scripts/test-rollback-vm.js` loads AutomationEngine + all dependencies into a Node.js VM with mocked GAS APIs, executes `processNewSubmissions()` end-to-end, and verifies: row processing, Email History entries, duplicate prevention, safety mode. **17/17 checks pass**.
 - **Skipped stat card added** — `/dashboard/sends` now shows 7 stat cards including Skipped count.
 - **Git status cleaned** — Agent directories (`.codex/`, `.pi/`, `.superset/`) added to `.gitignore`, deleted PNG files restored, all pending changes committed.
