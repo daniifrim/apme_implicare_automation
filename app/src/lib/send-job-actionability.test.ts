@@ -47,6 +47,21 @@ const legacyAlreadySentJob = {
   },
 };
 
+const historicalImportJob = {
+  id: "job-historical-import",
+  submissionId: "submission-historical",
+  templateId: "template-long-term",
+  email: "historical@example.com",
+  templateName: "Long Term Followup",
+  submission: {
+    submissionId: "response-historical",
+    rawData: {
+      "Processing Status": "PROCESSED",
+      "Processed At": "1/21/2026",
+    },
+  },
+};
+
 describe("reconcileAlreadySentPendingSendJobs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -58,6 +73,7 @@ describe("reconcileAlreadySentPendingSendJobs", () => {
         pendingJob,
         assignmentAlreadySentJob,
         legacyAlreadySentJob,
+        historicalImportJob,
       ] as never)
       .mockResolvedValueOnce([pendingJob] as never);
     vi.mocked(prisma.assignment.findMany)
@@ -80,12 +96,13 @@ describe("reconcileAlreadySentPendingSendJobs", () => {
       .mockResolvedValueOnce([]);
     vi.mocked(prisma.sendJob.updateMany)
       .mockResolvedValueOnce({ count: 1 } as never)
+      .mockResolvedValueOnce({ count: 1 } as never)
       .mockResolvedValueOnce({ count: 1 } as never);
 
     const firstRun = await reconcileAlreadySentPendingSendJobs();
     const secondRun = await reconcileAlreadySentPendingSendJobs();
 
-    expect(firstRun).toEqual({ reviewed: 3, skipped: 2, leftPending: 1 });
+    expect(firstRun).toEqual({ reviewed: 4, skipped: 3, leftPending: 1 });
     expect(secondRun).toEqual({ reviewed: 1, skipped: 0, leftPending: 1 });
     expect(prisma.sendJob.updateMany).toHaveBeenCalledWith({
       where: {
@@ -107,7 +124,17 @@ describe("reconcileAlreadySentPendingSendJobs", () => {
         lastError: "already_sent_legacy",
       },
     });
-    expect(prisma.sendJob.updateMany).toHaveBeenCalledTimes(2);
+    expect(prisma.sendJob.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: { in: ["job-historical-import"] },
+        status: "pending",
+      },
+      data: {
+        status: "skipped",
+        lastError: "historical_import",
+      },
+    });
+    expect(prisma.sendJob.updateMany).toHaveBeenCalledTimes(3);
   });
 
   it("keeps same email and template pending when the legacy responseId is different", async () => {

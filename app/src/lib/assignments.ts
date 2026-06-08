@@ -19,6 +19,10 @@ export interface AssignmentCreationResult {
   errors: string[];
 }
 
+export interface AssignmentCreationOptions {
+  queueSendJobs?: boolean;
+}
+
 /**
  * Converts normalized submission answers array to the Record format expected by assignment engine
  */
@@ -63,12 +67,14 @@ function convertAnswersToRecord(
 export async function createAssignmentsForSubmission(
   submissionId: string,
   normalizedSubmission: NormalizedSubmission,
+  options: AssignmentCreationOptions = {},
 ): Promise<AssignmentCreationResult> {
   const result: AssignmentCreationResult = {
     created: 0,
     skipped: 0,
     errors: [],
   };
+  const shouldQueueSendJobs = options.queueSendJobs ?? true;
 
   try {
     // Convert to the format expected by assignment engine
@@ -150,7 +156,7 @@ export async function createAssignmentsForSubmission(
         });
 
         // Queue send job (safe: feature flag controls actual sending)
-        if (normalizedSubmission.email) {
+        if (shouldQueueSendJobs && normalizedSubmission.email) {
           try {
             await createSendJob({
               submissionId,
@@ -213,7 +219,7 @@ export async function createAssignmentsForSubmission(
         });
 
         // Queue send job (safe: feature flag controls actual sending)
-        if (normalizedSubmission.email) {
+        if (shouldQueueSendJobs && normalizedSubmission.email) {
           try {
             await createSendJob({
               submissionId,

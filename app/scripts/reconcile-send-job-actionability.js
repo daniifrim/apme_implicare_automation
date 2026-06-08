@@ -90,11 +90,28 @@ function normalizeResponseId(responseId) {
   return (responseId || "").trim();
 }
 
+function isHistoricalImportedProcessedSubmission(rawData) {
+  if (!rawData || typeof rawData !== "object" || Array.isArray(rawData)) {
+    return false;
+  }
+
+  const processingStatus = String(rawData["Processing Status"] || "").trim();
+  const processedAt = String(rawData["Processed At"] || "").trim();
+
+  return processingStatus.toUpperCase() === "PROCESSED" || processedAt.length > 0;
+}
+
 async function findAlreadySentReasons(prisma, jobs) {
   const reasons = new Map();
 
   if (jobs.length === 0) {
     return reasons;
+  }
+
+  for (const job of jobs) {
+    if (isHistoricalImportedProcessedSubmission(job.submission?.rawData)) {
+      reasons.set(job.id, "historical_import");
+    }
   }
 
   const sentAssignments = await prisma.assignment.findMany({
@@ -118,6 +135,8 @@ async function findAlreadySentReasons(prisma, jobs) {
   );
 
   for (const job of jobs) {
+    if (reasons.has(job.id)) continue;
+
     if (sentAssignmentKeys.has(`${job.submissionId}::${job.templateId}`)) {
       reasons.set(job.id, "already_sent_assignment");
     }
@@ -183,6 +202,7 @@ async function runReconciliation(prisma, args) {
       submission: {
         select: {
           submissionId: true,
+          rawData: true,
         },
       },
     },

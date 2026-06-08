@@ -470,6 +470,7 @@ export async function POST(request: NextRequest) {
               },
               answers: buildAssignmentAnswersFromCsvRow(row),
             },
+            { queueSendJobs: false },
           );
           results.assignmentsCreated += assignmentResult.created;
           results.assignmentsSkipped += assignmentResult.skipped;
@@ -556,6 +557,7 @@ export async function POST(request: NextRequest) {
             },
             answers: buildAssignmentAnswersFromCsvRow(row),
           },
+          { queueSendJobs: false },
         );
         results.assignmentsCreated += assignmentResult.created;
         results.assignmentsSkipped += assignmentResult.skipped;

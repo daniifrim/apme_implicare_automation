@@ -35,6 +35,7 @@ export async function GET(_request: NextRequest) {
           submission: {
             select: {
               submissionId: true,
+              rawData: true,
             },
           },
         },

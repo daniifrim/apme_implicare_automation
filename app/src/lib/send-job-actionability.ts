@@ -11,6 +11,7 @@ type PendingSendJob = {
   templateName: string;
   submission?: {
     submissionId: string | null;
+    rawData?: unknown;
   } | null;
 };
 
@@ -44,7 +45,8 @@ type ReconciliationClient = ActionabilityClient & {
 
 export type AlreadySentReason =
   | "already_sent_assignment"
-  | "already_sent_legacy";
+  | "already_sent_legacy"
+  | "historical_import";
 
 export type SendJobReconciliationResult = {
   reviewed: number;
@@ -60,6 +62,12 @@ export async function findAlreadySentPendingSendJobReasons(
 
   if (jobs.length === 0) {
     return reasons;
+  }
+
+  for (const job of jobs) {
+    if (isHistoricalImportedProcessedSubmission(job.submission?.rawData)) {
+      reasons.set(job.id, "historical_import");
+    }
   }
 
   const sentAssignments = await client.assignment.findMany({
@@ -83,6 +91,8 @@ export async function findAlreadySentPendingSendJobReasons(
   );
 
   for (const job of jobs) {
+    if (reasons.has(job.id)) continue;
+
     if (sentAssignmentKeys.has(`${job.submissionId}::${job.templateId}`)) {
       reasons.set(job.id, "already_sent_assignment");
     }
@@ -148,6 +158,7 @@ export async function reconcileAlreadySentPendingSendJobs(
       submission: {
         select: {
           submissionId: true,
+          rawData: true,
         },
       },
     },
@@ -198,4 +209,16 @@ function responseLegacyKey(responseId: string, legacyKeyValue: string): string {
 
 function normalizeResponseId(responseId: string | null | undefined): string {
   return responseId?.trim() ?? "";
+}
+
+function isHistoricalImportedProcessedSubmission(rawData: unknown): boolean {
+  if (!rawData || typeof rawData !== "object" || Array.isArray(rawData)) {
+    return false;
+  }
+
+  const record = rawData as Record<string, unknown>;
+  const processingStatus = String(record["Processing Status"] ?? "").trim();
+  const processedAt = String(record["Processed At"] ?? "").trim();
+
+  return processingStatus.toUpperCase() === "PROCESSED" || processedAt.length > 0;
 }

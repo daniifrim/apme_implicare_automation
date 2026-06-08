@@ -229,6 +229,30 @@ describe("assignments", () => {
       expect(result.errors[0]).toContain("Assignment engine failed");
     });
 
+    it("should create assignments without send jobs when queueSendJobs is false", async () => {
+      const mockTemplates = [{ id: "template-1", slug: "info-voluntariat-apme", name: "Info Voluntariat APME" }];
+
+      vi.mocked(prisma.template.findMany).mockResolvedValue(mockTemplates);
+      vi.mocked(prisma.assignment.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.assignment.create).mockResolvedValue({
+        id: "assignment-1",
+      } as never);
+
+      const submission = createNormalizedSubmission({
+        answers: createMatchingAnswers("volunteer", "volunteer"),
+      });
+
+      const result = await createAssignmentsForSubmission(
+        "submission-1",
+        submission,
+        { queueSendJobs: false },
+      );
+
+      expect(result.created).toBeGreaterThan(0);
+      expect(prisma.assignment.create).toHaveBeenCalled();
+      expect(prisma.sendJob.create).not.toHaveBeenCalled();
+    });
+
     it("should handle partial failures (some succeed, some fail)", async () => {
       const mockTemplates = [
         { id: "template-1", slug: "info-voluntariat-apme" },

@@ -71,9 +71,25 @@ describe("GET /api/dashboard/sends", () => {
         submissionId: "response-legacy",
       },
     };
+    const historicalImportJob = {
+      ...baseJob,
+      id: "job-historical-import",
+      submissionId: "submission-historical",
+      templateId: "template-long-term",
+      email: "historical@example.com",
+      templateName: "Long Term Followup",
+      submission: {
+        ...baseJob.submission,
+        submissionId: "response-historical",
+        rawData: {
+          "Processing Status": "PROCESSED",
+          "Processed At": "1/21/2026",
+        },
+      },
+    };
 
     vi.mocked(prisma.sendJob.count)
-      .mockResolvedValueOnce(3)
+      .mockResolvedValueOnce(4)
       .mockResolvedValueOnce(0)
       .mockResolvedValueOnce(0)
       .mockResolvedValueOnce(0)
@@ -84,11 +100,13 @@ describe("GET /api/dashboard/sends", () => {
         actionablePendingJob,
         assignmentAlreadySentJob,
         legacyAlreadySentJob,
+        historicalImportJob,
       ] as never)
       .mockResolvedValueOnce([
         actionablePendingJob,
         assignmentAlreadySentJob,
         legacyAlreadySentJob,
+        historicalImportJob,
       ] as never);
     vi.mocked(prisma.assignment.findMany).mockResolvedValueOnce([
       {
@@ -111,7 +129,7 @@ describe("GET /api/dashboard/sends", () => {
 
     expect(response.status).toBe(200);
     expect(data.counts.pending).toBe(1);
-    expect(data.counts.skipped).toBe(2);
+    expect(data.counts.skipped).toBe(3);
     expect(data.recentJobs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -128,6 +146,11 @@ describe("GET /api/dashboard/sends", () => {
           id: "job-legacy-sent",
           status: "skipped",
           lastError: "already_sent_legacy",
+        }),
+        expect.objectContaining({
+          id: "job-historical-import",
+          status: "skipped",
+          lastError: "historical_import",
         }),
       ]),
     );

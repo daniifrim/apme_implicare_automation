@@ -410,6 +410,7 @@ describe("POST /api/submissions/import", () => {
           }),
         ]),
       }),
+      { queueSendJobs: false },
     );
     expect(body.results.answersImported).toBeGreaterThan(0);
     expect(body.results.assignmentsCreated).toBe(1);
@@ -457,6 +458,7 @@ describe("POST /api/submissions/import", () => {
           expect.objectContaining({ questionId: "mission_interests" }),
         ]),
       }),
+      { queueSendJobs: false },
     );
     expect(body.results.assignmentsSkipped).toBe(1);
   });
