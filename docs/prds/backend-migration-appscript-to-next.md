@@ -474,6 +474,8 @@ The app is not ready to replace Apps Script until all of these are true:
 - [ ] Rate limits configured.
 - [x] Test-mode send verified — feature flag `USE_APPS_SCRIPT_SENDER=false` by default.
 - [x] Live-send test verified — webhook successfully sent email via Apps Script.
+- [x] Live-send test verified — webhook successfully sent email via Apps Script.
+- [x] End-to-end test passed — submission → assignment → send job → dispatch → email → status `sent`.
 - [x] Dani explicitly approves live-send test.
 
 ### Observability and audit

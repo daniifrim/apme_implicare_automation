@@ -39,6 +39,7 @@ for submissions, templates, mappings, webhooks, and audit history.
 - **Updated `.env`** with production webhook URL and API key.
 - **84 tests passing** across 8 focused test files.
 - **Send jobs wired into assignment flow** — `createSendJob()` automatically called after each `Assignment` creation, so new submissions queue emails for dispatch. Feature flag `USE_APPS_SCRIPT_SENDER=false` still prevents actual sending until explicitly enabled.
+- **End-to-end test passed** — Full flow verified: submission → assignment → send job → Apps Script webhook → email sent → status updated to `sent`. Safety mode redirected test email to `danifrim14@gmail.com`.
 
 ### 2026-06-07
 
