@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * End-to-end test: Create submission → assignment → send job → dispatch → email
  *

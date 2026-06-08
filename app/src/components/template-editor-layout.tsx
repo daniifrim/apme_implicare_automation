@@ -72,9 +72,10 @@ export function TemplateEditorLayout({
   const [panelSizes, setPanelSizes] = useState(DEFAULT_SIZES);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Handle hydration
+  // Handle hydration — show tabs during SSR, switch to panels after mount
   useEffect(() => {
-    setIsMounted(true);
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Handle responsive detection
