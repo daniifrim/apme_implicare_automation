@@ -14,7 +14,7 @@ describe("POST /api/submissions/bulk/reprocess", () => {
   function createMockRequest(body: object) {
     return {
       json: () => Promise.resolve(body),
-    } as unknown as Request;
+    } as unknown as import("next/server").NextRequest;
   }
 
   it("should return 400 if submissionIds is missing", async () => {
@@ -122,7 +122,7 @@ describe("POST /api/submissions/bulk/reprocess", () => {
   it("should handle invalid JSON", async () => {
     const request = {
       json: () => Promise.reject(new Error("Invalid JSON")),
-    } as unknown as Request;
+    } as unknown as import("next/server").NextRequest;
 
     const response = await POST(request);
 

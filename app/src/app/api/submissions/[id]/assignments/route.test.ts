@@ -23,7 +23,7 @@ describe("POST /api/submissions/[id]/assignments", () => {
     return {
       json: () => Promise.resolve(body),
       url: `http://localhost/api/submissions/${submissionId}/assignments`,
-    } as unknown as Request;
+    } as unknown as import("next/server").NextRequest;
   }
 
   it("should create assignment successfully", async () => {

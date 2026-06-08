@@ -23,3 +23,8 @@ yarn-error.log*
 
 # OS/editor
 .DS_Store
+
+# Agent workspaces
+.codex/
+.pi/
+.superset/

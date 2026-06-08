@@ -10,6 +10,66 @@ This is a monorepo with two distinct parts:
 - **`main-project/`** - Google Apps Script library (core automation logic)
 - **`wrapper-project/`** - Google Apps Script bound to spreadsheet
 - **`docs/`** - Documentation, PRDs, data exports
+- **`scripts/`** - Root-level deployment and orchestration scripts
+
+### Web App (`app/`)
+
+```
+app/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── (app)/              # Main app route group (app shell layout)
+│   │   ├── dashboard/          # Legacy/dashboard route group
+│   │   ├── api/                # API routes
+│   │   ├── layout.tsx          # Root layout
+│   │   └── globals.css         # Global styles + CSS variables
+│   ├── components/
+│   │   ├── ui/                 # shadcn/ui components
+│   │   ├── dashboard/          # Dashboard widgets
+│   │   ├── template-editor/    # Email template editor
+│   │   ├── settings/           # Settings page sections
+│   │   └── layout/             # App shell (sidebar, header, nav)
+│   ├── lib/                    # Core business logic (co-located with tests)
+│   ├── hooks/                  # Custom React hooks
+│   ├── types/                  # Shared TypeScript types
+│   └── test/                   # Test setup
+├── prisma/                     # Prisma schema + migrations + seed
+├── scripts/                    # Data import + utility scripts
+├── public/                     # Static assets
+└── docker-compose.yml          # Production stack definition
+```
+
+### Key App Routes
+
+| Route | Purpose |
+|-------|---------|
+| `/` | Redirect to dashboard |
+| `/dashboard` | Overview with stats, charts, quick actions |
+| `/submissions` | Form submissions list |
+| `/submissions/[id]` | Submission detail + assignments |
+| `/templates` | Email templates list |
+| `/templates/[id]` | Template detail + version history |
+| `/templates/[id]/edit` | BlockNote-based template editor |
+| `/mappings` | Field mapping configuration |
+| `/settings` | App settings (appearance, automation, backup, etc.) |
+| `/audit` | Audit log viewer |
+| `/users` | User management |
+| `/webhooks` | Webhook event viewer |
+
+### Core Lib Modules (`app/src/lib/`)
+
+| Module | Purpose |
+|--------|---------|
+| `assignment-engine.ts` | Determines which email templates to assign to a submission |
+| `assignments.ts` | Assignment CRUD + business rules |
+| `send-dispatcher.ts` | Email send orchestration |
+| `shadow-mode.ts` | Shadow-mode comparison for validation |
+| `audit.ts` | Audit logging utilities |
+| `webhook.ts` | Webhook parsing + validation |
+| `email-template-normalization.ts` | Template content normalization |
+| `normalize.ts` | General normalization helpers |
+| `prisma.ts` | Prisma client singleton |
+| `utils.ts` | `cn()` and other shared utilities |
 
 ## Development Commands
 
@@ -28,14 +88,26 @@ pnpm -C app test:coverage    # Run tests with coverage
 pnpm -C app db:migrate       # Run Prisma migrations
 pnpm -C app db:generate      # Generate Prisma client
 pnpm -C app db:studio        # Open Prisma Studio
+pnpm -C app db:seed          # Seed database
 ```
 
 Or using root package.json shortcuts:
 ```bash
+npm run dev                  # Runs dev-with-data.sh (Docker + dev server)
 npm run app:dev
 npm run app:build
 npm run app:test
 npm run app:lint
+```
+
+### Docker / Deployment
+
+```bash
+npm run docker:build         # Build Docker image via buildx bake
+npm run docker:push          # Push image to registry
+npm run deploy               # Deploy to VPS via SSH + Docker Swarm
+npm run deploy:full          # Push image then deploy
+npm run vps:migrate          # Run Prisma migrate deploy on VPS
 ```
 
 ### Apps Script Projects
@@ -113,6 +185,7 @@ try {
 - Use descriptive test names with "should"
 - Use factory functions for test data
 - Mock external dependencies
+- Test environment: `jsdom` with `@testing-library/react`
 
 ### React/Next.js
 
@@ -148,12 +221,18 @@ try {
 
 ### Prerequisites
 
-- Docker Desktop (for PostgreSQL)
+- Docker Desktop (for PostgreSQL + Redis)
 - Node.js + PNPM
 
 ### Database Setup
 
-Start a local PostgreSQL container:
+The `dev-with-data.sh` script starts all required services:
+
+```bash
+npm run dev
+```
+
+Or manually start a local PostgreSQL container:
 
 ```bash
 docker run -d --name apme-postgres \
@@ -178,7 +257,7 @@ pnpm -C app db:migrate
 
 ### Seeding Data
 
-The database needs to be populated from local data files after a fresh setup. Run these in order:
+The database can be populated from local data files after a fresh setup. Run these in order:
 
 1. **Import email templates** (from `docs/email-templates/*.txt`):
    ```bash
@@ -200,7 +279,33 @@ The dev server (`pnpm -C app dev`) must be running for steps 1 and 2.
 
 ### Environment
 
-Web app environment is configured in `app/.env`. Default local values point to `localhost:5432` for PostgreSQL and `localhost:6379` for Redis.
+Web app environment is configured in `app/.env`. Key variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `REDIS_URL` | Redis connection string |
+| `NEXTAUTH_URL` / `NEXTAUTH_SECRET` | NextAuth configuration |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
+| `FILLOUT_API_KEY` / `FILLOUT_WEBHOOK_SECRET` | Fillout form integration |
+| `APP_URL` / `APP_HOST` | Public app URL |
+
+## Deployment
+
+The app deploys as a Docker Swarm stack to a Hetzner VPS:
+
+- **Image**: `ghcr.io/daniifrim/apme-implicare-web:latest`
+- **Orchestration**: Docker Swarm (defined in `docker-compose.yml`)
+- **Reverse Proxy**: Traefik with Let's Encrypt TLS
+- **Services**: web (Next.js), postgres, redis
+- **Health checks**: `/api/health` endpoint
+
+Deploy commands:
+```bash
+npm run docker:push    # Build + push image
+npm run deploy         # Deploy stack to VPS
+npm run vps:migrate    # Run pending migrations on VPS
+```
 
 ## Important Notes
 

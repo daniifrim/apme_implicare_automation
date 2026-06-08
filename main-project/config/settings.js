@@ -445,20 +445,19 @@ Respond ONLY with the exact field name that best matches, or "NO_MATCH" if none 
   // DEVELOPMENT & TESTING CONFIGURATION
   // ============================================================================
   DEVELOPMENT: {
-    // PRODUCTION: Send emails to real users
-    TEST_MODE: false, // CHANGED: Now sends emails to real users
-    TEST_EMAIL: 'danifrim14@gmail.com', // Fallback email for errors
+    // SAFETY: Redirect all emails to test email unless explicitly allowed
+    TEST_MODE: false,
+    TEST_EMAIL: 'danifrim14@gmail.com',
     VERBOSE_LOGGING: true,
 
-    // Email safety settings - KEEP ENABLED for initial production deployment
-    SAFETY_MODE: false, // Keep enabled for safety
+    // CRITICAL: Keep SAFETY_MODE enabled until live cutover is approved
+    SAFETY_MODE: true,
     ALLOWED_EMAILS: [
       'danifrim14@gmail.com',
       'betina.serban@interchange.ro',
       'mobilizare@apme.ro'
-      // Add more trusted emails here as needed
     ],
-    BLOCK_ALL_OTHER_EMAILS: false // CHANGED: Now allows emails to real users
+    BLOCK_ALL_OTHER_EMAILS: true
   },
 
   // ============================================================================

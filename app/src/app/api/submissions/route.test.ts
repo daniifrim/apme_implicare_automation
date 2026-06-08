@@ -19,7 +19,7 @@ describe("GET /api/submissions", () => {
   function createMockRequest(url: string) {
     return {
       url,
-    } as unknown as Request;
+    } as unknown as import("next/server").NextRequest;
   }
 
   it("should return submissions with default pagination", async () => {

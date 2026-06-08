@@ -140,7 +140,7 @@ export default function SendsDashboardPage() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
         <StatCard
           title="Total"
           value={counts?.total ?? 0}
@@ -173,6 +173,13 @@ export default function SendsDashboardPage() {
           value={counts?.failed ?? 0}
           icon={XCircle}
           variant="danger"
+          loading={loading}
+        />
+        <StatCard
+          title="Skipped"
+          value={counts?.skipped ?? 0}
+          icon={SkipForward}
+          variant="info"
           loading={loading}
         />
         <StatCard

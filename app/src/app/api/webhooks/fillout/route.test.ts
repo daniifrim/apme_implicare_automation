@@ -54,7 +54,7 @@ describe("POST /api/webhooks/fillout", () => {
       headers: {
         get: (name: string) => headers[name] || null,
       },
-    } as unknown as Request;
+    } as unknown as import("next/server").NextRequest;
   }
 
   const validHeaders = {
@@ -261,7 +261,7 @@ describe("POST /api/webhooks/fillout", () => {
       headers: {
         get: (name: string) => validHeaders[name] || null,
       },
-    } as unknown as Request;
+    } as unknown as import("next/server").NextRequest;
 
     const response = await POST(request);
 

@@ -30,7 +30,7 @@ describe("Assignment Management API", () => {
 
       const request = {
         json: () => Promise.resolve({ status: "sent" }),
-      } as unknown as Request;
+      } as unknown as import("next/server").NextRequest;
 
       const response = await PATCH(request, {
         params: Promise.resolve({ id: "assign-1" }),
@@ -49,7 +49,7 @@ describe("Assignment Management API", () => {
     it("should return 400 if status is missing", async () => {
       const request = {
         json: () => Promise.resolve({}),
-      } as unknown as Request;
+      } as unknown as import("next/server").NextRequest;
 
       const response = await PATCH(request, {
         params: Promise.resolve({ id: "assign-1" }),
@@ -63,7 +63,7 @@ describe("Assignment Management API", () => {
     it("should return 400 for invalid status", async () => {
       const request = {
         json: () => Promise.resolve({ status: "invalid_status" }),
-      } as unknown as Request;
+      } as unknown as import("next/server").NextRequest;
 
       const response = await PATCH(request, {
         params: Promise.resolve({ id: "assign-1" }),
@@ -85,7 +85,7 @@ describe("Assignment Management API", () => {
 
         const request = {
           json: () => Promise.resolve({ status }),
-        } as unknown as Request;
+        } as unknown as import("next/server").NextRequest;
 
         const response = await PATCH(request, {
           params: Promise.resolve({ id: "assign-1" }),
@@ -101,7 +101,7 @@ describe("Assignment Management API", () => {
 
       const request = {
         json: () => Promise.resolve({ status: "sent" }),
-      } as unknown as Request;
+      } as unknown as import("next/server").NextRequest;
 
       const response = await PATCH(request, {
         params: Promise.resolve({ id: "nonexistent" }),
