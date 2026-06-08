@@ -121,10 +121,15 @@ describe("send-dispatcher", () => {
         submissionId: "sub-1",
       } as never);
 
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ success: true }),
-      });
+      // Apps Script web app redirect flow: POST returns 302, then GET redirect URL for response
+      const mockFetch = vi.fn()
+        .mockResolvedValueOnce({
+          status: 302,
+          headers: new Map([["location", "https://script.googleusercontent.com/redirect"]]),
+        })
+        .mockResolvedValueOnce({
+          json: vi.fn().mockResolvedValue({ status: "success", message: "Email sent" }),
+        });
       global.fetch = mockFetch;
 
       const originalEnv = process.env.USE_APPS_SCRIPT_SENDER;
@@ -243,10 +248,15 @@ describe("send-dispatcher", () => {
         submissionId: "sub-1",
       } as never);
 
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ success: true }),
-      });
+      // Apps Script web app redirect flow
+      const mockFetch = vi.fn()
+        .mockResolvedValueOnce({
+          status: 302,
+          headers: new Map([["location", "https://script.googleusercontent.com/redirect"]]),
+        })
+        .mockResolvedValueOnce({
+          json: vi.fn().mockResolvedValue({ status: "success", message: "Email sent" }),
+        });
       global.fetch = mockFetch;
 
       const originalEnv = process.env.USE_APPS_SCRIPT_SENDER;

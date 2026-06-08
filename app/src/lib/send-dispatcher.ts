@@ -85,33 +85,23 @@ export async function dispatchSendJob(jobId: string): Promise<void> {
   }
 
   try {
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        apiKey,
-        jobId,
-        email: job.email,
-        templateName: job.templateName,
-        submissionId: job.submissionId,
-        personalizationData: {},
-      }),
+    const data = await postToAppsScriptWebhook(webhookUrl, {
+      apiKey,
+      jobId,
+      email: job.email,
+      templateName: job.templateName,
+      submissionId: job.submissionId,
+      personalizationData: {},
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = (await response.json()) as { success: boolean };
-
-    if (data.success) {
+    if (data.status === "success") {
       await prisma.sendJob.update({
         where: { id: jobId },
         data: { status: "sent", sentAt: new Date() },
       });
       console.log(`[SendDispatcher] sent job=${jobId} status=sent`);
     } else {
-      throw new Error("webhook returned success=false");
+      throw new Error(`webhook error: ${data.message || "unknown"}`);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -160,6 +150,37 @@ export async function processPendingSendJobs(): Promise<{
   }
 
   return { processed, errors };
+}
+
+/**
+ * POST to an Apps Script web app and follow the 302 redirect to get the response.
+ * Apps Script web apps return a 302 redirect on POST; the response body is only
+ * available by making a GET to the redirect URL.
+ */
+async function postToAppsScriptWebhook(
+  url: string,
+  payload: Record<string, unknown>,
+): Promise<{ status: string; message: string; [key: string]: unknown }> {
+  const postRes = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    redirect: "manual",
+  });
+
+  if (postRes.status !== 302) {
+    const text = await postRes.text();
+    throw new Error(`Expected 302 redirect, got ${postRes.status}: ${text.substring(0, 200)}`);
+  }
+
+  const redirectUrl = postRes.headers.get("location");
+  if (!redirectUrl) {
+    throw new Error("302 redirect missing Location header");
+  }
+
+  const getRes = await fetch(redirectUrl, { method: "GET" });
+  const data = (await getRes.json()) as { status: string; message: string };
+  return data;
 }
 
 export function generateIdempotencyKey(
