@@ -37,7 +37,11 @@ for submissions, templates, mappings, webhooks, and audit history.
   - Live email send test successful: POST → 302 redirect → GET response → `{"status":"success","message":"Email sent successfully"}`
 - **Fixed Apps Script POST redirect handling** — Apps Script web apps return 302 on POST; response is only available via GET to redirect URL. Updated `send-dispatcher.ts` with `postToAppsScriptWebhook()` helper that handles the two-step flow.
 - **Updated `.env`** with production webhook URL and API key.
-- **84 tests passing** across 8 focused test files.
+- **91 tests passing** across 9 focused test files (added alerting tests).
+- **Rollback verification** — `scripts/test-rollback.js` confirms old Apps Script path is intact and shares Email History state with new path (22 checks pass).
+- **Send job dashboard** — `/dashboard/sends` shows status counts, filterable job table, refresh button.
+- **Alerting system** — `alerting.ts` with webhook health checks and send job failure/retry monitoring. API at `/api/health/alerting`.
+- **Quality gates green** — `pnpm lint` exits 0, `pnpm exec tsc --noEmit` exits 0.
 - **Send jobs wired into assignment flow** — `createSendJob()` automatically called after each `Assignment` creation, so new submissions queue emails for dispatch. Feature flag `USE_APPS_SCRIPT_SENDER=false` still prevents actual sending until explicitly enabled.
 - **End-to-end test passed** — Full flow verified: submission → assignment → send job → Apps Script webhook → email sent → status updated to `sent`. Safety mode redirected test email to `danifrim14@gmail.com`.
 
