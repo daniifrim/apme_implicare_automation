@@ -112,9 +112,10 @@ describe("SubmissionsPage", () => {
   it("opens the detail modal when a row is clicked and shows raw answers", async () => {
     render(<SubmissionsPage />);
 
-    expect(await screen.findByText("Ada Lovelace")).toBeInTheDocument();
+    const adaElements = await screen.findAllByText("Ada Lovelace");
+    expect(adaElements.length).toBeGreaterThan(0);
 
-    const row = screen.getByText("Ada Lovelace").closest("tr");
+    const row = adaElements[0].closest("tr");
     if (!row) {
       throw new Error("Expected row for submission not found");
     }
