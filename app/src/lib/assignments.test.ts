@@ -20,6 +20,10 @@ vi.mock("@/lib/prisma", () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    sendJob: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+    },
   },
 }));
 

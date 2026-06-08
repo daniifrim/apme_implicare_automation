@@ -3,6 +3,7 @@ import {
   assignmentEngine,
   type NormalizedSubmission as EngineNormalizedSubmission,
 } from "@/lib/assignment-engine";
+import { createSendJob } from "@/lib/send-dispatcher";
 import type { NormalizedSubmission } from "@/types/fillout";
 
 interface Template {
@@ -147,6 +148,20 @@ export async function createAssignmentsForSubmission(
           },
         });
 
+        // Queue send job (safe: feature flag controls actual sending)
+        try {
+          await createSendJob({
+            submissionId,
+            templateId: template.id,
+            email: normalizedSubmission.email,
+            templateName: template.name,
+          });
+        } catch (sendJobError) {
+          result.errors.push(
+            `Assignment created but send job failed for ${assignment.templateSlug}: ${sendJobError instanceof Error ? sendJobError.message : "Unknown error"}`,
+          );
+        }
+
         result.created++;
       } catch (error) {
         const errorMessage =
@@ -193,6 +208,20 @@ export async function createAssignmentsForSubmission(
             ],
           },
         });
+
+        // Queue send job (safe: feature flag controls actual sending)
+        try {
+          await createSendJob({
+            submissionId,
+            templateId: template.id,
+            email: normalizedSubmission.email,
+            templateName: template.name,
+          });
+        } catch (sendJobError) {
+          result.errors.push(
+            `Assignment created but send job failed for ${templateSlug}: ${sendJobError instanceof Error ? sendJobError.message : "Unknown error"}`,
+          );
+        }
 
         result.created++;
       } catch (error) {
