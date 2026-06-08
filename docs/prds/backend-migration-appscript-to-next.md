@@ -470,9 +470,11 @@ The app is not ready to replace Apps Script until all of these are true:
 - [x] Sender strategy chosen — Apps Script thin adapter.
 - [x] Idempotency key implemented for `(submission, template, recipient)`.
 - [x] Retry and failure states implemented (5min → 15min → 45min, max 3 attempts).
+- [x] Send jobs wired into assignment flow — `createSendJob()` called after each `Assignment` creation.
 - [ ] Rate limits configured.
 - [x] Test-mode send verified — feature flag `USE_APPS_SCRIPT_SENDER=false` by default.
-- [ ] Dani explicitly approves live-send test.
+- [x] Live-send test verified — webhook successfully sent email via Apps Script.
+- [x] Dani explicitly approves live-send test.
 
 ### Observability and audit
 

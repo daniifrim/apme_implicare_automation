@@ -38,6 +38,7 @@ for submissions, templates, mappings, webhooks, and audit history.
 - **Fixed Apps Script POST redirect handling** — Apps Script web apps return 302 on POST; response is only available via GET to redirect URL. Updated `send-dispatcher.ts` with `postToAppsScriptWebhook()` helper that handles the two-step flow.
 - **Updated `.env`** with production webhook URL and API key.
 - **84 tests passing** across 8 focused test files.
+- **Send jobs wired into assignment flow** — `createSendJob()` automatically called after each `Assignment` creation, so new submissions queue emails for dispatch. Feature flag `USE_APPS_SCRIPT_SENDER=false` still prevents actual sending until explicitly enabled.
 
 ### 2026-06-07
 
