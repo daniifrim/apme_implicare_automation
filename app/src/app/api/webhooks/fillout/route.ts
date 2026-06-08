@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { ingestFilloutSubmission } from "@/lib/fillout-ingestion";
 import { verifyWebhookSignature } from "@/lib/webhook";
-import { normalizeSubmission } from "@/lib/normalize";
-import {
-  createAssignmentsForSubmission,
-  markSubmissionAsProcessed,
-} from "@/lib/assignments";
 import type { FilloutWebhookPayload, FilloutSubmission } from "@/types/fillout";
 
 export async function POST(request: NextRequest) {
@@ -98,112 +94,17 @@ export async function POST(request: NextRequest) {
 }
 
 async function processSubmission(submissionData: FilloutSubmission) {
-  const normalized = normalizeSubmission(submissionData);
-
-  const existingSubmission = await prisma.submission.findUnique({
-    where: { submissionId: normalized.submissionId },
+  const result = await ingestFilloutSubmission(submissionData, {
+    formId: process.env.FILLOUT_FORM_ID ?? "pqwmkBmnpbus",
+    formName: process.env.FILLOUT_FORM_NAME ?? "Implicare 2.0",
+    queueSendJobs: true,
   });
 
-  if (existingSubmission) {
-    console.log(
-      `Submission ${normalized.submissionId} already exists, updating`,
-    );
-
-    await prisma.submission.update({
-      where: { submissionId: normalized.submissionId },
-      data: {
-        email: normalized.email,
-        firstName: normalized.firstName,
-        lastName: normalized.lastName,
-        phone: normalized.phone,
-        locationType: normalized.locationType,
-        city: normalized.city,
-        country: normalized.country,
-        church: normalized.church,
-        rawData: normalized.rawData as unknown as object,
-        updatedAt: new Date(),
-      },
-    });
-
-    await prisma.submissionAnswer.deleteMany({
-      where: { submissionId: existingSubmission.id },
-    });
-
-    for (const answer of normalized.answers) {
-      await prisma.submissionAnswer.create({
-        data: {
-          submissionId: existingSubmission.id,
-          questionId: answer.questionId,
-          value: answer.value,
-          rawValue: answer.rawValue as unknown as object,
-        },
-      });
-    }
-
-    // Re-process assignments for existing submission (in case data changed)
-    const assignmentResult = await createAssignmentsForSubmission(
-      existingSubmission.id,
-      normalized,
-    );
-
-    if (assignmentResult.errors.length > 0) {
-      console.error(
-        "Assignment errors for existing submission:",
-        assignmentResult.errors,
-      );
-    }
-
-    // Mark as processed (even if partially failed)
-    await markSubmissionAsProcessed(existingSubmission.id);
-
-    console.log(
-      `Updated submission ${existingSubmission.id} with ${assignmentResult.created} new assignments, ${assignmentResult.skipped} skipped`,
-    );
-    return;
+  if (result.assignments.errors.length > 0) {
+    console.error("Assignment errors:", result.assignments.errors);
   }
-
-  const submission = await prisma.submission.create({
-    data: {
-      submissionId: normalized.submissionId,
-      submissionTime: normalized.submissionTime,
-      email: normalized.email,
-      firstName: normalized.firstName,
-      lastName: normalized.lastName,
-      phone: normalized.phone,
-      locationType: normalized.locationType,
-      city: normalized.city,
-      country: normalized.country,
-      church: normalized.church,
-      rawData: normalized.rawData as unknown as object,
-      status: "pending",
-    },
-  });
-
-  for (const answer of normalized.answers) {
-    await prisma.submissionAnswer.create({
-      data: {
-        submissionId: submission.id,
-        questionId: answer.questionId,
-        value: answer.value,
-        rawValue: answer.rawValue as unknown as object,
-      },
-    });
-  }
-
-  // Create template assignments based on submission answers
-  const assignmentResult = await createAssignmentsForSubmission(
-    submission.id,
-    normalized,
-  );
-
-  if (assignmentResult.errors.length > 0) {
-    console.error("Assignment errors:", assignmentResult.errors);
-  }
-
-  // Mark submission as processed
-  await markSubmissionAsProcessed(submission.id);
 
   console.log(
-    `Created submission ${submission.id} for ${normalized.submissionId} with ${assignmentResult.created} assignments`,
+    `${result.created ? "Created" : "Updated"} submission ${result.databaseId} for ${result.submissionId} with ${result.assignments.created} new assignments, ${result.assignments.skipped} skipped`,
   );
 }

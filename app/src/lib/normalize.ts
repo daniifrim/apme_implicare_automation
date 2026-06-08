@@ -130,12 +130,145 @@ export function normalizeSubmission(
     country,
     church: churchAnswer?.value ? String(churchAnswer.value) : null,
     rawData: submission,
-    answers: submission.questions.map((q) => ({
-      questionId: q.id,
-      value: q.value ? String(q.value) : null,
-      rawValue: q.value,
-    })),
+    answers: [
+      ...submission.questions.map((q) => ({
+        questionId: q.id,
+        value: q.value ? String(q.value) : null,
+        rawValue: q.value,
+      })),
+      ...buildCanonicalAssignmentAnswersFromQuestions(submission.questions),
+    ],
   };
+}
+
+export function buildCanonicalAssignmentAnswersFromQuestions(
+  questions: FilloutSubmission["questions"],
+): NormalizedSubmission["answers"] {
+  const answers: NormalizedSubmission["answers"] = [];
+  const missionInterests: string[] = [];
+  const courseInterests: string[] = [];
+  const prayerMethods: string[] = [];
+
+  const answerByName = (matcher: (name: string) => boolean) =>
+    questions.find((question) => matcher(normalizeText(question.name)))?.value;
+
+  const missionField = answerByName((name) =>
+    name.includes("oportunitatile de a merge pe campul de misiune"),
+  );
+  if (hasPositiveIntent(missionField)) {
+    const normalized = normalizeText(missionField);
+    if (normalized.includes("termen scurt")) missionInterests.push("short_term");
+    if (normalized.includes("termen lung")) {
+      answers.push({
+        questionId: "desired_role",
+        value: String(missionField),
+        rawValue: "missionary",
+      });
+    }
+  }
+
+  const campInfo = answerByName((name) =>
+    name.includes("informatii despre taberele de misiune"),
+  );
+  if (hasPositiveIntent(campInfo)) missionInterests.push("camps");
+
+  const volunteer = answerByName((name) => name.includes("voluntar"));
+  if (hasPositiveIntent(volunteer)) missionInterests.push("volunteer");
+
+  const donation = answerByName((name) =>
+    name.includes("ajuti financiar lucrarile si misionarii"),
+  );
+  if (hasPositiveIntent(donation)) {
+    answers.push({
+      questionId: "support_interests",
+      value: String(donation),
+      rawValue: ["donate"],
+    });
+  }
+
+  const courses = answerByName((name) =>
+    name.includes("cursuri de pregatire"),
+  );
+  if (hasPositiveIntent(courses)) {
+    const normalized = normalizeText(courses);
+    if (normalized.includes("kairos")) courseInterests.push("kairos");
+    if (normalized.includes("mobilize") || normalized.includes("imputernicit")) {
+      courseInterests.push("mobilizeaza");
+    }
+    if (normalized.includes("crst")) courseInterests.push("crst");
+  }
+
+  const prayerAdoption = answerByName((name) =>
+    name.includes("adopti in rugaciune"),
+  );
+  if (hasPositiveIntent(prayerAdoption)) {
+    const missionaryChoice = answerByName((name) =>
+      name.includes("pentru ce misionar"),
+    );
+    if (hasPositiveIntent(missionaryChoice)) prayerMethods.push("missionary");
+
+    const ethnicGroupChoice = answerByName((name) =>
+      name.includes("pentru care popor neatins"),
+    );
+    if (hasPositiveIntent(ethnicGroupChoice)) {
+      prayerMethods.push("adopt");
+      answers.push({
+        questionId: "ethnic_group_choice",
+        value: String(ethnicGroupChoice),
+        rawValue: ethnicGroupChoice,
+      });
+    }
+  }
+
+  if (missionInterests.length > 0) {
+    answers.push({
+      questionId: "mission_interests",
+      value: uniqueValues(missionInterests).join(","),
+      rawValue: uniqueValues(missionInterests),
+    });
+  }
+
+  if (courseInterests.length > 0) {
+    answers.push({
+      questionId: "course_interests",
+      value: uniqueValues(courseInterests).join(","),
+      rawValue: uniqueValues(courseInterests),
+    });
+  }
+
+  if (prayerMethods.length > 0) {
+    answers.push({
+      questionId: "prayer_method",
+      value: uniqueValues(prayerMethods).join(","),
+      rawValue: uniqueValues(prayerMethods),
+    });
+  }
+
+  return answers;
+}
+
+function normalizeText(value: unknown): string {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function hasPositiveIntent(value: unknown): boolean {
+  const normalized = normalizeText(value);
+  if (!normalized || normalized.includes("nu sunt interesat")) return false;
+  if (normalized === "nu") return false;
+  if (normalized.includes("am participat, doresc sa mai fiu informat")) {
+    return false;
+  }
+  if (normalized.includes("nu acum, poate mai tarziu")) return false;
+  if (normalized.includes("nu am resurse financiare")) return false;
+  return normalized.includes("da") || normalized.length > 0;
+}
+
+function uniqueValues(values: string[]): string[] {
+  return [...new Set(values)];
 }
 
 export function mapFieldValues(
