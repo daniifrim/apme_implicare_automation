@@ -18,7 +18,7 @@ describe("legacy-inference-rules", () => {
     });
 
     it("should return empty array for null rawData", () => {
-      const result = inferTemplatesFromRawData(null);
+      const result = inferTemplatesFromRawData(null as unknown as Record<string, unknown>);
       expect(result).toEqual([]);
     });
 

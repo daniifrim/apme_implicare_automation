@@ -50,7 +50,9 @@ export async function computeShadowDecision(submissionId: string): Promise<Shado
     };
   }
 
-  const normalizedSubmission = assignmentEngine.normalizeSubmission(submission);
+  const normalizedSubmission = assignmentEngine.normalizeSubmission(
+    submission as unknown as Parameters<typeof assignmentEngine.normalizeSubmission>[0],
+  );
   const assignmentResults = assignmentEngine.assignTemplates(normalizedSubmission);
   const appTemplateSlugs = assignmentResults.map(r => r.templateSlug);
 
