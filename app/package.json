@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "templates:publish-batch": "tsx scripts/batch-publish-templates.ts"
   },
   "dependencies": {
     "@blocknote/core": "^0.46.2",

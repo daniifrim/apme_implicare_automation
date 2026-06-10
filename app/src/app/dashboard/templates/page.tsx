@@ -45,6 +45,7 @@ interface Template {
     htmlContent?: string;
     textContent?: string | null;
   }>;
+  hasPublishedVersion: boolean;
   _count: {
     assignments: number;
   };
@@ -287,7 +288,7 @@ export default function TemplatesPage() {
                       <h3 className="font-semibold text-gray-900 truncate">
                         {template.name}
                       </h3>
-                      {template.versions.some((v) => v.isPublished) && (
+                      {template.hasPublishedVersion && (
                         <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                       )}
                     </div>

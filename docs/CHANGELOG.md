@@ -1,6 +1,6 @@
 # Project Knowledge Changelog
 
-> Living project state document. Not a git log. Last updated: 2026-06-08 15:05
+> Living project state document. Not a git log. Last updated: 2026-06-10 11:15
 
 ## Current State
 
@@ -10,6 +10,13 @@ processing, email template assignment, and reporting. The dashboard provides ope
 for submissions, templates, mappings, webhooks, and audit history.
 
 ## Latest Changes
+
+### 2026-06-10
+
+- **Direct Fillout ingestion** — Fillout API backfill now imports live `Implicare 2.0` submissions directly into Postgres via shared ingestion logic used by the webhook path.
+- **Send queue state corrected for cutover** — historical/already-handled send jobs were classified as sent, while submissions on/after 2026-05-21 were restored to pending for controlled reprocessing.
+- **Template batch publishing support** — added a script and package command to publish draft template versions in bulk, with dry-run behavior and audit logging.
+- **Template published indicator fixed** — template list API now exposes whether any version is published, so the dashboard checkmark is accurate even when the latest version is not the published one.
 
 ### 2026-06-08 (afternoon)
 
@@ -70,31 +77,19 @@ for submissions, templates, mappings, webhooks, and audit history.
   - Total: **84 tests passing** across 8 focused test files
 - **PRD updated** with Phase 5 architecture, deployment steps, and cutover checklist progress
 
-### February 14, 2026
-
-- Fixed CSV filename mismatch in submission import route (`implicare-data.csv` instead of old name).
-- Fixed undeclared `missingAssignment` variable bug in legacy email history reconciliation script.
-
-### February 12, 2026
-
-- Added audit log API support with filterable, paginated responses and related dashboard UI.
-- Added mapping management API with tests, plus UI improvements in the mappings dashboard.
-- Extended template workflows with publish adjustments, version handling, and duplicate endpoint.
-- Expanded submissions tooling with import updates, new tests, and richer list/detail UI behavior.
-- Added legacy inference rules and updated reconciliation tooling for backfilling email history.
-- Replaced legacy CSV exports with normalized data files under `docs/data/`.
-- Added and refreshed diagrams under `docs/diagrams/` plus submission detail modal planning notes.
-
 ## Key Files
 
 ### Core (Next.js App)
 
 - `app/src/app/api/audit-logs/route.ts` - Audit log listing with filters and pagination.
 - `app/src/app/api/mappings/route.ts` - Mapping CRUD endpoints for dashboard management.
+- `app/src/app/api/templates/route.ts` - Template listing API with published-version metadata.
 - `app/src/app/api/templates/[id]/duplicate/route.ts` - Template duplication endpoint.
 - `app/src/app/api/templates/[id]/versions/[versionId]/route.ts` - Template version handling.
 - `app/src/app/api/submissions/import/route.ts` - Submission import pipeline with canonical decision answers.
-- `app/src/app/api/webhooks/fillout/route.ts` - Fillout webhook ingestion with assignments.
+- `app/src/app/api/webhooks/fillout/route.ts` - Fillout webhook ingestion using shared Fillout persistence.
+- `app/src/lib/fillout-ingestion.ts` - Shared direct Fillout API/webhook ingestion path.
+- `app/src/lib/normalize.ts` - Fillout normalization with canonical assignment answers.
 - `app/src/lib/audit.ts` - Central audit log writer helper.
 - `app/src/lib/assignment-engine.ts` - Submission template assignment logic with exclusions.
 - `app/src/lib/shadow-mode.ts` - Shadow-mode decision engine (zero email side effects).
@@ -115,6 +110,8 @@ for submissions, templates, mappings, webhooks, and audit history.
 - `app/scripts/reimport-with-fixes.js` - Re-import CSV with updated canonical answer logic.
 - `app/scripts/legacy-email-history-utils.js` - Template name normalization utilities.
 - `app/scripts/reconcile-legacy-email-history.js` - Backfill email history tooling.
+- `app/scripts/import-fillout-submissions.ts` - Direct Fillout API backfill and update script.
+- `app/scripts/batch-publish-templates.ts` - Bulk draft-template publishing script.
 - `app/scripts/legacy-inference-rules.js` - Rules for inferring template assignments.
 - `app/scripts/legacy-inference-rules.test.ts` - Legacy inference test coverage.
 - `docs/data/email-history.csv` - Normalized email history export.
@@ -133,6 +130,13 @@ for submissions, templates, mappings, webhooks, and audit history.
 
 ## Findings & Learnings
 
+### 2026-06-10
+
+- **Finding:** Fillout form `Implicare 2.0` uses public form ID `pqwmkBmnpbus`; the database placeholder `implicare-form` is not the live API identifier.
+- **Why it matters:** Backfills and webhooks must use the real Fillout form ID to avoid relying on Google Sheets as the source of truth.
+- **Finding:** Existing historical send queue status can be operationally misleading unless tied to a cutover date and source-system history.
+- **Why it matters:** Operators should treat `SendJob.status=pending` as an actionable queue only after explicit reconciliation.
+
 ### 2026-06-06
 
 - **Finding:** `hasPositiveIntent` with `startsWith("nu ")` incorrectly excluded positive Romanian phrases like "Nu am participat, doresc informații."
@@ -146,15 +150,6 @@ for submissions, templates, mappings, webhooks, and audit history.
 - **Finding:** Shadow mode match rate of 49.9% with only ~85 unexplained mismatches (all combinations of known differences) indicates assignment parity is sufficient for sender cutover.
 - **Why it matters:** No new systematic app bugs found after eliminating the `startsWith("nu ")` bug. Next milestone can advance to sender strategy selection.
 
-### February 12, 2026
-
-- **Finding:** Audit log queries need both pagination and filter metadata to keep UI responsive.
-- **Why it matters:** The audit dashboard relies on consistent filter sets for fast navigation.
-- **Finding:** Legacy template inference logic must mirror Apps Script rules to reconcile history.
-- **Why it matters:** Backfill accuracy depends on using the same mapping heuristics.
-- **Finding:** Mapping data and audit records now move together in the UI.
-- **Why it matters:** Operators can trace template behavior across both systems.
-
 ## Tech Stack
 
 - **Framework:** Next.js 16 (App Router)
@@ -162,7 +157,7 @@ for submissions, templates, mappings, webhooks, and audit history.
 - **Database:** PostgreSQL via Prisma
 - **Testing:** Vitest + React Testing Library
 - **Package Manager:** PNPM
-- **Deployment:** Vercel (web app) + Google Apps Script
+- **Deployment:** Docker Swarm on Hetzner VPS + Google Apps Script sender adapter
 
 ## Development
 

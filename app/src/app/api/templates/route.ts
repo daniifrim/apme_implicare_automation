@@ -43,7 +43,27 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ templates });
+    // Determine which templates have any published version (may not be the latest)
+    const templateIds = templates.map((t) => t.id);
+    const publishedVersions = await prisma.templateVersion.groupBy({
+      by: ["templateId"],
+      where: {
+        templateId: { in: templateIds },
+        isPublished: true,
+      },
+      _count: { id: true },
+    });
+
+    const publishedTemplateIds = new Set(
+      publishedVersions.map((pv) => pv.templateId),
+    );
+
+    const templatesWithPublishedFlag = templates.map((template) => ({
+      ...template,
+      hasPublishedVersion: publishedTemplateIds.has(template.id),
+    }));
+
+    return NextResponse.json({ templates: templatesWithPublishedFlag });
   } catch (error) {
     console.error("Error fetching templates:", error);
     return NextResponse.json(
